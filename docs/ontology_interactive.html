@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>해사 도메인 온톨로지 탐색기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#0d1117;color:#e6edf3;overflow:hidden;height:100vh}
+#app{display:flex;flex-direction:column;height:100vh}
+
+/* Header */
+#hdr{height:50px;background:#161b22;border-bottom:1px solid #30363d;display:flex;align-items:center;padding:0 16px;gap:16px;flex-shrink:0}
+#hdr h1{font-size:15px;font-weight:700;color:#e6edf3}
+.badge{font-size:11px;color:#7d8590;background:#21262d;padding:2px 8px;border-radius:10px}
+#searchBox{margin-left:auto;padding:5px 10px;border-radius:6px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;font-size:13px;width:200px}
+
+/* Main */
+#main{display:flex;flex:1;overflow:hidden}
+
+/* Sidebar */
+#side{width:220px;background:#161b22;border-right:1px solid #30363d;overflow-y:auto;flex-shrink:0;padding:8px}
+.grp{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:2px}
+.grp:hover{background:#21262d}
+.grp .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.grp .name{flex:1}
+.grp .cnt{color:#7d8590;font-size:11px}
+.grp.off{opacity:0.35}
+.grp .chk{width:14px;height:14px;border:1.5px solid #30363d;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px}
+.grp.on .chk{background:#2563eb;border-color:#2563eb;color:#fff}
+.sep{height:1px;background:#30363d;margin:8px 0}
+#stats{padding:8px;font-size:11px;color:#7d8590}
+
+/* Canvas */
+#canvasWrap{flex:1;position:relative;background:#0d1117}
+#graph{width:100%;height:100%}
+#loader{position:absolute;inset:0;background:#0d1117;display:flex;align-items:center;justify-content:center;z-index:5;transition:opacity 0.4s}
+#loader.hide{opacity:0;pointer-events:none}
+
+/* Detail */
+#detail{height:180px;background:#161b22;border-top:1px solid #30363d;overflow-y:auto;padding:12px 16px;flex-shrink:0;font-size:12px}
+#detail.empty{display:flex;align-items:center;justify-content:center;color:#7d8590}
+.d-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.d-grid{display:flex;gap:24px;flex-wrap:wrap}
+.d-col{min-width:200px}
+.d-col h4{font-size:11px;color:#7d8590;margin-bottom:4px;text-transform:uppercase}
+.d-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #21262d}
+.d-key{color:#e6edf3}.d-val{color:#7d8590;font-family:monospace;font-size:11px}
+.d-rel{padding:2px 0;color:#7d8590}
+.d-rel span{color:#58a6ff}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <h1>⚓ 해사 도메인 온톨로지 탐색기</h1>
+    <span class="badge" id="nodeCount">139 엔티티</span>
+    <span class="badge" id="edgeCount">83 관계</span>
+    <span class="badge">11 그룹</span>
+    <input type="text" id="searchBox" placeholder="검색 (예: Vessel, 선박)">
+  </div>
+  <div id="main">
+    <div id="side"></div>
+    <div id="canvasWrap">
+      <div id="loader">⏳ 그래프 로딩 중...</div>
+      <div id="graph"></div>
+    </div>
+  </div>
+  <div id="detail" class="empty">노드를 클릭하면 속성 정보가 표시됩니다</div>
+</div>
+
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script>
+// ── Check vis.js loaded ──
+if(typeof vis==='undefined'){
+  document.getElementById('loader').innerHTML='<div style="color:#f87171">vis.js 로드 실패. 인터넷 연결을 확인하세요.</div>';
+}
+
+// ── DATA ──
+const GROUPS=[
+  {id:"Physical",label:"물리 개체 (25)",color:"#3b82f6",entities:["Vessel","CargoShip","Tanker","FishingVessel","PassengerShip","NavalVessel","AutonomousVessel","Port","TradePort","CoastalPort","FishingPort","PortFacility","Berth","Anchorage","Terminal","Waterway","TSS","Channel","Cargo","DangerousGoods","BulkCargo","ContainerCargo","Sensor","AISTransceiver","Radar","CCTVCamera","WeatherStation"]},
+  {id:"Spatial",label:"공간 정보 (5)",color:"#10b981",entities:["SeaArea","EEZ","TerritorialSea","CoastalRegion","GeoPoint"]},
+  {id:"Temporal",label:"시간·사건 (16)",color:"#ef4444",entities:["Voyage","PortCall","TrackSegment","Incident","Collision","Grounding","Pollution","Distress","IllegalFishing","WeatherCondition","Activity","Loading","Unloading","Bunkering","Anchoring","Loitering"]},
+  {id:"Information",label:"정보·서비스 (19)",color:"#a855f7",entities:["Regulation","COLREG","SOLAS","MARPOL","IMDGCode","Document","AccidentReport","InspectionReport","NavigationalWarning","CargoManifest","DataSource","APIEndpoint","StreamSource","FileSource","Service","QueryService","AnalysisService","AlertService","PredictionService"]},
+  {id:"Observation",label:"관측 데이터 (7)",color:"#f97316",entities:["Observation","SARObservation","OpticalObservation","CCTVObservation","AISObservation","RadarObservation","WeatherObservation"]},
+  {id:"Agent",label:"행위자 (8)",color:"#06b6d4",entities:["Organization","GovernmentAgency","ShippingCompany","ResearchInstitute","ClassificationSociety","Person","CrewMember","Inspector"]},
+  {id:"Platform",label:"플랫폼 자원 (8)",color:"#6366f1",entities:["Workflow","WorkflowNode","WorkflowExecution","AIModel","DataPipeline","AIAgent","MCPTool","MCPResource"]},
+  {id:"MMData",label:"멀티모달 데이터 (6)",color:"#d946ef",entities:["AISData","SatelliteImage","RadarImage","SensorReading","MaritimeChart","VideoClip"]},
+  {id:"MMRep",label:"멀티모달 임베딩 (4)",color:"#ec4899",entities:["VisualEmbedding","TrajectoryEmbedding","TextEmbedding","FusedEmbedding"]},
+  {id:"KRISO",label:"KRISO 실험 (24)",color:"#f59e0b",entities:["Experiment","TestFacility","TowingTank","OceanEngineeringBasin","IceTank","DeepOceanBasin","WaveEnergyTestSite","HyperbaricChamber","CavitationTunnel","LargeCavitationTunnel","MediumCavitationTunnel","HighSpeedCavitationTunnel","BridgeSimulator","ExperimentalDataset","TestCondition","ModelShip","Measurement","Resistance","Propulsion","Maneuvering","Seakeeping","IcePerformance","StructuralResponse"]},
+  {id:"RBAC",label:"접근 제어 (4)",color:"#64748b",entities:["User","Role","DataClass","Permission"]},
+];
+
+// ── Korean names ──
+const KO={
+  Vessel:"선박",CargoShip:"화물선",Tanker:"탱커",FishingVessel:"어선",PassengerShip:"여객선",NavalVessel:"군함",AutonomousVessel:"자율운항선",
+  Port:"항만",TradePort:"무역항",CoastalPort:"연안항",FishingPort:"어항",PortFacility:"항만시설",Berth:"선석",Anchorage:"정박지",Terminal:"터미널",
+  Waterway:"수로",TSS:"통항분리대",Channel:"항로",Cargo:"화물",DangerousGoods:"위험물",BulkCargo:"벌크화물",ContainerCargo:"컨테이너화물",
+  Sensor:"센서",AISTransceiver:"AIS송수신기",Radar:"레이더",CCTVCamera:"CCTV카메라",WeatherStation:"기상관측소",
+  SeaArea:"해역",EEZ:"배타적경제수역",TerritorialSea:"영해",CoastalRegion:"연안지역",GeoPoint:"좌표",
+  Voyage:"항해",PortCall:"입출항",TrackSegment:"항적구간",Incident:"해양사고",Collision:"충돌",Grounding:"좌초",Pollution:"오염",Distress:"조난",IllegalFishing:"불법어업",
+  WeatherCondition:"기상상태",Activity:"활동",Loading:"적재",Unloading:"양하",Bunkering:"급유",Anchoring:"정박",Loitering:"배회",
+  Regulation:"규정",COLREG:"국제해상충돌예방규칙",SOLAS:"해상인명안전협약",MARPOL:"해양오염방지협약",IMDGCode:"위험물운송코드",
+  Document:"문서",AccidentReport:"사고보고서",InspectionReport:"검사보고서",NavigationalWarning:"항행경보",CargoManifest:"적하목록",
+  DataSource:"데이터소스",APIEndpoint:"API엔드포인트",StreamSource:"스트림소스",FileSource:"파일소스",
+  Service:"서비스",QueryService:"쿼리서비스",AnalysisService:"분석서비스",AlertService:"알림서비스",PredictionService:"예측서비스",
+  Observation:"관측",SARObservation:"SAR관측",OpticalObservation:"광학관측",CCTVObservation:"CCTV관측",AISObservation:"AIS관측",RadarObservation:"레이더관측",WeatherObservation:"기상관측",
+  Organization:"기관",GovernmentAgency:"정부기관",ShippingCompany:"해운사",ResearchInstitute:"연구소",ClassificationSociety:"선급",Person:"개인",CrewMember:"선원",Inspector:"검사관",
+  Workflow:"워크플로우",WorkflowNode:"워크플로우노드",WorkflowExecution:"워크플로우실행",AIModel:"AI모델",DataPipeline:"데이터파이프라인",AIAgent:"AI에이전트",MCPTool:"MCP도구",MCPResource:"MCP리소스",
+  AISData:"AIS데이터",SatelliteImage:"위성영상",RadarImage:"레이더영상",SensorReading:"센서측정",MaritimeChart:"해도",VideoClip:"영상클립",
+  VisualEmbedding:"영상임베딩",TrajectoryEmbedding:"궤적임베딩",TextEmbedding:"텍스트임베딩",FusedEmbedding:"융합임베딩",
+  Experiment:"실험",TestFacility:"시험시설",TowingTank:"예인수조",OceanEngineeringBasin:"해양공학수조",IceTank:"빙해수조",DeepOceanBasin:"심해공학수조",
+  WaveEnergyTestSite:"파력시험장",HyperbaricChamber:"고압챔버",CavitationTunnel:"캐비테이션터널",LargeCavitationTunnel:"대형캐비테이션터널",
+  MediumCavitationTunnel:"중형캐비테이션터널",HighSpeedCavitationTunnel:"고속캐비테이션터널",BridgeSimulator:"선박운항시뮬레이터",
+  ExperimentalDataset:"실험데이터셋",TestCondition:"시험조건",ModelShip:"모형선",Measurement:"측정",Resistance:"저항",Propulsion:"추진",Maneuvering:"조종",Seakeeping:"내항",IcePerformance:"빙해성능",StructuralResponse:"구조응답",
+  User:"사용자",Role:"역할",DataClass:"데이터등급",Permission:"권한",
+};
+
+const PARENTS=new Set(["Vessel","Port","SeaArea","Voyage","Incident","Regulation","Observation","Organization","Workflow","AISData","Experiment","TestFacility","User","Sensor","Document","Service","DataSource","Cargo","WeatherCondition","DataPipeline","AIAgent"]);
+
+const EDGES=[
+  {f:"Vessel",t:"SeaArea",l:"LOCATED_AT"},{f:"Vessel",t:"Berth",l:"DOCKED_AT"},{f:"Vessel",t:"Anchorage",l:"ANCHORED_AT"},
+  {f:"Port",t:"PortFacility",l:"HAS_FACILITY"},{f:"Port",t:"Waterway",l:"CONNECTED_VIA"},{f:"Waterway",t:"SeaArea",l:"CONNECTS"},
+  {f:"Vessel",t:"Voyage",l:"ON_VOYAGE"},{f:"Voyage",t:"Port",l:"FROM_PORT"},{f:"Voyage",t:"Port",l:"TO_PORT"},
+  {f:"Voyage",t:"TrackSegment",l:"CONSISTS_OF"},{f:"Vessel",t:"Cargo",l:"CARRIES"},{f:"Vessel",t:"Activity",l:"PERFORMS"},
+  {f:"Sensor",t:"Observation",l:"PRODUCES"},{f:"Observation",t:"Vessel",l:"DEPICTS"},{f:"Observation",t:"GeoPoint",l:"OBSERVED_AT"},
+  {f:"Observation",t:"VisualEmbedding",l:"HAS_EMBEDDING"},{f:"Observation",t:"DataSource",l:"STORED_AT"},
+  {f:"Observation",t:"Vessel",l:"DETECTED"},{f:"Observation",t:"Vessel",l:"IDENTIFIED"},{f:"Observation",t:"TrackSegment",l:"TRACKED"},
+  {f:"Observation",t:"Observation",l:"MATCHED_WITH"},{f:"Observation",t:"Observation",l:"SAME_ENTITY"},
+  {f:"WeatherCondition",t:"SeaArea",l:"AFFECTS"},{f:"Incident",t:"WeatherCondition",l:"CAUSED_BY"},
+  {f:"Incident",t:"GeoPoint",l:"OCCURRED_AT"},{f:"Incident",t:"Vessel",l:"INVOLVES"},
+  {f:"Regulation",t:"Vessel",l:"APPLIES_TO"},{f:"Regulation",t:"Organization",l:"ENFORCED_BY"},
+  {f:"Incident",t:"Regulation",l:"VIOLATED"},{f:"Document",t:"Incident",l:"DESCRIBES"},{f:"Document",t:"Organization",l:"ISSUED_BY"},
+  {f:"Service",t:"DataSource",l:"USES_DATA"},{f:"Service",t:"DataSource",l:"REQUIRES_INPUT"},
+  {f:"Service",t:"DataSource",l:"PRODUCES_OUTPUT"},{f:"DataSource",t:"Organization",l:"PROVIDED_BY"},
+  {f:"Service",t:"Service",l:"COMPOSED_IN"},{f:"Service",t:"Service",l:"FEEDS"},
+  {f:"Service",t:"Document",l:"GENERATES"},{f:"DataSource",t:"DataSource",l:"DERIVED_FROM"},
+  {f:"Experiment",t:"TestFacility",l:"CONDUCTED_AT"},{f:"Experiment",t:"ModelShip",l:"TESTED"},
+  {f:"Experiment",t:"ExperimentalDataset",l:"PRODUCED"},{f:"Experiment",t:"TestCondition",l:"UNDER_CONDITION"},
+  {f:"ModelShip",t:"Vessel",l:"MODEL_OF"},{f:"ExperimentalDataset",t:"Measurement",l:"HAS_RAW_DATA"},
+  {f:"Experiment",t:"VideoClip",l:"RECORDED_VIDEO"},{f:"Experiment",t:"SensorReading",l:"MEASURED_DATA"},
+  {f:"Experiment",t:"MaritimeChart",l:"BASED_ON_CHART"},{f:"Experiment",t:"Regulation",l:"COMPLIES_WITH"},
+  {f:"Experiment",t:"SatelliteImage",l:"USES_SATELLITE"},{f:"Experiment",t:"AISData",l:"HAS_AIS_DATA"},
+  {f:"Workflow",t:"WorkflowNode",l:"CONTAINS_NODE"},{f:"WorkflowNode",t:"WorkflowNode",l:"CONNECTS_TO"},
+  {f:"WorkflowNode",t:"AIModel",l:"USES_MODEL"},{f:"WorkflowNode",t:"DataSource",l:"READS_FROM"},
+  {f:"WorkflowNode",t:"DataSource",l:"WRITES_TO"},{f:"WorkflowExecution",t:"Workflow",l:"EXECUTION_OF"},
+  {f:"AIAgent",t:"Workflow",l:"EXECUTES"},{f:"AIAgent",t:"DataSource",l:"MANAGES"},
+  {f:"Service",t:"MCPTool",l:"EXPOSES_TOOL"},{f:"Service",t:"MCPResource",l:"EXPOSES_RESOURCE"},
+  {f:"AIAgent",t:"MCPTool",l:"INVOKES"},{f:"AIAgent",t:"MCPResource",l:"ACCESSES"},
+  {f:"DataPipeline",t:"DataSource",l:"PIPELINE_FEEDS"},{f:"DataPipeline",t:"DataSource",l:"PIPELINE_READS"},
+  {f:"AISData",t:"Vessel",l:"AIS_TRACK_OF"},{f:"AISData",t:"SeaArea",l:"OBSERVED_IN_AREA"},
+  {f:"SatelliteImage",t:"SeaArea",l:"CAPTURED_OVER"},{f:"SatelliteImage",t:"Port",l:"SAT_DEPICTS"},
+  {f:"SatelliteImage",t:"Vessel",l:"SAT_DETECTED"},{f:"RadarImage",t:"SeaArea",l:"RADAR_COVERS"},
+  {f:"SensorReading",t:"Sensor",l:"READING_FROM_SENSOR"},{f:"SensorReading",t:"GeoPoint",l:"READING_AT"},
+  {f:"MaritimeChart",t:"SeaArea",l:"CHART_COVERS"},{f:"VideoClip",t:"Sensor",l:"VIDEO_FROM"},
+  {f:"VideoClip",t:"Vessel",l:"VIDEO_DEPICTS"},{f:"FusedEmbedding",t:"AISData",l:"FUSED_FROM"},
+  {f:"FusedEmbedding",t:"SatelliteImage",l:"FUSED_FROM_IMAGE"},
+  {f:"User",t:"Role",l:"HAS_ROLE"},{f:"Role",t:"DataClass",l:"CAN_ACCESS"},
+  {f:"Role",t:"Permission",l:"GRANTS"},{f:"User",t:"Organization",l:"BELONGS_TO"},
+  {f:"ExperimentalDataset",t:"DataClass",l:"CLASSIFIED_AS"},
+];
+
+const PROPS={
+  Vessel:{mmsi:"INTEGER",imo:"INTEGER",name:"STRING",callSign:"STRING",vesselType:"STRING",flag:"STRING",grossTonnage:"FLOAT",deadweight:"FLOAT",length:"FLOAT",beam:"FLOAT",draft:"FLOAT",yearBuilt:"INTEGER",currentStatus:"STRING",currentLocation:"POINT",speed:"FLOAT",course:"FLOAT",heading:"FLOAT",destination:"STRING",eta:"DATETIME",lastUpdated:"DATETIME"},
+  Port:{unlocode:"STRING",name:"STRING",nameEn:"STRING",country:"STRING",location:"POINT",portType:"STRING",maxDraft:"FLOAT",berthCount:"INTEGER",anchorageCount:"INTEGER",timezone:"STRING"},
+  Incident:{incidentId:"STRING",incidentType:"STRING",date:"DATETIME",location:"POINT",severity:"STRING",description:"STRING",casualties:"INTEGER",resolved:"BOOLEAN"},
+  WeatherCondition:{timestamp:"DATETIME",windSpeed:"FLOAT",windDirection:"FLOAT",waveHeight:"FLOAT",wavePeriod:"FLOAT",visibility:"FLOAT",seaState:"INTEGER",temperature:"FLOAT"},
+  Experiment:{experimentId:"STRING",title:"STRING",objective:"STRING",date:"DATE",duration:"FLOAT",status:"STRING",principalInvestigator:"STRING"},
+  TestFacility:{facilityId:"STRING",name:"STRING",facilityType:"STRING",length:"FLOAT",width:"FLOAT",depth:"FLOAT",maxSpeed:"FLOAT"},
+  ModelShip:{modelId:"STRING",scale:"FLOAT",length:"FLOAT",beam:"FLOAT",draft:"FLOAT",displacement:"FLOAT",hullForm:"STRING"},
+  User:{userId:"STRING",name:"STRING",email:"STRING",organization:"STRING",status:"STRING",createdAt:"DATETIME"},
+  Role:{roleId:"STRING",name:"STRING",description:"STRING",level:"INTEGER"},
+  Workflow:{workflowId:"STRING",name:"STRING",description:"STRING",status:"STRING",version:"STRING",schedule:"STRING"},
+  AIModel:{modelId:"STRING",name:"STRING",version:"STRING",modality:"STRING",framework:"STRING",endpoint:"STRING"},
+  Document:{docId:"STRING",title:"STRING",docType:"STRING",language:"STRING",issueDate:"DATE",source:"STRING"},
+  Observation:{observationId:"STRING",timestamp:"DATETIME",location:"POINT",source:"STRING",modalityType:"STRING",confidence:"FLOAT"},
+  Regulation:{code:"STRING",title:"STRING",regulationType:"STRING",effectiveDate:"DATE",version:"STRING",issuingBody:"STRING"},
+  Cargo:{cargoId:"STRING",cargoType:"STRING",weight:"FLOAT",volume:"FLOAT",hazardClass:"STRING"},
+  AISData:{batchId:"STRING",mmsi:"INTEGER",startTime:"DATETIME",endTime:"DATETIME",pointCount:"INTEGER",storagePath:"STRING"},
+  SatelliteImage:{imageId:"STRING",captureTime:"DATETIME",satellite:"STRING",resolution:"FLOAT",cloudCover:"FLOAT",storagePath:"STRING"},
+  VideoClip:{clipId:"STRING",source:"STRING",startTime:"DATETIME",endTime:"DATETIME",duration:"FLOAT",storagePath:"STRING"},
+};
+
+// ── Node→Group mapping ──
+const N2G={};
+GROUPS.forEach(g=>g.entities.forEach(e=>{N2G[e]=g.id}));
+
+// ── State ──
+const visible={};
+GROUPS.forEach(g=>{visible[g.id]=true});
+let network,nodesDS,edgesDS,allN,allE;
+
+// ── Sidebar ──
+function buildSidebar(){
+  const el=document.getElementById('side');
+  let h='<div class="grp on" onclick="toggleAll()" id="allBtn"><div class="chk">✓</div><div class="name" style="font-weight:600">전체 선택</div></div><div class="sep"></div>';
+  GROUPS.forEach(g=>{
+    h+=`<div class="grp on" id="grp_${g.id}" onclick="toggle('${g.id}')">
+      <div class="chk">✓</div>
+      <div class="dot" style="background:${g.color}"></div>
+      <div class="name">${g.label}</div>
+    </div>`;
+  });
+  h+='<div class="sep"></div><div id="stats"></div>';
+  el.innerHTML=h;
+}
+
+function toggle(id){
+  visible[id]=!visible[id];
+  const el=document.getElementById('grp_'+id);
+  el.classList.toggle('on',visible[id]);
+  el.classList.toggle('off',!visible[id]);
+  applyFilter();
+}
+
+function toggleAll(){
+  const allOn=Object.values(visible).every(v=>v);
+  GROUPS.forEach(g=>{
+    visible[g.id]=!allOn;
+    const el=document.getElementById('grp_'+g.id);
+    el.classList.toggle('on',!allOn);
+    el.classList.toggle('off',allOn);
+  });
+  document.getElementById('allBtn').classList.toggle('on',!allOn);
+  applyFilter();
+}
+
+function applyFilter(){
+  if(!nodesDS)return;
+  const updates=allN.map(n=>({id:n.id,hidden:!visible[n.group]}));
+  nodesDS.update(updates);
+  // hide edges where either end is hidden
+  const hiddenSet=new Set(allN.filter(n=>!visible[n.group]).map(n=>n.id));
+  const eUp=allE.map(e=>({id:e.id,hidden:hiddenSet.has(e.from)||hiddenSet.has(e.to)}));
+  edgesDS.update(eUp);
+  updateStats();
+}
+
+function updateStats(){
+  const vn=allN.filter(n=>visible[n.group]).length;
+  const hiddenSet=new Set(allN.filter(n=>!visible[n.group]).map(n=>n.id));
+  const ve=allE.filter(e=>!hiddenSet.has(e.from)&&!hiddenSet.has(e.to)).length;
+  document.getElementById('stats').innerHTML=`표시: ${vn} 노드 / ${ve} 관계`;
+  document.getElementById('nodeCount').textContent=vn+' 엔티티';
+  document.getElementById('edgeCount').textContent=ve+' 관계';
+}
+
+// ── Search ──
+document.getElementById('searchBox').addEventListener('input',function(e){
+  const q=e.target.value.trim().toLowerCase();
+  if(!q||!network)return;
+  const found=allN.find(n=>n.id.toLowerCase().includes(q)||(KO[n.id]||'').includes(q));
+  if(found){
+    if(!visible[found.group])toggle(found.group);
+    network.focus(found.id,{scale:1.5,animation:{duration:500,easingFunction:'easeInOutCubic'}});
+    network.selectNodes([found.id]);
+    showDetail(found.id);
+  }
+});
+
+// ── Detail panel ──
+function showDetail(nodeId){
+  const g=N2G[nodeId]||'';
+  const color=(GROUPS.find(x=>x.id===g)||{}).color||'#888';
+  const props=PROPS[nodeId];
+  const outE=allE.filter(e=>e.from===nodeId);
+  const inE=allE.filter(e=>e.to===nodeId&&e.from!==nodeId);
+
+  const ko=KO[nodeId]?` (${KO[nodeId]})`:'';
+  let h=`<div class="d-title"><span style="color:${color}">●</span> ${nodeId}${ko} <span style="color:#7d8590;font-size:12px">${g}</span></div><div class="d-grid">`;
+
+  // Props
+  h+='<div class="d-col"><h4>속성</h4>';
+  if(props){
+    Object.entries(props).forEach(([k,v])=>{h+=`<div class="d-row"><span class="d-key">${k}</span><span class="d-val">${v}</span></div>`});
+  }else{h+='<div style="color:#7d8590">속성 정의 없음</div>'}
+  h+='</div>';
+
+  // Out
+  h+=`<div class="d-col"><h4>→ 나가는 관계 (${outE.length})</h4>`;
+  outE.forEach(e=>{
+    const tc=(GROUPS.find(x=>x.id===N2G[e.to])||{}).color||'#888';
+    h+=`<div class="d-rel">${e._label} → <span style="color:${tc}">${e.to}</span></div>`;
+  });
+  if(!outE.length)h+='<div style="color:#7d8590">없음</div>';
+  h+='</div>';
+
+  // In
+  h+=`<div class="d-col"><h4>← 들어오는 관계 (${inE.length})</h4>`;
+  inE.forEach(e=>{
+    const fc=(GROUPS.find(x=>x.id===N2G[e.from])||{}).color||'#888';
+    h+=`<div class="d-rel"><span style="color:${fc}">${e.from}</span> → ${e._label}</div>`;
+  });
+  if(!inE.length)h+='<div style="color:#7d8590">없음</div>';
+  h+='</div></div>';
+
+  const el=document.getElementById('detail');
+  el.className='';
+  el.innerHTML=h;
+}
+
+// ── Build & Init ──
+function init(){
+  if(typeof vis==='undefined')return;
+
+  // Build nodes
+  allN=[];
+  GROUPS.forEach(g=>{
+    g.entities.forEach(name=>{
+      const isPar=PARENTS.has(name);
+      const ko=KO[name];
+      const lbl=ko?name+'\n('+ko+')':name;
+      allN.push({
+        id:name, label:lbl, group:g.id,
+        color:{background:g.color+'22',border:g.color,
+          highlight:{background:g.color+'55',border:g.color},
+          hover:{background:g.color+'44',border:g.color}},
+        font:{color:'#c9d1d9',size:isPar?13:10},
+        size:isPar?24:12, borderWidth:isPar?2.5:1.5,
+        shape:'dot', shadow:{enabled:true,color:g.color+'55',size:isPar?14:6,x:0,y:0},
+        hidden:false
+      });
+    });
+  });
+
+  // Build edges
+  allE=[];
+  EDGES.forEach((e,i)=>{
+    const fc=(GROUPS.find(x=>x.id===N2G[e.f])||{}).color||'#555';
+    allE.push({
+      id:i, from:e.f, to:e.t, _label:e.l,
+      label:e.l, color:{color:fc+'66',highlight:fc,hover:fc+'aa'},
+      font:{color:'#7d8590',size:8,strokeWidth:0,background:'#0d1117cc'},
+      arrows:{to:{enabled:true,scaleFactor:0.5}},
+      width:1, selectionWidth:2,
+      smooth:e.f===e.t?{enabled:true,type:'curvedCW',roundness:0.4}:{enabled:true,type:'dynamic'},
+      hidden:false
+    });
+  });
+
+  nodesDS=new vis.DataSet(allN);
+  edgesDS=new vis.DataSet(allE);
+
+  const container=document.getElementById('graph');
+  network=new vis.Network(container,{nodes:nodesDS,edges:edgesDS},{
+    physics:{
+      enabled:true, solver:'forceAtlas2Based',
+      forceAtlas2Based:{gravitationalConstant:-60,centralGravity:0.008,springLength:120,springConstant:0.06,damping:0.5,avoidOverlap:0.6},
+      stabilization:{enabled:true,iterations:250,fit:true},
+      maxVelocity:50, minVelocity:0.5
+    },
+    interaction:{hover:true,tooltipDelay:200,hideEdgesOnDrag:true,zoomView:true},
+    layout:{improvedLayout:false}
+  });
+
+  network.once('stabilizationIterationsDone',()=>{
+    network.setOptions({physics:{stabilization:false,maxVelocity:25,forceAtlas2Based:{damping:0.8}}});
+    const ld=document.getElementById('loader');
+    ld.classList.add('hide');
+  });
+
+  network.on('click',function(p){
+    if(p.nodes.length>0)showDetail(p.nodes[0]);
+  });
+
+  network.on('doubleClick',function(){
+    network.fit({animation:{duration:400,easingFunction:'easeInOutCubic'}});
+  });
+
+  updateStats();
+}
+
+buildSidebar();
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+{
+  "name": "ETL: 해양기상 데이터 수집",
+  "description": "기상청 해양기상 API에서 실시간 데이터를 수집하여 Knowledge Graph에 적재합니다. 매 3시간마다 증분 수집합니다.",
+  "schedule": "0 */3 * * *",
+  "trigger": {
+    "type": "SCHEDULE",
+    "settings": {
+      "cronExpression": "0 */3 * * *",
+      "timezone": "Asia/Seoul"
+    }
+  },
+  "steps": [
+    {
+      "name": "trigger_etl",
+      "type": "HTTP_REQUEST",
+      "settings": {
+        "method": "POST",
+        "url": "${API_BASE_URL}/api/v1/etl/trigger",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-API-Key": "${API_KEY}"
+        },
+        "body": {
+          "pipeline_name": "weather",
+          "mode": "incremental",
+          "options": {
+            "stations": ["busan", "incheon", "jeju"],
+            "lookback_hours": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "check_result",
+      "type": "CONDITION",
+      "settings": {
+        "condition": "{{steps.trigger_etl.status}} == 200"
+      }
+    },
+    {
+      "name": "notify_success",
+      "type": "HTTP_REQUEST",
+      "settings": {
+        "method": "POST",
+        "url": "${SLACK_WEBHOOK_URL}",
+        "body": {
+          "text": "✅ ETL 완료: 해양기상 데이터 수집\n- 처리: {{steps.trigger_etl.body.processed}} 건\n- 실패: {{steps.trigger_etl.body.failed}} 건\n- 소요시간: {{steps.trigger_etl.body.elapsed_seconds}}초"
+        }
+      },
+      "condition": "{{steps.check_result.result}} == true"
+    },
+    {
+      "name": "notify_failure",
+      "type": "HTTP_REQUEST",
+      "settings": {
+        "method": "POST",
+        "url": "${SLACK_WEBHOOK_URL}",
+        "body": {
+          "text": "❌ ETL 실패: 해양기상 데이터 수집\n- 오류: {{steps.trigger_etl.body.error}}"
+        }
+      },
+      "condition": "{{steps.check_result.result}} == false"
+    }
+  ]
+}

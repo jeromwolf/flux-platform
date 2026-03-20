@@ -1,0 +1,1 @@
+"""Maritime RBAC seed data."""

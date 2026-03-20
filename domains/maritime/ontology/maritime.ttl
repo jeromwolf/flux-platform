@@ -1,0 +1,1845 @@
+# ===========================================================================
+# 해사 도메인 온톨로지 (Maritime Domain Ontology)
+# KRISO 대화형 해사서비스 플랫폼 - Neosemantics (n10s) 통합용
+# ===========================================================================
+# 파일: kg/ontology/maritime.ttl
+# 형식: OWL 2 / Turtle
+# 인코딩: UTF-8
+# 버전: 1.0.0
+# 생성일: 2026-02-21
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# 1. 접두사 선언 (Prefix Declarations)
+# ---------------------------------------------------------------------------
+
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix dc:       <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix geo:      <http://www.opengis.net/ont/geosparql#> .
+@prefix maritime: <https://kg.kriso.re.kr/maritime#> .
+@prefix s100:     <https://registry.iho.int/s100#> .
+
+
+# ---------------------------------------------------------------------------
+# 2. 온톨로지 헤더 (Ontology Header)
+# ---------------------------------------------------------------------------
+
+maritime: a owl:Ontology ;
+    dc:title "해사 도메인 온톨로지 (Maritime Domain Ontology)" ;
+    dc:description "KRISO 대화형 해사서비스 플랫폼을 위한 해사 도메인 지식그래프 온톨로지. IHO S-100 표준과 호환." ;
+    dc:creator "인사이트마이닝 (InsightMining)" ;
+    dcterms:created "2026-02-21"^^xsd:date ;
+    owl:versionInfo "1.0.0" .
+
+
+# ===========================================================================
+# 3. 상위 클래스 계층 (Superclass Hierarchy) - 11개 그룹
+# ===========================================================================
+
+maritime:PhysicalEntity a owl:Class ;
+    rdfs:label "PhysicalEntity" ;
+    rdfs:comment "물리적 개체 (선박, 항구, 화물, 센서)" .
+
+maritime:SpatialEntity a owl:Class ;
+    rdfs:label "SpatialEntity" ;
+    rdfs:comment "공간 개체 (해역, EEZ, 지점)" .
+
+maritime:TemporalEntity a owl:Class ;
+    rdfs:label "TemporalEntity" ;
+    rdfs:comment "시간적 이벤트 (항해, 사고, 활동)" .
+
+maritime:InformationEntity a owl:Class ;
+    rdfs:label "InformationEntity" ;
+    rdfs:comment "정보 개체 (규정, 문서, 서비스)" .
+
+maritime:ObservationEntity a owl:Class ;
+    rdfs:label "ObservationEntity" ;
+    rdfs:comment "관측 데이터" .
+
+maritime:AgentEntity a owl:Class ;
+    rdfs:label "AgentEntity" ;
+    rdfs:comment "행위 주체 (조직, 사람)" .
+
+maritime:PlatformResource a owl:Class ;
+    rdfs:label "PlatformResource" ;
+    rdfs:comment "플랫폼 자원 (워크플로우, AI 모델)" .
+
+maritime:MultimodalData a owl:Class ;
+    rdfs:label "MultimodalData" ;
+    rdfs:comment "멀티모달 데이터 (AIS, 위성, 레이더)" .
+
+maritime:MultimodalRepresentation a owl:Class ;
+    rdfs:label "MultimodalRepresentation" ;
+    rdfs:comment "임베딩 벡터" .
+
+maritime:KRISOEntity a owl:Class ;
+    rdfs:label "KRISOEntity" ;
+    rdfs:comment "KRISO 시험 관련 개체" .
+
+maritime:RBACEntity a owl:Class ;
+    rdfs:label "RBACEntity" ;
+    rdfs:comment "접근 제어 개체" .
+
+
+# ===========================================================================
+# 4. 엔티티 클래스 (Entity Classes) - 127개
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# 4.1 PhysicalEntity 그룹 (27개)
+# ---------------------------------------------------------------------------
+
+maritime:Vessel a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Vessel" ;
+    rdfs:comment "Any watercraft or ship operating at sea" .
+
+maritime:CargoShip a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Vessel ;
+    rdfs:label "CargoShip" ;
+    rdfs:comment "Vessel designed for transporting goods" .
+
+maritime:Tanker a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Vessel ;
+    rdfs:label "Tanker" ;
+    rdfs:comment "Vessel designed for transporting liquid cargo (oil, chemicals, LNG)" .
+
+maritime:FishingVessel a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Vessel ;
+    rdfs:label "FishingVessel" ;
+    rdfs:comment "Vessel used for commercial or artisanal fishing" .
+
+maritime:PassengerShip a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Vessel ;
+    rdfs:label "PassengerShip" ;
+    rdfs:comment "Vessel carrying passengers (ferry, cruise ship)" .
+
+maritime:NavalVessel a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Vessel ;
+    rdfs:label "NavalVessel" ;
+    rdfs:comment "Military or coast-guard vessel" .
+
+maritime:AutonomousVessel a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Vessel ;
+    rdfs:label "AutonomousVessel" ;
+    rdfs:comment "Unmanned or remotely operated vessel (MASS)" .
+
+maritime:Port a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Port" ;
+    rdfs:comment "Harbour facility where vessels dock for loading/unloading" .
+
+maritime:TradePort a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Port ;
+    rdfs:label "TradePort" ;
+    rdfs:comment "Port primarily handling commercial cargo" .
+
+maritime:CoastalPort a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Port ;
+    rdfs:label "CoastalPort" ;
+    rdfs:comment "Smaller port serving coastal traffic" .
+
+maritime:FishingPort a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Port ;
+    rdfs:label "FishingPort" ;
+    rdfs:comment "Port primarily serving fishing vessels" .
+
+maritime:PortFacility a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "PortFacility" ;
+    rdfs:comment "Infrastructure within a port (crane, storage, etc.)" .
+
+maritime:Berth a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Berth" ;
+    rdfs:comment "Designated mooring position within a port" .
+
+maritime:Anchorage a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Anchorage" ;
+    rdfs:comment "Designated area where vessels anchor outside a port" .
+
+maritime:Terminal a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Terminal" ;
+    rdfs:comment "Specialised cargo-handling area within a port" .
+
+maritime:Waterway a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Waterway" ;
+    rdfs:comment "Navigable body of water (strait, canal, river)" .
+
+maritime:TSS a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "TSS" ;
+    rdfs:comment "Traffic Separation Scheme defined by IMO" .
+
+maritime:Channel a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Channel" ;
+    rdfs:comment "Marked navigational channel within a waterway" .
+
+maritime:Cargo a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Cargo" ;
+    rdfs:comment "Goods transported by a vessel" .
+
+maritime:DangerousGoods a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Cargo ;
+    rdfs:label "DangerousGoods" ;
+    rdfs:comment "Cargo classified as hazardous (IMDG Code)" .
+
+maritime:BulkCargo a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Cargo ;
+    rdfs:label "BulkCargo" ;
+    rdfs:comment "Unpackaged bulk commodities (grain, coal, ore)" .
+
+maritime:ContainerCargo a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Cargo ;
+    rdfs:label "ContainerCargo" ;
+    rdfs:comment "Cargo transported in ISO containers" .
+
+maritime:Sensor a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity ;
+    rdfs:label "Sensor" ;
+    rdfs:comment "Any device producing observational data" .
+
+maritime:AISTransceiver a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Sensor ;
+    rdfs:label "AISTransceiver" ;
+    rdfs:comment "Automatic Identification System transponder" .
+
+maritime:Radar a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Sensor ;
+    rdfs:label "Radar" ;
+    rdfs:comment "Radar sensor for vessel/object detection" .
+
+maritime:CCTVCamera a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Sensor ;
+    rdfs:label "CCTVCamera" ;
+    rdfs:comment "Closed-circuit television camera" .
+
+maritime:WeatherStation a owl:Class ;
+    rdfs:subClassOf maritime:PhysicalEntity , maritime:Sensor ;
+    rdfs:label "WeatherStation" ;
+    rdfs:comment "Meteorological observation station" .
+
+# ---------------------------------------------------------------------------
+# 4.2 SpatialEntity 그룹 (5개)
+# ---------------------------------------------------------------------------
+
+maritime:SeaArea a owl:Class ;
+    rdfs:subClassOf maritime:SpatialEntity ;
+    rdfs:label "SeaArea" ;
+    rdfs:comment "Named or regulated sea region" .
+
+maritime:EEZ a owl:Class ;
+    rdfs:subClassOf maritime:SpatialEntity , maritime:SeaArea ;
+    rdfs:label "EEZ" ;
+    rdfs:comment "Exclusive Economic Zone (200 NM from baseline)" .
+
+maritime:TerritorialSea a owl:Class ;
+    rdfs:subClassOf maritime:SpatialEntity , maritime:SeaArea ;
+    rdfs:label "TerritorialSea" ;
+    rdfs:comment "Territorial sea (12 NM from baseline)" .
+
+maritime:CoastalRegion a owl:Class ;
+    rdfs:subClassOf maritime:SpatialEntity ;
+    rdfs:label "CoastalRegion" ;
+    rdfs:comment "Coastal administrative or geographic region" .
+
+maritime:GeoPoint a owl:Class ;
+    rdfs:subClassOf maritime:SpatialEntity ;
+    rdfs:label "GeoPoint" ;
+    rdfs:comment "A single geographic coordinate (lat/lon)" .
+
+# ---------------------------------------------------------------------------
+# 4.3 TemporalEntity 그룹 (16개)
+# ---------------------------------------------------------------------------
+
+maritime:Voyage a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity ;
+    rdfs:label "Voyage" ;
+    rdfs:comment "A complete journey of a vessel from origin to destination" .
+
+maritime:PortCall a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity ;
+    rdfs:label "PortCall" ;
+    rdfs:comment "A vessel's visit to a specific port" .
+
+maritime:TrackSegment a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity ;
+    rdfs:label "TrackSegment" ;
+    rdfs:comment "Contiguous segment of a vessel's AIS track" .
+
+maritime:Incident a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity ;
+    rdfs:label "Incident" ;
+    rdfs:comment "Any maritime incident or event" .
+
+maritime:Collision a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Incident ;
+    rdfs:label "Collision" ;
+    rdfs:comment "Incident involving collision between vessels or objects" .
+
+maritime:Grounding a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Incident ;
+    rdfs:label "Grounding" ;
+    rdfs:comment "Incident where a vessel runs aground" .
+
+maritime:Pollution a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Incident ;
+    rdfs:label "Pollution" ;
+    rdfs:comment "Incident involving marine pollution (oil spill, etc.)" .
+
+maritime:Distress a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Incident ;
+    rdfs:label "Distress" ;
+    rdfs:comment "Emergency situation requiring SAR response" .
+
+maritime:IllegalFishing a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Incident ;
+    rdfs:label "IllegalFishing" ;
+    rdfs:comment "Detected illegal, unreported, or unregulated (IUU) fishing" .
+
+maritime:WeatherCondition a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity ;
+    rdfs:label "WeatherCondition" ;
+    rdfs:comment "Observed or forecasted weather state for an area" .
+
+maritime:Activity a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity ;
+    rdfs:label "Activity" ;
+    rdfs:comment "A discrete operational activity performed by a vessel" .
+
+maritime:Loading a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Activity ;
+    rdfs:label "Loading" ;
+    rdfs:comment "Cargo loading activity at port" .
+
+maritime:Unloading a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Activity ;
+    rdfs:label "Unloading" ;
+    rdfs:comment "Cargo unloading activity at port" .
+
+maritime:Bunkering a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Activity ;
+    rdfs:label "Bunkering" ;
+    rdfs:comment "Fuel bunkering activity" .
+
+maritime:Anchoring a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Activity ;
+    rdfs:label "Anchoring" ;
+    rdfs:comment "Activity of anchoring at an anchorage" .
+
+maritime:Loitering a owl:Class ;
+    rdfs:subClassOf maritime:TemporalEntity , maritime:Activity ;
+    rdfs:label "Loitering" ;
+    rdfs:comment "Abnormal loitering behaviour detected from AIS" .
+
+# ---------------------------------------------------------------------------
+# 4.4 InformationEntity 그룹 (19개)
+# ---------------------------------------------------------------------------
+
+maritime:Regulation a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity ;
+    rdfs:label "Regulation" ;
+    rdfs:comment "Maritime regulation, convention, or rule" .
+
+maritime:COLREG a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Regulation ;
+    rdfs:label "COLREG" ;
+    rdfs:comment "Convention on the International Regulations for Preventing Collisions at Sea" .
+
+maritime:SOLAS a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Regulation ;
+    rdfs:label "SOLAS" ;
+    rdfs:comment "International Convention for the Safety of Life at Sea" .
+
+maritime:MARPOL a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Regulation ;
+    rdfs:label "MARPOL" ;
+    rdfs:comment "International Convention for the Prevention of Pollution from Ships" .
+
+maritime:IMDGCode a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Regulation ;
+    rdfs:label "IMDGCode" ;
+    rdfs:comment "International Maritime Dangerous Goods Code" .
+
+maritime:Document a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity ;
+    rdfs:label "Document" ;
+    rdfs:comment "Any document (report, paper, notice, manifest)" .
+
+maritime:AccidentReport a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Document ;
+    rdfs:label "AccidentReport" ;
+    rdfs:comment "Official maritime accident/incident report" .
+
+maritime:InspectionReport a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Document ;
+    rdfs:label "InspectionReport" ;
+    rdfs:comment "Port state control or flag state inspection report" .
+
+maritime:NavigationalWarning a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Document ;
+    rdfs:label "NavigationalWarning" ;
+    rdfs:comment "Safety navigation warning (NAVTEX, EGC)" .
+
+maritime:CargoManifest a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Document ;
+    rdfs:label "CargoManifest" ;
+    rdfs:comment "Cargo manifest or bill of lading" .
+
+maritime:DataSource a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity ;
+    rdfs:label "DataSource" ;
+    rdfs:comment "External data provider or feed" .
+
+maritime:APIEndpoint a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:DataSource ;
+    rdfs:label "APIEndpoint" ;
+    rdfs:comment "REST/gRPC API endpoint for data ingestion" .
+
+maritime:StreamSource a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:DataSource ;
+    rdfs:label "StreamSource" ;
+    rdfs:comment "Real-time streaming data source (Kafka, MQTT, etc.)" .
+
+maritime:FileSource a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:DataSource ;
+    rdfs:label "FileSource" ;
+    rdfs:comment "Batch file-based data source" .
+
+maritime:Service a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity ;
+    rdfs:label "Service" ;
+    rdfs:comment "Platform micro-service or analytical service" .
+
+maritime:QueryService a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Service ;
+    rdfs:label "QueryService" ;
+    rdfs:comment "Service handling natural-language to Cypher queries" .
+
+maritime:AnalysisService a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Service ;
+    rdfs:label "AnalysisService" ;
+    rdfs:comment "Service performing analytical computations" .
+
+maritime:AlertService a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Service ;
+    rdfs:label "AlertService" ;
+    rdfs:comment "Service generating alerts and notifications" .
+
+maritime:PredictionService a owl:Class ;
+    rdfs:subClassOf maritime:InformationEntity , maritime:Service ;
+    rdfs:label "PredictionService" ;
+    rdfs:comment "Service producing predictive outputs (ETA, risk)" .
+
+# ---------------------------------------------------------------------------
+# 4.5 ObservationEntity 그룹 (7개)
+# ---------------------------------------------------------------------------
+
+maritime:Observation a owl:Class ;
+    rdfs:subClassOf maritime:ObservationEntity ;
+    rdfs:label "Observation" ;
+    rdfs:comment "Base type for all observation data" .
+
+maritime:SARObservation a owl:Class ;
+    rdfs:subClassOf maritime:ObservationEntity , maritime:Observation ;
+    rdfs:label "SARObservation" ;
+    rdfs:comment "Synthetic Aperture Radar satellite observation" .
+
+maritime:OpticalObservation a owl:Class ;
+    rdfs:subClassOf maritime:ObservationEntity , maritime:Observation ;
+    rdfs:label "OpticalObservation" ;
+    rdfs:comment "Optical satellite observation" .
+
+maritime:CCTVObservation a owl:Class ;
+    rdfs:subClassOf maritime:ObservationEntity , maritime:Observation ;
+    rdfs:label "CCTVObservation" ;
+    rdfs:comment "Observation derived from CCTV footage" .
+
+maritime:AISObservation a owl:Class ;
+    rdfs:subClassOf maritime:ObservationEntity , maritime:Observation ;
+    rdfs:label "AISObservation" ;
+    rdfs:comment "Single AIS position report" .
+
+maritime:RadarObservation a owl:Class ;
+    rdfs:subClassOf maritime:ObservationEntity , maritime:Observation ;
+    rdfs:label "RadarObservation" ;
+    rdfs:comment "Observation derived from radar returns" .
+
+maritime:WeatherObservation a owl:Class ;
+    rdfs:subClassOf maritime:ObservationEntity , maritime:Observation ;
+    rdfs:label "WeatherObservation" ;
+    rdfs:comment "Single meteorological observation record" .
+
+# ---------------------------------------------------------------------------
+# 4.6 AgentEntity 그룹 (8개)
+# ---------------------------------------------------------------------------
+
+maritime:Organization a owl:Class ;
+    rdfs:subClassOf maritime:AgentEntity ;
+    rdfs:label "Organization" ;
+    rdfs:comment "Legal entity (company, government body, institute)" .
+
+maritime:GovernmentAgency a owl:Class ;
+    rdfs:subClassOf maritime:AgentEntity , maritime:Organization ;
+    rdfs:label "GovernmentAgency" ;
+    rdfs:comment "Government ministry or agency" .
+
+maritime:ShippingCompany a owl:Class ;
+    rdfs:subClassOf maritime:AgentEntity , maritime:Organization ;
+    rdfs:label "ShippingCompany" ;
+    rdfs:comment "Commercial shipping or logistics company" .
+
+maritime:ResearchInstitute a owl:Class ;
+    rdfs:subClassOf maritime:AgentEntity , maritime:Organization ;
+    rdfs:label "ResearchInstitute" ;
+    rdfs:comment "Research institute or university" .
+
+maritime:ClassificationSociety a owl:Class ;
+    rdfs:subClassOf maritime:AgentEntity , maritime:Organization ;
+    rdfs:label "ClassificationSociety" ;
+    rdfs:comment "Ship classification society (KR, DNV, LR, etc.)" .
+
+maritime:Person a owl:Class ;
+    rdfs:subClassOf maritime:AgentEntity ;
+    rdfs:label "Person" ;
+    rdfs:comment "An individual person" .
+
+maritime:CrewMember a owl:Class ;
+    rdfs:subClassOf maritime:AgentEntity , maritime:Person ;
+    rdfs:label "CrewMember" ;
+    rdfs:comment "Person serving as crew aboard a vessel" .
+
+maritime:Inspector a owl:Class ;
+    rdfs:subClassOf maritime:AgentEntity , maritime:Person ;
+    rdfs:label "Inspector" ;
+    rdfs:comment "Person conducting inspections" .
+
+# ---------------------------------------------------------------------------
+# 4.7 PlatformResource 그룹 (8개)
+# ---------------------------------------------------------------------------
+
+maritime:Workflow a owl:Class ;
+    rdfs:subClassOf maritime:PlatformResource ;
+    rdfs:label "Workflow" ;
+    rdfs:comment "Automated data processing or analysis workflow definition" .
+
+maritime:WorkflowNode a owl:Class ;
+    rdfs:subClassOf maritime:PlatformResource ;
+    rdfs:label "WorkflowNode" ;
+    rdfs:comment "Individual processing step within a workflow" .
+
+maritime:WorkflowExecution a owl:Class ;
+    rdfs:subClassOf maritime:PlatformResource ;
+    rdfs:label "WorkflowExecution" ;
+    rdfs:comment "A single execution instance of a workflow" .
+
+maritime:AIModel a owl:Class ;
+    rdfs:subClassOf maritime:PlatformResource ;
+    rdfs:label "AIModel" ;
+    rdfs:comment "Machine learning or AI model used for inference" .
+
+maritime:DataPipeline a owl:Class ;
+    rdfs:subClassOf maritime:PlatformResource ;
+    rdfs:label "DataPipeline" ;
+    rdfs:comment "Scheduled data ingestion or transformation pipeline" .
+
+maritime:AIAgent a owl:Class ;
+    rdfs:subClassOf maritime:PlatformResource ;
+    rdfs:label "AIAgent" ;
+    rdfs:comment "Autonomous AI agent that orchestrates tasks via MCP" .
+
+maritime:MCPTool a owl:Class ;
+    rdfs:subClassOf maritime:PlatformResource ;
+    rdfs:label "MCPTool" ;
+    rdfs:comment "Tool exposed via Model Context Protocol for agent use" .
+
+maritime:MCPResource a owl:Class ;
+    rdfs:subClassOf maritime:PlatformResource ;
+    rdfs:label "MCPResource" ;
+    rdfs:comment "Resource exposed via MCP (schema, data view, etc.)" .
+
+# ---------------------------------------------------------------------------
+# 4.8 MultimodalData 그룹 (6개)
+# ---------------------------------------------------------------------------
+
+maritime:AISData a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalData ;
+    rdfs:label "AISData" ;
+    rdfs:comment "AIS position report time-series data batch" .
+
+maritime:SatelliteImage a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalData ;
+    rdfs:label "SatelliteImage" ;
+    rdfs:comment "Satellite imagery (optical or SAR) raster data" .
+
+maritime:RadarImage a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalData ;
+    rdfs:label "RadarImage" ;
+    rdfs:comment "Shore-based or vessel radar image capture" .
+
+maritime:SensorReading a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalData ;
+    rdfs:label "SensorReading" ;
+    rdfs:comment "Time-series sensor measurement (IoT, weather station)" .
+
+maritime:MaritimeChart a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalData ;
+    rdfs:label "MaritimeChart" ;
+    rdfs:comment "Electronic Navigational Chart (ENC) or sea chart data" .
+
+maritime:VideoClip a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalData ;
+    rdfs:label "VideoClip" ;
+    rdfs:comment "Video footage from CCTV or drone surveillance" .
+
+# ---------------------------------------------------------------------------
+# 4.9 MultimodalRepresentation 그룹 (4개)
+# ---------------------------------------------------------------------------
+
+maritime:VisualEmbedding a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalRepresentation ;
+    rdfs:label "VisualEmbedding" ;
+    rdfs:comment "Dense vector from an image encoder" .
+
+maritime:TrajectoryEmbedding a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalRepresentation ;
+    rdfs:label "TrajectoryEmbedding" ;
+    rdfs:comment "Dense vector from a trajectory encoder" .
+
+maritime:TextEmbedding a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalRepresentation ;
+    rdfs:label "TextEmbedding" ;
+    rdfs:comment "Dense vector from a text encoder" .
+
+maritime:FusedEmbedding a owl:Class ;
+    rdfs:subClassOf maritime:MultimodalRepresentation ;
+    rdfs:label "FusedEmbedding" ;
+    rdfs:comment "Fused multi-modal embedding vector" .
+
+# ---------------------------------------------------------------------------
+# 4.10 KRISOEntity 그룹 (23개)
+# ---------------------------------------------------------------------------
+
+maritime:Experiment a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity ;
+    rdfs:label "Experiment" ;
+    rdfs:comment "KRISO experimental test campaign" .
+
+maritime:TestFacility a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity ;
+    rdfs:label "TestFacility" ;
+    rdfs:comment "Physical test facility at KRISO" .
+
+maritime:TowingTank a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:TestFacility ;
+    rdfs:label "TowingTank" ;
+    rdfs:comment "Towing tank facility for resistance/propulsion tests" .
+
+maritime:OceanEngineeringBasin a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:TestFacility ;
+    rdfs:label "OceanEngineeringBasin" ;
+    rdfs:comment "Ocean engineering basin for seakeeping tests" .
+
+maritime:IceTank a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:TestFacility ;
+    rdfs:label "IceTank" ;
+    rdfs:comment "Ice model basin for ice-going vessel tests" .
+
+maritime:DeepOceanBasin a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:TestFacility ;
+    rdfs:label "DeepOceanBasin" ;
+    rdfs:comment "Deep ocean engineering basin" .
+
+maritime:WaveEnergyTestSite a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:TestFacility ;
+    rdfs:label "WaveEnergyTestSite" ;
+    rdfs:comment "Open-sea wave energy converter test site" .
+
+maritime:HyperbaricChamber a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:TestFacility ;
+    rdfs:label "HyperbaricChamber" ;
+    rdfs:comment "Hyperbaric pressure testing chamber" .
+
+maritime:CavitationTunnel a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:TestFacility ;
+    rdfs:label "CavitationTunnel" ;
+    rdfs:comment "Cavitation tunnel for propeller/hull cavitation tests" .
+
+maritime:LargeCavitationTunnel a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:CavitationTunnel ;
+    rdfs:label "LargeCavitationTunnel" ;
+    rdfs:comment "Large cavitation tunnel (대형 캐비테이션터널)" .
+
+maritime:MediumCavitationTunnel a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:CavitationTunnel ;
+    rdfs:label "MediumCavitationTunnel" ;
+    rdfs:comment "Medium cavitation tunnel (중형 캐비테이션터널)" .
+
+maritime:HighSpeedCavitationTunnel a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:CavitationTunnel ;
+    rdfs:label "HighSpeedCavitationTunnel" ;
+    rdfs:comment "High-speed cavitation tunnel (고속 캐비테이션터널)" .
+
+maritime:BridgeSimulator a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:TestFacility ;
+    rdfs:label "BridgeSimulator" ;
+    rdfs:comment "Full Mission Bridge Simulator for navigation training and research (선박운항시뮬레이터)" .
+
+maritime:ExperimentalDataset a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity ;
+    rdfs:label "ExperimentalDataset" ;
+    rdfs:comment "Dataset produced by a KRISO experiment" .
+
+maritime:TestCondition a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity ;
+    rdfs:label "TestCondition" ;
+    rdfs:comment "Environmental/operational conditions during a test" .
+
+maritime:ModelShip a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity ;
+    rdfs:label "ModelShip" ;
+    rdfs:comment "Scale model ship used in a KRISO experiment" .
+
+maritime:Measurement a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity ;
+    rdfs:label "Measurement" ;
+    rdfs:comment "A single measurement record from a test" .
+
+maritime:Resistance a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:Measurement ;
+    rdfs:label "Resistance" ;
+    rdfs:comment "Resistance measurement (drag force)" .
+
+maritime:Propulsion a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:Measurement ;
+    rdfs:label "Propulsion" ;
+    rdfs:comment "Propulsion performance measurement" .
+
+maritime:Maneuvering a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:Measurement ;
+    rdfs:label "Maneuvering" ;
+    rdfs:comment "Maneuvering test measurement" .
+
+maritime:Seakeeping a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:Measurement ;
+    rdfs:label "Seakeeping" ;
+    rdfs:comment "Seakeeping performance measurement" .
+
+maritime:IcePerformance a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:Measurement ;
+    rdfs:label "IcePerformance" ;
+    rdfs:comment "Ice resistance/performance measurement" .
+
+maritime:StructuralResponse a owl:Class ;
+    rdfs:subClassOf maritime:KRISOEntity , maritime:Measurement ;
+    rdfs:label "StructuralResponse" ;
+    rdfs:comment "Structural load/response measurement" .
+
+# ---------------------------------------------------------------------------
+# 4.11 RBACEntity 그룹 (4개)
+# ---------------------------------------------------------------------------
+
+maritime:User a owl:Class ;
+    rdfs:subClassOf maritime:RBACEntity ;
+    rdfs:label "User" ;
+    rdfs:comment "Platform user account" .
+
+maritime:Role a owl:Class ;
+    rdfs:subClassOf maritime:RBACEntity ;
+    rdfs:label "Role" ;
+    rdfs:comment "Access control role (admin, researcher, developer, public)" .
+
+maritime:DataClass a owl:Class ;
+    rdfs:subClassOf maritime:RBACEntity ;
+    rdfs:label "DataClass" ;
+    rdfs:comment "Data classification level for access control" .
+
+maritime:Permission a owl:Class ;
+    rdfs:subClassOf maritime:RBACEntity ;
+    rdfs:label "Permission" ;
+    rdfs:comment "Specific access permission on a resource" .
+
+
+# ===========================================================================
+# 5. 객체 속성 (Object Properties) - 83개 관계
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# 5.1 물리적 관계 (Physical Relations)
+# ---------------------------------------------------------------------------
+
+maritime:LOCATED_AT a owl:ObjectProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range maritime:SeaArea ;
+    rdfs:label "LOCATED_AT" ;
+    rdfs:comment "Current or last-known location of a vessel within a sea area" .
+
+maritime:DOCKED_AT a owl:ObjectProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range maritime:Berth ;
+    rdfs:label "DOCKED_AT" ;
+    rdfs:comment "Vessel is currently docked at a specific berth" .
+
+maritime:ANCHORED_AT a owl:ObjectProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range maritime:Anchorage ;
+    rdfs:label "ANCHORED_AT" ;
+    rdfs:comment "Vessel is anchored at a designated anchorage" .
+
+maritime:HAS_FACILITY a owl:ObjectProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range maritime:PortFacility ;
+    rdfs:label "HAS_FACILITY" ;
+    rdfs:comment "Port contains or operates a facility" .
+
+maritime:CONNECTED_VIA a owl:ObjectProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range maritime:Waterway ;
+    rdfs:label "CONNECTED_VIA" ;
+    rdfs:comment "Port is accessible via a waterway" .
+
+maritime:CONNECTS a owl:ObjectProperty ;
+    rdfs:domain maritime:Waterway ;
+    rdfs:range maritime:SeaArea ;
+    rdfs:label "CONNECTS" ;
+    rdfs:comment "Waterway connects two sea areas" .
+
+# ---------------------------------------------------------------------------
+# 5.2 운항 관계 (Operational Relations)
+# ---------------------------------------------------------------------------
+
+maritime:ON_VOYAGE a owl:ObjectProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range maritime:Voyage ;
+    rdfs:label "ON_VOYAGE" ;
+    rdfs:comment "Vessel is performing a voyage" .
+
+maritime:FROM_PORT a owl:ObjectProperty ;
+    rdfs:domain maritime:Voyage ;
+    rdfs:range maritime:Port ;
+    rdfs:label "FROM_PORT" ;
+    rdfs:comment "Voyage originates from a port" .
+
+maritime:TO_PORT a owl:ObjectProperty ;
+    rdfs:domain maritime:Voyage ;
+    rdfs:range maritime:Port ;
+    rdfs:label "TO_PORT" ;
+    rdfs:comment "Voyage is destined for a port" .
+
+maritime:CONSISTS_OF a owl:ObjectProperty ;
+    rdfs:domain maritime:Voyage ;
+    rdfs:range maritime:TrackSegment ;
+    rdfs:label "CONSISTS_OF" ;
+    rdfs:comment "Voyage is composed of track segments" .
+
+maritime:CARRIES a owl:ObjectProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range maritime:Cargo ;
+    rdfs:label "CARRIES" ;
+    rdfs:comment "Vessel is carrying cargo" .
+
+maritime:PERFORMS a owl:ObjectProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range maritime:Activity ;
+    rdfs:label "PERFORMS" ;
+    rdfs:comment "Vessel performs an operational activity" .
+
+# ---------------------------------------------------------------------------
+# 5.3 관측 관계 (Observational Relations)
+# ---------------------------------------------------------------------------
+
+maritime:PRODUCES a owl:ObjectProperty ;
+    rdfs:domain maritime:Sensor ;
+    rdfs:range maritime:Observation ;
+    rdfs:label "PRODUCES" ;
+    rdfs:comment "Sensor produces an observation record" .
+
+maritime:DEPICTS a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "DEPICTS" ;
+    rdfs:comment "Observation depicts or captures a vessel" .
+
+maritime:OBSERVED_AT a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:GeoPoint ;
+    rdfs:label "OBSERVED_AT" ;
+    rdfs:comment "Observation was recorded at a geographic point" .
+
+maritime:HAS_EMBEDDING a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:VisualEmbedding ;
+    rdfs:label "HAS_EMBEDDING" ;
+    rdfs:comment "Observation has an associated embedding vector" .
+
+maritime:STORED_AT a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "STORED_AT" ;
+    rdfs:comment "Raw observation data is stored at a data source" .
+
+maritime:DETECTED a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "DETECTED" ;
+    rdfs:comment "Observation detected a vessel (automated detection)" .
+
+maritime:IDENTIFIED a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "IDENTIFIED" ;
+    rdfs:comment "Observation identified a specific vessel" .
+
+maritime:TRACKED a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:TrackSegment ;
+    rdfs:label "TRACKED" ;
+    rdfs:comment "Observation contributed to a track segment" .
+
+# ---------------------------------------------------------------------------
+# 5.4 교차 모달 관계 (Cross-modal Relations)
+# ---------------------------------------------------------------------------
+
+maritime:MATCHED_WITH a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:Observation ;
+    rdfs:label "MATCHED_WITH" ;
+    rdfs:comment "Two observations matched across modalities" .
+
+maritime:SAME_ENTITY a owl:ObjectProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range maritime:Observation ;
+    rdfs:label "SAME_ENTITY" ;
+    rdfs:comment "Two observations confirmed to depict the same entity" .
+
+# ---------------------------------------------------------------------------
+# 5.5 환경 관계 (Environmental Relations)
+# ---------------------------------------------------------------------------
+
+maritime:AFFECTS a owl:ObjectProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range maritime:SeaArea ;
+    rdfs:label "AFFECTS" ;
+    rdfs:comment "Weather condition affects a sea area" .
+
+maritime:CAUSED_BY a owl:ObjectProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range maritime:WeatherCondition ;
+    rdfs:label "CAUSED_BY" ;
+    rdfs:comment "Incident was caused or influenced by weather" .
+
+maritime:OCCURRED_AT a owl:ObjectProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range maritime:GeoPoint ;
+    rdfs:label "OCCURRED_AT" ;
+    rdfs:comment "Incident occurred at a geographic point" .
+
+maritime:INVOLVES a owl:ObjectProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "INVOLVES" ;
+    rdfs:comment "Incident involves one or more vessels" .
+
+# ---------------------------------------------------------------------------
+# 5.6 규제 관계 (Regulatory Relations)
+# ---------------------------------------------------------------------------
+
+maritime:APPLIES_TO a owl:ObjectProperty ;
+    rdfs:domain maritime:Regulation ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "APPLIES_TO" ;
+    rdfs:comment "Regulation applies to a class of vessels" .
+
+maritime:ENFORCED_BY a owl:ObjectProperty ;
+    rdfs:domain maritime:Regulation ;
+    rdfs:range maritime:Organization ;
+    rdfs:label "ENFORCED_BY" ;
+    rdfs:comment "Regulation is enforced by an organisation" .
+
+maritime:VIOLATED a owl:ObjectProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range maritime:Regulation ;
+    rdfs:label "VIOLATED" ;
+    rdfs:comment "Incident involved violation of a regulation" .
+
+maritime:DESCRIBES a owl:ObjectProperty ;
+    rdfs:domain maritime:Document ;
+    rdfs:range maritime:Incident ;
+    rdfs:label "DESCRIBES" ;
+    rdfs:comment "Document describes or reports on an incident" .
+
+maritime:ISSUED_BY a owl:ObjectProperty ;
+    rdfs:domain maritime:Document ;
+    rdfs:range maritime:Organization ;
+    rdfs:label "ISSUED_BY" ;
+    rdfs:comment "Document was issued by an organisation" .
+
+# ---------------------------------------------------------------------------
+# 5.7 서비스/리니지 관계 (Service / Lineage Relations)
+# ---------------------------------------------------------------------------
+
+maritime:USES_DATA a owl:ObjectProperty ;
+    rdfs:domain maritime:Service ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "USES_DATA" ;
+    rdfs:comment "Service consumes data from a data source" .
+
+maritime:REQUIRES_INPUT a owl:ObjectProperty ;
+    rdfs:domain maritime:Service ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "REQUIRES_INPUT" ;
+    rdfs:comment "Service requires a specific input data source" .
+
+maritime:PRODUCES_OUTPUT a owl:ObjectProperty ;
+    rdfs:domain maritime:Service ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "PRODUCES_OUTPUT" ;
+    rdfs:comment "Service produces output stored in a data source" .
+
+maritime:PROVIDED_BY a owl:ObjectProperty ;
+    rdfs:domain maritime:DataSource ;
+    rdfs:range maritime:Organization ;
+    rdfs:label "PROVIDED_BY" ;
+    rdfs:comment "Data source is provided by an organisation" .
+
+maritime:COMPOSED_IN a owl:ObjectProperty ;
+    rdfs:domain maritime:Service ;
+    rdfs:range maritime:Service ;
+    rdfs:label "COMPOSED_IN" ;
+    rdfs:comment "Service is composed within another service" .
+
+maritime:FEEDS a owl:ObjectProperty ;
+    rdfs:domain maritime:Service ;
+    rdfs:range maritime:Service ;
+    rdfs:label "FEEDS" ;
+    rdfs:comment "Output of one service feeds into another" .
+
+maritime:GENERATES a owl:ObjectProperty ;
+    rdfs:domain maritime:Service ;
+    rdfs:range maritime:Document ;
+    rdfs:label "GENERATES" ;
+    rdfs:comment "Service generates a document or report" .
+
+maritime:DERIVED_FROM a owl:ObjectProperty ;
+    rdfs:domain maritime:DataSource ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "DERIVED_FROM" ;
+    rdfs:comment "Data source is derived from another source" .
+
+# ---------------------------------------------------------------------------
+# 5.8 KRISO 관계 (KRISO Relations)
+# ---------------------------------------------------------------------------
+
+maritime:CONDUCTED_AT a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:TestFacility ;
+    rdfs:label "CONDUCTED_AT" ;
+    rdfs:comment "Experiment was conducted at a test facility" .
+
+maritime:TESTED a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:ModelShip ;
+    rdfs:label "TESTED" ;
+    rdfs:comment "Experiment tested a model ship" .
+
+maritime:PRODUCED a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:ExperimentalDataset ;
+    rdfs:label "PRODUCED" ;
+    rdfs:comment "Experiment produced a dataset" .
+
+maritime:UNDER_CONDITION a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:TestCondition ;
+    rdfs:label "UNDER_CONDITION" ;
+    rdfs:comment "Experiment was run under specific conditions" .
+
+maritime:MODEL_OF a owl:ObjectProperty ;
+    rdfs:domain maritime:ModelShip ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "MODEL_OF" ;
+    rdfs:comment "Scale model represents a real vessel design" .
+
+maritime:HAS_RAW_DATA a owl:ObjectProperty ;
+    rdfs:domain maritime:ExperimentalDataset ;
+    rdfs:range maritime:Measurement ;
+    rdfs:label "HAS_RAW_DATA" ;
+    rdfs:comment "Dataset contains raw measurement records" .
+
+maritime:RECORDED_VIDEO a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:VideoClip ;
+    rdfs:label "RECORDED_VIDEO" ;
+    rdfs:comment "Experiment was recorded on video" .
+
+maritime:MEASURED_DATA a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:SensorReading ;
+    rdfs:label "MEASURED_DATA" ;
+    rdfs:comment "Experiment produced sensor measurement data" .
+
+maritime:BASED_ON_CHART a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:MaritimeChart ;
+    rdfs:label "BASED_ON_CHART" ;
+    rdfs:comment "Experiment references a maritime chart for spatial context" .
+
+maritime:COMPLIES_WITH a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:Regulation ;
+    rdfs:label "COMPLIES_WITH" ;
+    rdfs:comment "Experiment complies with a standard or regulation" .
+
+maritime:USES_SATELLITE a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:SatelliteImage ;
+    rdfs:label "USES_SATELLITE" ;
+    rdfs:comment "Experiment uses satellite imagery for comparison/validation" .
+
+maritime:HAS_AIS_DATA a owl:ObjectProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range maritime:AISData ;
+    rdfs:label "HAS_AIS_DATA" ;
+    rdfs:comment "Experiment uses AIS data for validation or correlation" .
+
+# ---------------------------------------------------------------------------
+# 5.9 플랫폼 관계 (Platform Relations)
+# ---------------------------------------------------------------------------
+
+maritime:CONTAINS_NODE a owl:ObjectProperty ;
+    rdfs:domain maritime:Workflow ;
+    rdfs:range maritime:WorkflowNode ;
+    rdfs:label "CONTAINS_NODE" ;
+    rdfs:comment "Workflow contains a processing node" .
+
+maritime:CONNECTS_TO a owl:ObjectProperty ;
+    rdfs:domain maritime:WorkflowNode ;
+    rdfs:range maritime:WorkflowNode ;
+    rdfs:label "CONNECTS_TO" ;
+    rdfs:comment "Data flows from one workflow node to another" .
+
+maritime:USES_MODEL a owl:ObjectProperty ;
+    rdfs:domain maritime:WorkflowNode ;
+    rdfs:range maritime:AIModel ;
+    rdfs:label "USES_MODEL" ;
+    rdfs:comment "Workflow node uses an AI model for processing" .
+
+maritime:READS_FROM a owl:ObjectProperty ;
+    rdfs:domain maritime:WorkflowNode ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "READS_FROM" ;
+    rdfs:comment "Workflow node reads from a data source" .
+
+maritime:WRITES_TO a owl:ObjectProperty ;
+    rdfs:domain maritime:WorkflowNode ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "WRITES_TO" ;
+    rdfs:comment "Workflow node writes output to a data source" .
+
+maritime:EXECUTION_OF a owl:ObjectProperty ;
+    rdfs:domain maritime:WorkflowExecution ;
+    rdfs:range maritime:Workflow ;
+    rdfs:label "EXECUTION_OF" ;
+    rdfs:comment "An execution instance of a workflow" .
+
+maritime:EXECUTES a owl:ObjectProperty ;
+    rdfs:domain maritime:AIAgent ;
+    rdfs:range maritime:Workflow ;
+    rdfs:label "EXECUTES" ;
+    rdfs:comment "AI agent triggers or manages workflow execution" .
+
+maritime:MANAGES a owl:ObjectProperty ;
+    rdfs:domain maritime:AIAgent ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "MANAGES" ;
+    rdfs:comment "AI agent manages a data source" .
+
+maritime:EXPOSES_TOOL a owl:ObjectProperty ;
+    rdfs:domain maritime:Service ;
+    rdfs:range maritime:MCPTool ;
+    rdfs:label "EXPOSES_TOOL" ;
+    rdfs:comment "Service exposes a tool via MCP protocol" .
+
+maritime:EXPOSES_RESOURCE a owl:ObjectProperty ;
+    rdfs:domain maritime:Service ;
+    rdfs:range maritime:MCPResource ;
+    rdfs:label "EXPOSES_RESOURCE" ;
+    rdfs:comment "Service exposes a resource via MCP protocol" .
+
+maritime:INVOKES a owl:ObjectProperty ;
+    rdfs:domain maritime:AIAgent ;
+    rdfs:range maritime:MCPTool ;
+    rdfs:label "INVOKES" ;
+    rdfs:comment "AI agent invokes an MCP tool" .
+
+maritime:ACCESSES a owl:ObjectProperty ;
+    rdfs:domain maritime:AIAgent ;
+    rdfs:range maritime:MCPResource ;
+    rdfs:label "ACCESSES" ;
+    rdfs:comment "AI agent accesses an MCP resource" .
+
+maritime:PIPELINE_FEEDS a owl:ObjectProperty ;
+    rdfs:domain maritime:DataPipeline ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "PIPELINE_FEEDS" ;
+    rdfs:comment "Pipeline feeds data into a data source" .
+
+maritime:PIPELINE_READS a owl:ObjectProperty ;
+    rdfs:domain maritime:DataPipeline ;
+    rdfs:range maritime:DataSource ;
+    rdfs:label "PIPELINE_READS" ;
+    rdfs:comment "Pipeline reads data from a data source" .
+
+# ---------------------------------------------------------------------------
+# 5.10 멀티모달 데이터 관계 (Multimodal Data Relations)
+# ---------------------------------------------------------------------------
+
+maritime:AIS_TRACK_OF a owl:ObjectProperty ;
+    rdfs:domain maritime:AISData ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "AIS_TRACK_OF" ;
+    rdfs:comment "AIS data batch belongs to a vessel" .
+
+maritime:OBSERVED_IN_AREA a owl:ObjectProperty ;
+    rdfs:domain maritime:AISData ;
+    rdfs:range maritime:SeaArea ;
+    rdfs:label "OBSERVED_IN_AREA" ;
+    rdfs:comment "AIS data batch covers observations in a sea area" .
+
+maritime:CAPTURED_OVER a owl:ObjectProperty ;
+    rdfs:domain maritime:SatelliteImage ;
+    rdfs:range maritime:SeaArea ;
+    rdfs:label "CAPTURED_OVER" ;
+    rdfs:comment "Satellite image covers a sea area" .
+
+maritime:SAT_DEPICTS a owl:ObjectProperty ;
+    rdfs:domain maritime:SatelliteImage ;
+    rdfs:range maritime:Port ;
+    rdfs:label "SAT_DEPICTS" ;
+    rdfs:comment "Satellite image depicts a port" .
+
+maritime:SAT_DETECTED a owl:ObjectProperty ;
+    rdfs:domain maritime:SatelliteImage ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "SAT_DETECTED" ;
+    rdfs:comment "Satellite image detected a vessel" .
+
+maritime:RADAR_COVERS a owl:ObjectProperty ;
+    rdfs:domain maritime:RadarImage ;
+    rdfs:range maritime:SeaArea ;
+    rdfs:label "RADAR_COVERS" ;
+    rdfs:comment "Radar image covers a sea area" .
+
+maritime:READING_FROM_SENSOR a owl:ObjectProperty ;
+    rdfs:domain maritime:SensorReading ;
+    rdfs:range maritime:Sensor ;
+    rdfs:label "READING_FROM_SENSOR" ;
+    rdfs:comment "Sensor reading originates from a sensor" .
+
+maritime:READING_AT a owl:ObjectProperty ;
+    rdfs:domain maritime:SensorReading ;
+    rdfs:range maritime:GeoPoint ;
+    rdfs:label "READING_AT" ;
+    rdfs:comment "Sensor reading was taken at a location" .
+
+maritime:CHART_COVERS a owl:ObjectProperty ;
+    rdfs:domain maritime:MaritimeChart ;
+    rdfs:range maritime:SeaArea ;
+    rdfs:label "CHART_COVERS" ;
+    rdfs:comment "Maritime chart covers a sea area" .
+
+maritime:VIDEO_FROM a owl:ObjectProperty ;
+    rdfs:domain maritime:VideoClip ;
+    rdfs:range maritime:Sensor ;
+    rdfs:label "VIDEO_FROM" ;
+    rdfs:comment "Video clip recorded by a sensor (CCTV/drone)" .
+
+maritime:VIDEO_DEPICTS a owl:ObjectProperty ;
+    rdfs:domain maritime:VideoClip ;
+    rdfs:range maritime:Vessel ;
+    rdfs:label "VIDEO_DEPICTS" ;
+    rdfs:comment "Video clip shows a vessel" .
+
+maritime:FUSED_FROM a owl:ObjectProperty ;
+    rdfs:domain maritime:FusedEmbedding ;
+    rdfs:range maritime:AISData ;
+    rdfs:label "FUSED_FROM" ;
+    rdfs:comment "Fused embedding incorporates AIS data" .
+
+maritime:FUSED_FROM_IMAGE a owl:ObjectProperty ;
+    rdfs:domain maritime:FusedEmbedding ;
+    rdfs:range maritime:SatelliteImage ;
+    rdfs:label "FUSED_FROM_IMAGE" ;
+    rdfs:comment "Fused embedding incorporates satellite image" .
+
+# ---------------------------------------------------------------------------
+# 5.11 접근 제어 관계 (RBAC Relations)
+# ---------------------------------------------------------------------------
+
+maritime:HAS_ROLE a owl:ObjectProperty ;
+    rdfs:domain maritime:User ;
+    rdfs:range maritime:Role ;
+    rdfs:label "HAS_ROLE" ;
+    rdfs:comment "User has an assigned role" .
+
+maritime:CAN_ACCESS a owl:ObjectProperty ;
+    rdfs:domain maritime:Role ;
+    rdfs:range maritime:DataClass ;
+    rdfs:label "CAN_ACCESS" ;
+    rdfs:comment "Role grants access to a data classification level" .
+
+maritime:GRANTS a owl:ObjectProperty ;
+    rdfs:domain maritime:Role ;
+    rdfs:range maritime:Permission ;
+    rdfs:label "GRANTS" ;
+    rdfs:comment "Role grants a specific permission" .
+
+maritime:BELONGS_TO a owl:ObjectProperty ;
+    rdfs:domain maritime:User ;
+    rdfs:range maritime:Organization ;
+    rdfs:label "BELONGS_TO" ;
+    rdfs:comment "User belongs to an organization" .
+
+maritime:CLASSIFIED_AS a owl:ObjectProperty ;
+    rdfs:domain maritime:ExperimentalDataset ;
+    rdfs:range maritime:DataClass ;
+    rdfs:label "CLASSIFIED_AS" ;
+    rdfs:comment "Dataset is classified at a security/access level" .
+
+
+# ===========================================================================
+# 6. 데이터타입 속성 (Datatype Properties)
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# 6.1 Vessel 속성
+# ---------------------------------------------------------------------------
+
+maritime:mmsi a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:integer ;
+    rdfs:label "mmsi" ;
+    rdfs:comment "Maritime Mobile Service Identity" .
+
+maritime:imo a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:integer ;
+    rdfs:label "imo" ;
+    rdfs:comment "IMO ship identification number" .
+
+maritime:name a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "name" ;
+    rdfs:comment "Name of the entity" .
+
+maritime:callSign a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:string ;
+    rdfs:label "callSign" ;
+    rdfs:comment "Radio call sign" .
+
+maritime:vesselType a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:string ;
+    rdfs:label "vesselType" ;
+    rdfs:comment "Type classification of the vessel" .
+
+maritime:flag a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:string ;
+    rdfs:label "flag" ;
+    rdfs:comment "Flag state (country of registration)" .
+
+maritime:grossTonnage a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:double ;
+    rdfs:label "grossTonnage" ;
+    rdfs:comment "Gross tonnage of the vessel" .
+
+maritime:deadweight a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:double ;
+    rdfs:label "deadweight" ;
+    rdfs:comment "Deadweight tonnage (DWT)" .
+
+maritime:length a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "length" ;
+    rdfs:comment "Length in meters" .
+
+maritime:beam a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "beam" ;
+    rdfs:comment "Beam (width) in meters" .
+
+maritime:draft a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "draft" ;
+    rdfs:comment "Draft (depth below waterline) in meters" .
+
+maritime:yearBuilt a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:integer ;
+    rdfs:label "yearBuilt" ;
+    rdfs:comment "Year the vessel was built" .
+
+maritime:currentStatus a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:string ;
+    rdfs:label "currentStatus" ;
+    rdfs:comment "Current operational status of the vessel" .
+
+maritime:currentLocation a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range geo:wktLiteral ;
+    rdfs:label "currentLocation" ;
+    rdfs:comment "Current geographic position as WKT POINT" .
+
+maritime:speed a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:double ;
+    rdfs:label "speed" ;
+    rdfs:comment "Speed over ground (knots)" .
+
+maritime:course a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:double ;
+    rdfs:label "course" ;
+    rdfs:comment "Course over ground (degrees)" .
+
+maritime:heading a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:double ;
+    rdfs:label "heading" ;
+    rdfs:comment "True heading (degrees)" .
+
+maritime:destination a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:string ;
+    rdfs:label "destination" ;
+    rdfs:comment "Reported destination port" .
+
+maritime:eta a owl:DatatypeProperty ;
+    rdfs:domain maritime:Vessel ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "eta" ;
+    rdfs:comment "Estimated time of arrival" .
+
+maritime:lastUpdated a owl:DatatypeProperty ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "lastUpdated" ;
+    rdfs:comment "Timestamp of last data update" .
+
+# ---------------------------------------------------------------------------
+# 6.2 Port 속성
+# ---------------------------------------------------------------------------
+
+maritime:unlocode a owl:DatatypeProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range xsd:string ;
+    rdfs:label "unlocode" ;
+    rdfs:comment "UN/LOCODE port identifier" .
+
+maritime:nameEn a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "nameEn" ;
+    rdfs:comment "English name" .
+
+maritime:country a owl:DatatypeProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range xsd:string ;
+    rdfs:label "country" ;
+    rdfs:comment "Country of the port" .
+
+maritime:location a owl:DatatypeProperty ;
+    rdfs:range geo:wktLiteral ;
+    rdfs:label "location" ;
+    rdfs:comment "Geographic location as WKT POINT" .
+
+maritime:portType a owl:DatatypeProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range xsd:string ;
+    rdfs:label "portType" ;
+    rdfs:comment "Type of port (trade, coastal, fishing, etc.)" .
+
+maritime:maxDraft a owl:DatatypeProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range xsd:double ;
+    rdfs:label "maxDraft" ;
+    rdfs:comment "Maximum allowable draft in meters" .
+
+maritime:berthCount a owl:DatatypeProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range xsd:integer ;
+    rdfs:label "berthCount" ;
+    rdfs:comment "Number of berths available" .
+
+maritime:anchorageCount a owl:DatatypeProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range xsd:integer ;
+    rdfs:label "anchorageCount" ;
+    rdfs:comment "Number of anchorage areas" .
+
+maritime:timezone a owl:DatatypeProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range xsd:string ;
+    rdfs:label "timezone" ;
+    rdfs:comment "Time zone of the port" .
+
+maritime:operatingHours a owl:DatatypeProperty ;
+    rdfs:domain maritime:Port ;
+    rdfs:range xsd:string ;
+    rdfs:label "operatingHours" ;
+    rdfs:comment "Operating hours of the port" .
+
+# ---------------------------------------------------------------------------
+# 6.3 Document 속성
+# ---------------------------------------------------------------------------
+
+maritime:docId a owl:DatatypeProperty ;
+    rdfs:domain maritime:Document ;
+    rdfs:range xsd:string ;
+    rdfs:label "docId" ;
+    rdfs:comment "Document identifier" .
+
+maritime:title a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "title" ;
+    rdfs:comment "Title of the entity" .
+
+maritime:content a owl:DatatypeProperty ;
+    rdfs:domain maritime:Document ;
+    rdfs:range xsd:string ;
+    rdfs:label "content" ;
+    rdfs:comment "Full text content" .
+
+maritime:summary a owl:DatatypeProperty ;
+    rdfs:domain maritime:Document ;
+    rdfs:range xsd:string ;
+    rdfs:label "summary" ;
+    rdfs:comment "Summary or abstract" .
+
+maritime:docType a owl:DatatypeProperty ;
+    rdfs:domain maritime:Document ;
+    rdfs:range xsd:string ;
+    rdfs:label "docType" ;
+    rdfs:comment "Document type classification" .
+
+maritime:language a owl:DatatypeProperty ;
+    rdfs:domain maritime:Document ;
+    rdfs:range xsd:string ;
+    rdfs:label "language" ;
+    rdfs:comment "Language of the document (ISO 639-1)" .
+
+maritime:issueDate a owl:DatatypeProperty ;
+    rdfs:range xsd:date ;
+    rdfs:label "issueDate" ;
+    rdfs:comment "Date of issuance" .
+
+maritime:source a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "source" ;
+    rdfs:comment "Source or origin of the data" .
+
+maritime:textEmbedding a owl:DatatypeProperty ;
+    rdfs:domain maritime:Document ;
+    rdfs:range xsd:string ;
+    rdfs:label "textEmbedding" ;
+    rdfs:comment "Dense text embedding vector (LIST<FLOAT> serialized)" .
+
+# ---------------------------------------------------------------------------
+# 6.4 Experiment 속성
+# ---------------------------------------------------------------------------
+
+maritime:experimentId a owl:DatatypeProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range xsd:string ;
+    rdfs:label "experimentId" ;
+    rdfs:comment "Experiment identifier" .
+
+maritime:objective a owl:DatatypeProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range xsd:string ;
+    rdfs:label "objective" ;
+    rdfs:comment "Objective of the experiment" .
+
+maritime:date a owl:DatatypeProperty ;
+    rdfs:range xsd:date ;
+    rdfs:label "date" ;
+    rdfs:comment "Date of the event or experiment" .
+
+maritime:duration a owl:DatatypeProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range xsd:double ;
+    rdfs:label "duration" ;
+    rdfs:comment "Duration of the experiment in hours" .
+
+maritime:status a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "status" ;
+    rdfs:comment "Current status" .
+
+maritime:principalInvestigator a owl:DatatypeProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range xsd:string ;
+    rdfs:label "principalInvestigator" ;
+    rdfs:comment "Name of the principal investigator" .
+
+maritime:projectCode a owl:DatatypeProperty ;
+    rdfs:domain maritime:Experiment ;
+    rdfs:range xsd:string ;
+    rdfs:label "projectCode" ;
+    rdfs:comment "Associated project code" .
+
+# ---------------------------------------------------------------------------
+# 6.5 TestFacility 속성
+# ---------------------------------------------------------------------------
+
+maritime:facilityId a owl:DatatypeProperty ;
+    rdfs:domain maritime:TestFacility ;
+    rdfs:range xsd:string ;
+    rdfs:label "facilityId" ;
+    rdfs:comment "Facility identifier" .
+
+maritime:facilityType a owl:DatatypeProperty ;
+    rdfs:domain maritime:TestFacility ;
+    rdfs:range xsd:string ;
+    rdfs:label "facilityType" ;
+    rdfs:comment "Type of test facility" .
+
+maritime:width a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "width" ;
+    rdfs:comment "Width in meters" .
+
+maritime:depth a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "depth" ;
+    rdfs:comment "Depth in meters" .
+
+maritime:maxSpeed a owl:DatatypeProperty ;
+    rdfs:domain maritime:TestFacility ;
+    rdfs:range xsd:double ;
+    rdfs:label "maxSpeed" ;
+    rdfs:comment "Maximum towing/flow speed (m/s)" .
+
+maritime:waveCapability a owl:DatatypeProperty ;
+    rdfs:domain maritime:TestFacility ;
+    rdfs:range xsd:string ;
+    rdfs:label "waveCapability" ;
+    rdfs:comment "Wave generation capability description" .
+
+# ---------------------------------------------------------------------------
+# 6.6 Incident 속성
+# ---------------------------------------------------------------------------
+
+maritime:incidentId a owl:DatatypeProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range xsd:string ;
+    rdfs:label "incidentId" ;
+    rdfs:comment "Incident identifier" .
+
+maritime:incidentType a owl:DatatypeProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range xsd:string ;
+    rdfs:label "incidentType" ;
+    rdfs:comment "Type of incident (collision, grounding, pollution, etc.)" .
+
+maritime:severity a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "severity" ;
+    rdfs:comment "Severity level" .
+
+maritime:description a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "description" ;
+    rdfs:comment "Textual description" .
+
+maritime:casualties a owl:DatatypeProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range xsd:integer ;
+    rdfs:label "casualties" ;
+    rdfs:comment "Number of casualties" .
+
+maritime:pollutionAmount a owl:DatatypeProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range xsd:double ;
+    rdfs:label "pollutionAmount" ;
+    rdfs:comment "Amount of pollution (tonnes)" .
+
+maritime:resolved a owl:DatatypeProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "resolved" ;
+    rdfs:comment "Whether the incident has been resolved" .
+
+maritime:resolvedDate a owl:DatatypeProperty ;
+    rdfs:domain maritime:Incident ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "resolvedDate" ;
+    rdfs:comment "Date when the incident was resolved" .
+
+# ---------------------------------------------------------------------------
+# 6.7 ModelShip 속성
+# ---------------------------------------------------------------------------
+
+maritime:modelId a owl:DatatypeProperty ;
+    rdfs:domain maritime:ModelShip ;
+    rdfs:range xsd:string ;
+    rdfs:label "modelId" ;
+    rdfs:comment "Model ship identifier" .
+
+maritime:scale a owl:DatatypeProperty ;
+    rdfs:domain maritime:ModelShip ;
+    rdfs:range xsd:double ;
+    rdfs:label "scale" ;
+    rdfs:comment "Scale ratio of the model" .
+
+maritime:displacement a owl:DatatypeProperty ;
+    rdfs:domain maritime:ModelShip ;
+    rdfs:range xsd:double ;
+    rdfs:label "displacement" ;
+    rdfs:comment "Displacement in kg or tonnes" .
+
+maritime:hullForm a owl:DatatypeProperty ;
+    rdfs:domain maritime:ModelShip ;
+    rdfs:range xsd:string ;
+    rdfs:label "hullForm" ;
+    rdfs:comment "Hull form type" .
+
+maritime:propellerType a owl:DatatypeProperty ;
+    rdfs:domain maritime:ModelShip ;
+    rdfs:range xsd:string ;
+    rdfs:label "propellerType" ;
+    rdfs:comment "Propeller type (FPP, CPP, etc.)" .
+
+# ---------------------------------------------------------------------------
+# 6.8 Observation 속성
+# ---------------------------------------------------------------------------
+
+maritime:observationId a owl:DatatypeProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range xsd:string ;
+    rdfs:label "observationId" ;
+    rdfs:comment "Observation identifier" .
+
+maritime:timestamp a owl:DatatypeProperty ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "timestamp" ;
+    rdfs:comment "Timestamp of the event or measurement" .
+
+maritime:modalityType a owl:DatatypeProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range xsd:string ;
+    rdfs:label "modalityType" ;
+    rdfs:comment "Modality type (AIS, SAR, optical, CCTV, radar, weather)" .
+
+maritime:confidence a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "confidence" ;
+    rdfs:comment "Confidence score (0.0 to 1.0)" .
+
+maritime:visualEmbedding a owl:DatatypeProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range xsd:string ;
+    rdfs:label "visualEmbedding" ;
+    rdfs:comment "Dense visual embedding vector (LIST<FLOAT> serialized)" .
+
+maritime:fusedEmbedding a owl:DatatypeProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range xsd:string ;
+    rdfs:label "fusedEmbedding" ;
+    rdfs:comment "Fused multi-modal embedding vector (LIST<FLOAT> serialized)" .
+
+maritime:rawDataPath a owl:DatatypeProperty ;
+    rdfs:domain maritime:Observation ;
+    rdfs:range xsd:string ;
+    rdfs:label "rawDataPath" ;
+    rdfs:comment "File path to raw observation data" .
+
+# ---------------------------------------------------------------------------
+# 6.9 WeatherCondition 속성
+# ---------------------------------------------------------------------------
+
+maritime:windSpeed a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:double ;
+    rdfs:label "windSpeed" ;
+    rdfs:comment "Wind speed (m/s)" .
+
+maritime:windDirection a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:double ;
+    rdfs:label "windDirection" ;
+    rdfs:comment "Wind direction (degrees)" .
+
+maritime:waveHeight a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "waveHeight" ;
+    rdfs:comment "Significant wave height (meters)" .
+
+maritime:wavePeriod a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "wavePeriod" ;
+    rdfs:comment "Wave period (seconds)" .
+
+maritime:visibility a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:double ;
+    rdfs:label "visibility" ;
+    rdfs:comment "Visibility (nautical miles)" .
+
+maritime:seaState a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:integer ;
+    rdfs:label "seaState" ;
+    rdfs:comment "Sea state (Douglas scale 0-9)" .
+
+maritime:temperature a owl:DatatypeProperty ;
+    rdfs:range xsd:double ;
+    rdfs:label "temperature" ;
+    rdfs:comment "Temperature (Celsius)" .
+
+maritime:humidity a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:double ;
+    rdfs:label "humidity" ;
+    rdfs:comment "Relative humidity (percent)" .
+
+maritime:pressure a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:double ;
+    rdfs:label "pressure" ;
+    rdfs:comment "Atmospheric pressure (hPa)" .
+
+maritime:precipitation a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:double ;
+    rdfs:label "precipitation" ;
+    rdfs:comment "Precipitation (mm)" .
+
+maritime:riskLevel a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:string ;
+    rdfs:label "riskLevel" ;
+    rdfs:comment "Risk level assessment" .
+
+maritime:forecast a owl:DatatypeProperty ;
+    rdfs:domain maritime:WeatherCondition ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "forecast" ;
+    rdfs:comment "Whether this is a forecast (true) or observation (false)" .
+
+
+# ===========================================================================
+# End of Maritime Domain Ontology
+# ===========================================================================

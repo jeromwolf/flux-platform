@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maritime KG Visualizer - KRISO</title>
+
+    <!-- Cytoscape.js from CDN -->
+    <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+    <!-- Cytoscape layouts -->
+    <script src="https://unpkg.com/layout-base@2.0.1/layout-base.js"></script>
+    <script src="https://unpkg.com/cose-base@2.2.0/cose-base.js"></script>
+
+    <style>
+        /* ================================================================
+           CSS Reset & Variables
+           ================================================================ */
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d27;
+            --bg-tertiary: #252836;
+            --bg-hover: #2e3245;
+            --text-primary: #e4e6f0;
+            --text-secondary: #8b8fa3;
+            --text-muted: #5c6078;
+            --border-color: #2e3245;
+            --accent: #4A90D9;
+            --accent-hover: #5fa0e9;
+            --success: #50C878;
+            --warning: #E67E22;
+            --danger: #E74C3C;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --radius: 8px;
+            --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ================================================================
+           Layout
+           ================================================================ */
+        .app {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            grid-template-rows: 56px 1fr 36px;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ================================================================
+           Top Bar
+           ================================================================ */
+        .topbar {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .topbar-logo {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .topbar-logo span {
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-left: 6px;
+        }
+
+        .topbar-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-color);
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 480px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 14px 8px 36px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: var(--font);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 6px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+
+        .btn.active, .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+
+        /* ================================================================
+           Left Sidebar -- Filters
+           ================================================================ */
+        .sidebar-left {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 16px;
+        }
+
+        .sidebar-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            padding: 0 4px;
+        }
+
+        .entity-group {
+            margin-bottom: 6px;
+        }
+
+        .entity-group-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 12px;
+        }
+
+        .entity-group-header:hover {
+            background: var(--bg-hover);
+        }
+
+        .entity-group-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .entity-group-name {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .entity-group-count {
+            font-size: 10px;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 1px 6px;
+            border-radius: 10px;
+        }
+
+        .entity-group-chevron {
+            font-size: 10px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .entity-group.expanded .entity-group-chevron {
+            transform: rotate(90deg);
+        }
+
+        .entity-group-labels {
+            display: none;
+            padding-left: 26px;
+            padding-top: 2px;
+        }
+
+        .entity-group.expanded .entity-group-labels {
+            display: block;
+        }
+
+        .entity-label-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-secondary);
+            transition: all 0.15s;
+        }
+
+        .entity-label-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .entity-label-item.active {
+            background: rgba(74, 144, 217, 0.15);
+            color: var(--accent);
+        }
+
+        .entity-label-count {
+            margin-left: auto;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* ================================================================
+           Graph Canvas
+           ================================================================ */
+        .graph-container {
+            position: relative;
+            background: var(--bg-primary);
+            overflow: hidden;
+        }
+
+        #cy {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Graph overlay controls */
+        .graph-controls {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            display: flex;
+            gap: 6px;
+            z-index: 5;
+        }
+
+        .graph-controls .btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .graph-stats {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: flex;
+            gap: 12px;
+            z-index: 5;
+        }
+
+        .stat-badge {
+            background: rgba(26, 29, 39, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 4px 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-badge strong {
+            color: var(--text-primary);
+            margin-right: 4px;
+        }
+
+        .layout-selector {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 4px;
+            z-index: 5;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 17, 23, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            backdrop-filter: blur(4px);
+        }
+
+        .loading-overlay.visible {
+            display: flex;
+        }
+
+        .loading-spinner {
+            text-align: center;
+        }
+
+        .loading-spinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-spinner p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Empty state */
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 3;
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ================================================================
+           Right Sidebar -- Details Panel
+           ================================================================ */
+        .sidebar-right {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-label-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .detail-title {
+            font-size: 15px;
+            font-weight: 600;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .detail-group {
+            margin-bottom: 14px;
+        }
+
+        .detail-group-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .detail-props {
+            display: grid;
+            gap: 4px;
+        }
+
+        .detail-prop {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 12px;
+        }
+
+        .detail-prop-key {
+            color: var(--text-muted);
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .detail-prop-value {
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .detail-relationships {
+            margin-top: 14px;
+        }
+
+        .detail-rel-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-secondary);
+            transition: background 0.15s;
+            margin-bottom: 2px;
+        }
+
+        .detail-rel-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .detail-rel-type {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 11px;
+        }
+
+        .detail-rel-arrow {
+            color: var(--text-muted);
+        }
+
+        .detail-placeholder {
+            text-align: center;
+            padding: 40px 16px;
+        }
+
+        .detail-placeholder h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .detail-placeholder p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ================================================================
+           Status Bar
+           ================================================================ */
+        .statusbar {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            gap: 16px;
+        }
+
+        .statusbar .status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .status-dot.disconnected {
+            background: var(--danger);
+        }
+
+        .status-dot.mock {
+            background: var(--warning);
+        }
+
+        /* ================================================================
+           Toast Notifications
+           ================================================================ */
+        .toast-container {
+            position: fixed;
+            top: 68px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--text-primary);
+            box-shadow: var(--shadow);
+            animation: toastIn 0.3s ease;
+            max-width: 360px;
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ================================================================
+           Modal: Data source selector
+           ================================================================ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: var(--shadow);
+        }
+
+        .modal h2 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .modal p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btns .btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* ================================================================
+           Responsive: collapse sidebars on smaller screens
+           ================================================================ */
+        @media (max-width: 1024px) {
+            .app {
+                grid-template-columns: 240px 1fr 0;
+            }
+            .sidebar-right { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                grid-template-columns: 0 1fr 0;
+            }
+            .sidebar-left, .sidebar-right { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- ==================== TOP BAR ==================== -->
+        <header class="topbar">
+            <div class="topbar-logo">
+                Maritime KG<span>Visualizer</span>
+            </div>
+            <div class="topbar-divider"></div>
+            <div class="search-box">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" id="searchInput" placeholder="노드 검색... (e.g. 부산항, HMM, Experiment)" />
+            </div>
+            <div class="topbar-actions">
+                <select id="labelSelect" class="btn">
+                    <option value="">-- 엔티티 레이블 선택 --</option>
+                </select>
+                <button class="btn btn-primary" id="btnLoad">조회</button>
+                <button class="btn" id="btnMock">Mock 데이터</button>
+                <button class="btn" id="btnClear">초기화</button>
+            </div>
+        </header>
+
+        <!-- ==================== LEFT SIDEBAR ==================== -->
+        <aside class="sidebar-left" id="sidebarLeft">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Entity Groups</div>
+                <div id="entityGroupList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- ==================== GRAPH CANVAS ==================== -->
+        <main class="graph-container">
+            <div id="cy"></div>
+
+            <!-- Stats overlay -->
+            <div class="graph-stats" id="graphStats">
+                <div class="stat-badge"><strong id="statNodes">0</strong> nodes</div>
+                <div class="stat-badge"><strong id="statEdges">0</strong> edges</div>
+            </div>
+
+            <!-- Layout selector -->
+            <div class="layout-selector" id="layoutSelector">
+                <button class="btn btn-sm active" data-layout="cose">Force</button>
+                <button class="btn btn-sm" data-layout="breadthfirst">Tree</button>
+                <button class="btn btn-sm" data-layout="circle">Circle</button>
+                <button class="btn btn-sm" data-layout="grid">Grid</button>
+                <button class="btn btn-sm" data-layout="concentric">Concentric</button>
+            </div>
+
+            <!-- Zoom controls -->
+            <div class="graph-controls">
+                <button class="btn" id="btnZoomIn" title="확대">+</button>
+                <button class="btn" id="btnZoomOut" title="축소">-</button>
+                <button class="btn" id="btnFit" title="전체 보기">&#8690;</button>
+            </div>
+
+            <!-- Loading overlay -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p id="loadingText">데이터 로딩 중...</p>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div class="empty-state" id="emptyState">
+                <h3>Maritime Knowledge Graph Visualizer</h3>
+                <p>
+                    왼쪽 엔티티 그룹 클릭 또는<br>
+                    상단 드롭다운에서 레이블을 선택하여 시작하세요.<br><br>
+                    Neo4j 연결 없이 테스트하려면<br>
+                    <strong>"Mock 데이터"</strong> 버튼을 클릭하세요.
+                </p>
+            </div>
+        </main>
+
+        <!-- ==================== RIGHT SIDEBAR ==================== -->
+        <aside class="sidebar-right" id="sidebarRight">
+            <div class="detail-placeholder" id="detailPlaceholder">
+                <h3>노드 상세 정보</h3>
+                <p>그래프에서 노드를 클릭하면<br>상세 정보가 여기에 표시됩니다.</p>
+            </div>
+            <div id="detailContent" style="display:none;"></div>
+        </aside>
+
+        <!-- ==================== STATUS BAR ==================== -->
+        <footer class="statusbar">
+            <div class="status-item">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">준비</span>
+            </div>
+            <div class="status-item" id="statusSource">소스: -</div>
+            <div style="flex:1;"></div>
+            <div class="status-item">KRISO Maritime KG Platform | PoC Prototype</div>
+        </footer>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ==================== DATA SOURCE MODAL ==================== -->
+    <div class="modal-overlay" id="dataSourceModal">
+        <div class="modal">
+            <h2>데이터 소스 선택</h2>
+            <p>
+                Neo4j에 연결하여 실제 데이터를 조회하거나,
+                내장된 Mock 데이터로 시각화를 테스트할 수 있습니다.
+            </p>
+            <div class="modal-btns">
+                <button class="btn btn-primary" id="btnConnectNeo4j">Neo4j 연결</button>
+                <button class="btn" id="btnUseMock">Mock 데이터 사용</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+    /* ====================================================================
+       Maritime KG Visualizer -- Client-side application
+       ====================================================================
+       Works in two modes:
+       1. API mode: connects to kg_visualizer_api.py backend (Neo4j)
+       2. Mock mode: uses embedded sample data (standalone HTML)
+       ==================================================================== */
+
+    (function() {
+        'use strict';
+
+        // -----------------------------------------------------------------
+        // Configuration
+        // -----------------------------------------------------------------
+        const API_BASE = '';  // Same origin when served by kg_visualizer_api.py
+        const MAX_NODES = 200;
+
+        // Entity group definitions and colors
+        const ENTITY_GROUPS = {
+            PhysicalEntity: {
+                color: '#4A90D9',
+                labels: [
+                    'Vessel','CargoShip','Tanker','FishingVessel','PassengerShip',
+                    'NavalVessel','AutonomousVessel','Port','TradePort','CoastalPort',
+                    'FishingPort','PortFacility','Berth','Anchorage','Terminal',
+                    'Waterway','TSS','Channel','Cargo','DangerousGoods','BulkCargo',
+                    'ContainerCargo','Sensor','AISTransceiver','Radar','CCTVCamera',
+                    'WeatherStation'
+                ]
+            },
+            SpatialEntity: {
+                color: '#50C878',
+                labels: ['SeaArea','EEZ','TerritorialSea','CoastalRegion','GeoPoint']
+            },
+            TemporalEntity: {
+                color: '#E67E22',
+                labels: [
+                    'Voyage','PortCall','TrackSegment','Incident','Collision',
+                    'Grounding','Pollution','Distress','IllegalFishing',
+                    'WeatherCondition','Activity','Loading','Unloading',
+                    'Bunkering','Anchoring','Loitering'
+                ]
+            },
+            InformationEntity: {
+                color: '#9B59B6',
+                labels: [
+                    'Regulation','COLREG','SOLAS','MARPOL','IMDGCode','Document',
+                    'AccidentReport','InspectionReport','NavigationalWarning',
+                    'CargoManifest','DataSource','APIEndpoint','StreamSource',
+                    'FileSource','Service','QueryService','AnalysisService',
+                    'AlertService','PredictionService'
+                ]
+            },
+            Observation: {
+                color: '#E74C3C',
+                labels: [
+                    'SARObservation','OpticalObservation','CCTVObservation',
+                    'AISObservation','RadarObservation','WeatherObservation'
+                ]
+            },
+            Agent: {
+                color: '#F39C12',
+                labels: [
+                    'Organization','GovernmentAgency','ShippingCompany',
+                    'ResearchInstitute','ClassificationSociety','Person',
+                    'CrewMember','Inspector'
+                ]
+            },
+            PlatformResource: {
+                color: '#1ABC9C',
+                labels: [
+                    'Workflow','WorkflowNode','WorkflowExecution','AIModel',
+                    'DataPipeline','AIAgent','MCPTool','MCPResource'
+                ]
+            },
+            MultimodalData: {
+                color: '#3498DB',
+                labels: [
+                    'AISData','SatelliteImage','RadarImage','SensorReading',
+                    'MaritimeChart','VideoClip'
+                ]
+            },
+            MultimodalRepresentation: {
+                color: '#5DADE2',
+                labels: ['VisualEmbedding','TrajectoryEmbedding','TextEmbedding','FusedEmbedding']
+            },
+            KRISO: {
+                color: '#FF6B35',
+                labels: [
+                    'Experiment','TestFacility','TowingTank','OceanEngineeringBasin',
+                    'IceTank','DeepOceanBasin','WaveEnergyTestSite','HyperbaricChamber',
+                    'CavitationTunnel','LargeCavitationTunnel','MediumCavitationTunnel',
+                    'HighSpeedCavitationTunnel','BridgeSimulator','ExperimentalDataset',
+                    'TestCondition','ModelShip','Measurement','Resistance',
+                    'Propulsion','Maneuvering','Seakeeping','IcePerformance',
+                    'StructuralResponse'
+                ]
+            },
+            RBAC: {
+                color: '#95A5A6',
+                labels: ['User','Role','DataClass','Permission']
+            }
+        };
+
+        // Build reverse lookup: label -> group
+        const labelToGroup = {};
+        const labelToColor = {};
+        for (const [group, info] of Object.entries(ENTITY_GROUPS)) {
+            for (const label of info.labels) {
+                labelToGroup[label] = group;
+                labelToColor[label] = info.color;
+            }
+        }
+
+        function getColor(label) {
+            return labelToColor[label] || '#888888';
+        }
+
+        function getGroup(label) {
+            return labelToGroup[label] || 'Unknown';
+        }
+
+        // -----------------------------------------------------------------
+        // State
+        // -----------------------------------------------------------------
+        let cy = null;
+        let dataMode = 'none'; // 'api' | 'mock' | 'none'
+        let currentLayout = 'cose';
+        let selectedNode = null;
+
+        // -----------------------------------------------------------------
+        // Mock data generator
+        // -----------------------------------------------------------------
+        function generateMockData() {
+            const nodes = [];
+            const edges = [];
+
+            // Vessels
+            const vessels = [
+                {id:'v1', name:'HMM 알헤시라스', vesselType:'ContainerShip', flag:'KR', grossTonnage:228283},
+                {id:'v2', name:'팬오션 드림', vesselType:'BulkCarrier', flag:'KR', grossTonnage:82000},
+                {id:'v3', name:'한라', vesselType:'Tanker', flag:'KR', grossTonnage:159000},
+                {id:'v4', name:'새마을호', vesselType:'PassengerShip', flag:'KR', grossTonnage:6500},
+                {id:'v5', name:'무궁화 10호', vesselType:'FishingVessel', flag:'KR', grossTonnage:320},
+                {id:'v6', name:'COSCO Shipping Star', vesselType:'ContainerShip', flag:'CN', grossTonnage:197000},
+                {id:'v7', name:'Maersk Edmonton', vesselType:'ContainerShip', flag:'DK', grossTonnage:210000},
+            ];
+
+            const ports = [
+                {id:'p1', name:'부산항', unlocode:'KRPUS', country:'KR', portType:'TradePort'},
+                {id:'p2', name:'인천항', unlocode:'KRICN', country:'KR', portType:'TradePort'},
+                {id:'p3', name:'울산항', unlocode:'KRUSN', country:'KR', portType:'TradePort'},
+                {id:'p4', name:'여수광양항', unlocode:'KRYOS', country:'KR', portType:'TradePort'},
+                {id:'p5', name:'평택당진항', unlocode:'KRPTK', country:'KR', portType:'TradePort'},
+            ];
+
+            const seaAreas = [
+                {id:'sa1', name:'남해'},
+                {id:'sa2', name:'동해'},
+                {id:'sa3', name:'서해'},
+                {id:'sa4', name:'대한해협'},
+            ];
+
+            const voyages = [
+                {id:'voy1', name:'V-2025-001'},
+                {id:'voy2', name:'V-2025-002'},
+                {id:'voy3', name:'V-2025-003'},
+            ];
+
+            const incidents = [
+                {id:'inc1', name:'부산항 충돌사고', incidentType:'Collision', severity:'Major'},
+                {id:'inc2', name:'남해 오염사고', incidentType:'Pollution', severity:'Minor'},
+            ];
+
+            const weather = [
+                {id:'wc1', name:'남해 기상', windSpeed:12.5, waveHeight:2.3, riskLevel:'Moderate'},
+                {id:'wc2', name:'동해 기상', windSpeed:8.2, waveHeight:1.5, riskLevel:'Low'},
+            ];
+
+            const orgs = [
+                {id:'org1', name:'한국해양과학기술원 부설 선박해양플랜트연구소', orgId:'ORG-KRISO'},
+                {id:'org2', name:'해양수산부', orgId:'ORG-MOF'},
+                {id:'org3', name:'부산항만공사', orgId:'ORG-BPA'},
+                {id:'org4', name:'한국선급', orgId:'ORG-KR'},
+                {id:'org5', name:'HMM (현대상선)', orgId:'ORG-HMM'},
+            ];
+
+            const facilities = [
+                {id:'tf1', name:'대형 예인수조', facilityType:'TowingTank'},
+                {id:'tf2', name:'해양공학수조', facilityType:'OceanEngineeringBasin'},
+                {id:'tf3', name:'빙해수조', facilityType:'IceTank'},
+                {id:'tf4', name:'심해공학수조', facilityType:'DeepOceanBasin'},
+                {id:'tf5', name:'대형 캐비테이션터널', facilityType:'CavitationTunnel'},
+            ];
+
+            const experiments = [
+                {id:'exp1', name:'KCS 선형 저항 실험', objective:'컨테이너선 저항 측정'},
+                {id:'exp2', name:'KVLCC2 조종성 실험', objective:'초대형 유조선 조종성'},
+                {id:'exp3', name:'빙해 성능 실험', objective:'쇄빙선 성능 평가'},
+            ];
+
+            const regulations = [
+                {id:'reg1', name:'COLREG', title:'국제해상충돌예방규칙'},
+                {id:'reg2', name:'SOLAS', title:'해상인명안전협약'},
+                {id:'reg3', name:'MARPOL', title:'해양오염방지협약'},
+            ];
+
+            const models = [
+                {id:'ms1', name:'KCS 모형선', scale:1/31.6, hullForm:'ContainerShip'},
+                {id:'ms2', name:'KVLCC2 모형선', scale:1/58, hullForm:'VLCC'},
+            ];
+
+            // Add nodes
+            function addNode(id, label, props) {
+                nodes.push({
+                    data: {
+                        id: id,
+                        label: props.name || props.title || label,
+                        primaryLabel: label,
+                        group: getGroup(label),
+                        color: getColor(label),
+                        properties: props,
+                    }
+                });
+            }
+
+            vessels.forEach(v => addNode(v.id, 'Vessel', v));
+            ports.forEach(p => addNode(p.id, 'Port', p));
+            seaAreas.forEach(s => addNode(s.id, 'SeaArea', s));
+            voyages.forEach(v => addNode(v.id, 'Voyage', v));
+            incidents.forEach(i => addNode(i.id, 'Incident', i));
+            weather.forEach(w => addNode(w.id, 'WeatherCondition', w));
+            orgs.forEach(o => addNode(o.id, 'Organization', o));
+            facilities.forEach(f => addNode(f.id, 'TestFacility', f));
+            experiments.forEach(e => addNode(e.id, 'Experiment', e));
+            regulations.forEach(r => addNode(r.id, 'Regulation', r));
+            models.forEach(m => addNode(m.id, 'ModelShip', m));
+
+            // Add edges
+            function addEdge(source, target, type) {
+                edges.push({
+                    data: {
+                        id: `e-${source}-${target}-${type}`,
+                        source: source,
+                        target: target,
+                        type: type,
+                    }
+                });
+            }
+
+            // Vessels -> Voyages
+            addEdge('v1', 'voy1', 'ON_VOYAGE');
+            addEdge('v2', 'voy2', 'ON_VOYAGE');
+            addEdge('v3', 'voy3', 'ON_VOYAGE');
+
+            // Voyages -> Ports
+            addEdge('voy1', 'p1', 'FROM_PORT');
+            addEdge('voy1', 'p2', 'TO_PORT');
+            addEdge('voy2', 'p3', 'FROM_PORT');
+            addEdge('voy2', 'p4', 'TO_PORT');
+            addEdge('voy3', 'p1', 'FROM_PORT');
+            addEdge('voy3', 'p5', 'TO_PORT');
+
+            // Vessels -> SeaAreas
+            addEdge('v1', 'sa1', 'LOCATED_AT');
+            addEdge('v2', 'sa2', 'LOCATED_AT');
+            addEdge('v4', 'sa4', 'LOCATED_AT');
+            addEdge('v5', 'sa3', 'LOCATED_AT');
+            addEdge('v6', 'sa1', 'LOCATED_AT');
+            addEdge('v7', 'sa2', 'LOCATED_AT');
+
+            // Incidents -> Vessels
+            addEdge('inc1', 'v4', 'INVOLVES');
+            addEdge('inc2', 'v5', 'INVOLVES');
+
+            // Weather -> SeaAreas
+            addEdge('wc1', 'sa1', 'AFFECTS');
+            addEdge('wc2', 'sa2', 'AFFECTS');
+
+            // Incidents -> Weather
+            addEdge('inc2', 'wc1', 'CAUSED_BY');
+
+            // Regulations -> Vessels
+            addEdge('reg1', 'v1', 'APPLIES_TO');
+            addEdge('reg2', 'v3', 'APPLIES_TO');
+
+            // Org -> Facilities
+            addEdge('org1', 'tf1', 'HAS_FACILITY');
+            addEdge('org1', 'tf2', 'HAS_FACILITY');
+            addEdge('org1', 'tf3', 'HAS_FACILITY');
+            addEdge('org1', 'tf4', 'HAS_FACILITY');
+            addEdge('org1', 'tf5', 'HAS_FACILITY');
+
+            // Experiments -> Facilities
+            addEdge('exp1', 'tf1', 'CONDUCTED_AT');
+            addEdge('exp2', 'tf1', 'CONDUCTED_AT');
+            addEdge('exp3', 'tf3', 'CONDUCTED_AT');
+
+            // Experiments -> ModelShips
+            addEdge('exp1', 'ms1', 'TESTED');
+            addEdge('exp2', 'ms2', 'TESTED');
+
+            // ModelShip -> Vessel
+            addEdge('ms1', 'v1', 'MODEL_OF');
+
+            // Org connections
+            addEdge('org5', 'v1', 'OWNS');
+            addEdge('org3', 'p1', 'MANAGES');
+            addEdge('reg3', 'org2', 'ENFORCED_BY');
+            addEdge('reg1', 'org2', 'ENFORCED_BY');
+
+            return { nodes, edges };
+        }
+
+        // -----------------------------------------------------------------
+        // Cytoscape initialization
+        // -----------------------------------------------------------------
+        function initCytoscape() {
+            cy = cytoscape({
+                container: document.getElementById('cy'),
+                elements: [],
+                style: [
+                    // Node base style
+                    {
+                        selector: 'node',
+                        style: {
+                            'label': 'data(label)',
+                            'background-color': 'data(color)',
+                            'color': '#d0d3e0',
+                            'text-valign': 'bottom',
+                            'text-halign': 'center',
+                            'font-size': '10px',
+                            'font-family': 'Pretendard, -apple-system, sans-serif',
+                            'text-margin-y': 6,
+                            'width': 'mapData(degree, 0, 20, 28, 64)',
+                            'height': 'mapData(degree, 0, 20, 28, 64)',
+                            'border-width': 2,
+                            'border-color': 'data(color)',
+                            'border-opacity': 0.4,
+                            'background-opacity': 0.85,
+                            'text-wrap': 'ellipsis',
+                            'text-max-width': '80px',
+                            'text-background-color': '#0f1117',
+                            'text-background-opacity': 0.7,
+                            'text-background-padding': '2px',
+                            'text-background-shape': 'roundrectangle',
+                            'min-zoomed-font-size': 8,
+                            'overlay-padding': 4,
+                        }
+                    },
+                    // Edge base style
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 1.5,
+                            'line-color': '#3a3f54',
+                            'target-arrow-color': '#3a3f54',
+                            'target-arrow-shape': 'triangle',
+                            'arrow-scale': 0.8,
+                            'curve-style': 'bezier',
+                            'label': 'data(type)',
+                            'font-size': '8px',
+                            'color': '#5c6078',
+                            'text-rotation': 'autorotate',
+                            'text-margin-y': -8,
+                            'text-background-color': '#0f1117',
+                            'text-background-opacity': 0.7,
+                            'text-background-padding': '1px',
+                            'text-background-shape': 'roundrectangle',
+                            'min-zoomed-font-size': 10,
+                            'opacity': 0.7,
+                        }
+                    },
+                    // Selected node
+                    {
+                        selector: 'node:selected',
+                        style: {
+                            'border-width': 3,
+                            'border-color': '#fff',
+                            'border-opacity': 1,
+                            'background-opacity': 1,
+                            'overlay-color': '#4A90D9',
+                            'overlay-opacity': 0.15,
+                        }
+                    },
+                    // Highlighted (neighbor) nodes
+                    {
+                        selector: 'node.highlighted',
+                        style: {
+                            'border-width': 2,
+                            'border-color': '#fff',
+                            'border-opacity': 0.6,
+                            'background-opacity': 1,
+                        }
+                    },
+                    // Dimmed (non-neighbor) nodes
+                    {
+                        selector: 'node.dimmed',
+                        style: {
+                            'opacity': 0.15,
+                        }
+                    },
+                    // Dimmed edges
+                    {
+                        selector: 'edge.dimmed',
+                        style: {
+                            'opacity': 0.05,
+                        }
+                    },
+                    // Highlighted edges
+                    {
+                        selector: 'edge.highlighted',
+                        style: {
+                            'width': 2.5,
+                            'line-color': '#6ba3d6',
+                            'target-arrow-color': '#6ba3d6',
+                            'opacity': 1,
+                            'color': '#8b8fa3',
+                        }
+                    },
+                ],
+                layout: { name: 'preset' },
+                wheelSensitivity: 0.3,
+                minZoom: 0.1,
+                maxZoom: 5,
+            });
+
+            // Event: node click
+            cy.on('tap', 'node', function(evt) {
+                const node = evt.target;
+                selectNode(node);
+            });
+
+            // Event: background click (deselect)
+            cy.on('tap', function(evt) {
+                if (evt.target === cy) {
+                    deselectAll();
+                }
+            });
+
+            // Event: double-click to expand
+            cy.on('dbltap', 'node', function(evt) {
+                const node = evt.target;
+                expandNode(node.id());
+            });
+        }
+
+        // -----------------------------------------------------------------
+        // Node selection / highlighting
+        // -----------------------------------------------------------------
+        function selectNode(node) {
+            selectedNode = node;
+
+            // Highlight connected elements
+            cy.elements().removeClass('highlighted dimmed');
+            const neighborhood = node.neighborhood().add(node);
+            cy.elements().not(neighborhood).addClass('dimmed');
+            neighborhood.addClass('highlighted');
+            node.removeClass('dimmed highlighted');
+
+            // Show detail panel
+            showNodeDetail(node);
+        }
+
+        function deselectAll() {
+            selectedNode = null;
+            cy.elements().removeClass('highlighted dimmed');
+            document.getElementById('detailContent').style.display = 'none';
+            document.getElementById('detailPlaceholder').style.display = 'block';
+        }
+
+        function showNodeDetail(node) {
+            const data = node.data();
+            const props = data.properties || {};
+            const neighborhood = node.neighborhood();
+            const connectedEdges = node.connectedEdges();
+
+            let html = '';
+
+            // Header
+            html += `<div class="detail-header">`;
+            html += `<span class="detail-label-badge" style="background:${data.color}">${data.primaryLabel}</span>`;
+            html += `<span class="detail-title">${escapeHtml(data.label)}</span>`;
+            html += `</div>`;
+
+            // Group info
+            html += `<div class="detail-group">`;
+            html += `<div class="detail-group-title">Group</div>`;
+            html += `<div style="font-size:12px;color:var(--text-secondary);">${data.group}</div>`;
+            html += `</div>`;
+
+            // Properties
+            const propKeys = Object.keys(props).filter(k => k !== 'id' && k !== 'name' && k !== 'title');
+            if (propKeys.length > 0) {
+                html += `<div class="detail-group">`;
+                html += `<div class="detail-group-title">Properties</div>`;
+                html += `<div class="detail-props">`;
+                for (const key of propKeys) {
+                    let val = props[key];
+                    if (val === null || val === undefined) continue;
+                    if (typeof val === 'object') val = JSON.stringify(val);
+                    html += `<div class="detail-prop">`;
+                    html += `<span class="detail-prop-key">${escapeHtml(key)}</span>`;
+                    html += `<span class="detail-prop-value">${escapeHtml(String(val))}</span>`;
+                    html += `</div>`;
+                }
+                html += `</div></div>`;
+            }
+
+            // Connected edges
+            if (connectedEdges.length > 0) {
+                html += `<div class="detail-group detail-relationships">`;
+                html += `<div class="detail-group-title">Relationships (${connectedEdges.length})</div>`;
+                connectedEdges.forEach(edge => {
+                    const edata = edge.data();
+                    const source = cy.getElementById(edata.source);
+                    const target = cy.getElementById(edata.target);
+                    const isOutgoing = edata.source === node.id();
+                    const other = isOutgoing ? target : source;
+                    const arrow = isOutgoing ? '&rarr;' : '&larr;';
+                    const otherLabel = other.data('label') || other.id();
+                    const otherId = other.id();
+
+                    html += `<div class="detail-rel-item" onclick="window._kgVis.focusNode('${otherId}')">`;
+                    html += `<span class="detail-rel-arrow">${arrow}</span>`;
+                    html += `<span class="detail-rel-type">${escapeHtml(edata.type)}</span>`;
+                    html += `<span>${escapeHtml(otherLabel)}</span>`;
+                    html += `</div>`;
+                });
+                html += `</div>`;
+            }
+
+            // Expand button
+            html += `<div style="margin-top:16px;">`;
+            html += `<button class="btn btn-primary" style="width:100%" `;
+            html += `onclick="window._kgVis.expandNode('${node.id()}')">`;
+            html += `이웃 노드 확장</button>`;
+            html += `</div>`;
+
+            document.getElementById('detailContent').innerHTML = html;
+            document.getElementById('detailContent').style.display = 'block';
+            document.getElementById('detailPlaceholder').style.display = 'none';
+        }
+
+        // -----------------------------------------------------------------
+        // Graph data management
+        // -----------------------------------------------------------------
+        function loadDataToGraph(data) {
+            if (!data || (!data.nodes && !data.edges)) return;
+
+            const elements = [];
+
+            // Add nodes
+            if (data.nodes) {
+                for (const n of data.nodes) {
+                    const nodeId = n.id || n.data?.id;
+                    if (!nodeId) continue;
+
+                    // Skip if node already exists
+                    if (cy.getElementById(nodeId).length > 0) continue;
+
+                    const primaryLabel = n.primaryLabel || n.data?.primaryLabel || 'Unknown';
+                    const displayName = n.displayName || n.data?.label ||
+                        n.properties?.name || n.properties?.title || primaryLabel;
+
+                    elements.push({
+                        group: 'nodes',
+                        data: {
+                            id: nodeId,
+                            label: displayName,
+                            primaryLabel: primaryLabel,
+                            group: n.group || n.data?.group || getGroup(primaryLabel),
+                            color: n.color || n.data?.color || getColor(primaryLabel),
+                            properties: n.properties || n.data?.properties || {},
+                            degree: 0,
+                        }
+                    });
+                }
+            }
+
+            // Add edges
+            if (data.edges) {
+                for (const e of data.edges) {
+                    const edgeId = e.id || e.data?.id;
+                    const sourceId = e.sourceId || e.data?.source;
+                    const targetId = e.targetId || e.data?.target;
+                    const relType = e.type || e.data?.type || '';
+
+                    if (!sourceId || !targetId) continue;
+
+                    // Skip if edge already exists
+                    const eid = edgeId || `e-${sourceId}-${targetId}-${relType}`;
+                    if (cy.getElementById(eid).length > 0) continue;
+
+                    elements.push({
+                        group: 'edges',
+                        data: {
+                            id: eid,
+                            source: sourceId,
+                            target: targetId,
+                            type: relType,
+                        }
+                    });
+                }
+            }
+
+            cy.add(elements);
+
+            // Update node degree data for size mapping
+            cy.nodes().forEach(node => {
+                node.data('degree', node.degree());
+            });
+
+            updateStats();
+            runLayout(currentLayout);
+
+            // Hide empty state if there are nodes
+            const emptyState = document.getElementById('emptyState');
+            if (cy.nodes().length > 0) {
+                emptyState.style.display = 'none';
+            } else {
+                emptyState.style.display = 'block';
+            }
+        }
+
+        function loadMockDataToGraph(data) {
+            // Mock data has the Cytoscape format directly
+            cy.add(data.nodes);
+            cy.add(data.edges);
+
+            // Update degree
+            cy.nodes().forEach(node => {
+                node.data('degree', node.degree());
+            });
+
+            updateStats();
+            runLayout(currentLayout);
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        function clearGraph() {
+            cy.elements().remove();
+            updateStats();
+            deselectAll();
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        function updateStats() {
+            document.getElementById('statNodes').textContent = cy.nodes().length;
+            document.getElementById('statEdges').textContent = cy.edges().length;
+        }
+
+        // -----------------------------------------------------------------
+        // Layout
+        // -----------------------------------------------------------------
+        function runLayout(name) {
+            currentLayout = name;
+
+            // Update active button
+            document.querySelectorAll('#layoutSelector .btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.layout === name);
+            });
+
+            const opts = {
+                name: name,
+                animate: true,
+                animationDuration: 500,
+                fit: true,
+                padding: 40,
+            };
+
+            // Layout-specific options
+            if (name === 'cose') {
+                Object.assign(opts, {
+                    nodeRepulsion: function() { return 8000; },
+                    idealEdgeLength: function() { return 100; },
+                    gravity: 0.25,
+                    numIter: 300,
+                    randomize: cy.nodes().length <= 5,
+                });
+            } else if (name === 'breadthfirst') {
+                Object.assign(opts, {
+                    directed: true,
+                    spacingFactor: 1.2,
+                });
+            } else if (name === 'concentric') {
+                Object.assign(opts, {
+                    concentric: function(node) { return node.degree(); },
+                    levelWidth: function() { return 2; },
+                    minNodeSpacing: 50,
+                });
+            } else if (name === 'circle') {
+                Object.assign(opts, {
+                    spacingFactor: 1.2,
+                });
+            } else if (name === 'grid') {
+                Object.assign(opts, {
+                    spacingFactor: 1.2,
+                });
+            }
+
+            cy.layout(opts).run();
+        }
+
+        // -----------------------------------------------------------------
+        // API calls
+        // -----------------------------------------------------------------
+        async function apiCall(endpoint, params) {
+            const url = new URL(API_BASE + endpoint, window.location.origin);
+            for (const [k, v] of Object.entries(params || {})) {
+                url.searchParams.set(k, v);
+            }
+
+            const resp = await fetch(url.toString());
+            if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+            return await resp.json();
+        }
+
+        async function loadSubgraph(label, limit) {
+            showLoading('서브그래프 로딩 중...');
+            try {
+                const data = await apiCall('/api/subgraph', { label, limit: limit || 50 });
+                if (data.error) throw new Error(data.error);
+                loadDataToGraph(data);
+                setStatus('connected', `${label} 노드 ${data.meta?.nodeCount || 0}개 로드됨`);
+                toast(`${label}: ${data.meta?.nodeCount || 0} nodes, ${data.meta?.edgeCount || 0} edges`);
+            } catch (err) {
+                setStatus('error', 'API 연결 실패');
+                toast(`오류: ${err.message}`, 'error');
+                console.error(err);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function expandNode(nodeId) {
+            if (dataMode === 'mock') {
+                toast('Mock 모드에서는 확장이 지원되지 않습니다.');
+                return;
+            }
+
+            showLoading('이웃 노드 확장 중...');
+            try {
+                const data = await apiCall('/api/neighbors', { nodeId });
+                if (data.error) throw new Error(data.error);
+                loadDataToGraph(data);
+                toast(`${data.meta?.nodeCount || 0} nodes expanded`);
+            } catch (err) {
+                toast(`확장 오류: ${err.message}`, 'error');
+                console.error(err);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function searchNodes(query) {
+            if (!query || query.length < 1) return;
+
+            if (dataMode === 'mock') {
+                // Local search in mock data
+                const matches = cy.nodes().filter(n => {
+                    const label = (n.data('label') || '').toLowerCase();
+                    const props = n.data('properties') || {};
+                    const name = (props.name || '').toLowerCase();
+                    const q = query.toLowerCase();
+                    return label.includes(q) || name.includes(q);
+                });
+
+                if (matches.length > 0) {
+                    deselectAll();
+                    cy.elements().addClass('dimmed');
+                    matches.removeClass('dimmed').addClass('highlighted');
+                    matches.connectedEdges().removeClass('dimmed').addClass('highlighted');
+                    cy.fit(matches, 60);
+                    toast(`${matches.length}개 노드 검색됨 (Mock)`);
+                } else {
+                    toast('검색 결과가 없습니다.', 'error');
+                }
+                return;
+            }
+
+            showLoading(`"${query}" 검색 중...`);
+            try {
+                const data = await apiCall('/api/search', { q: query, limit: 30 });
+                if (data.error) throw new Error(data.error);
+                clearGraph();
+                loadDataToGraph(data);
+                toast(`"${query}": ${data.meta?.nodeCount || 0} nodes found`);
+            } catch (err) {
+                toast(`검색 오류: ${err.message}`, 'error');
+                console.error(err);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function loadSchema() {
+            try {
+                const data = await apiCall('/api/schema', {});
+                if (data.error) throw new Error(data.error);
+                populateLabelSelect(data.labels || []);
+                populateEntityGroups(data.labels || []);
+                setStatus('connected', `스키마 로드 완료: ${data.totalLabels || 0} labels`);
+                dataMode = 'api';
+                updateStatusSource();
+            } catch (err) {
+                console.warn('Schema load failed, using default labels:', err.message);
+                populateDefaultLabels();
+                // Don't switch to API mode if schema fails
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // UI population
+        // -----------------------------------------------------------------
+        function populateLabelSelect(labels) {
+            const select = document.getElementById('labelSelect');
+            select.innerHTML = '<option value="">-- 엔티티 레이블 선택 --</option>';
+            for (const lbl of labels) {
+                const opt = document.createElement('option');
+                opt.value = lbl.label || lbl;
+                const count = lbl.count !== undefined ? ` (${lbl.count})` : '';
+                opt.textContent = `${lbl.label || lbl}${count}`;
+                select.appendChild(opt);
+            }
+        }
+
+        function populateDefaultLabels() {
+            const allLabels = [];
+            for (const [group, info] of Object.entries(ENTITY_GROUPS)) {
+                for (const label of info.labels) {
+                    allLabels.push({ label, group, color: info.color });
+                }
+            }
+            populateLabelSelect(allLabels);
+            populateEntityGroups(allLabels);
+        }
+
+        function populateEntityGroups(labels) {
+            const container = document.getElementById('entityGroupList');
+            container.innerHTML = '';
+
+            // Count labels per group from the actual labels list
+            const groupCounts = {};
+            for (const lbl of labels) {
+                const group = lbl.group || getGroup(lbl.label || lbl);
+                if (!groupCounts[group]) groupCounts[group] = [];
+                groupCounts[group].push(lbl);
+            }
+
+            for (const [group, info] of Object.entries(ENTITY_GROUPS)) {
+                const groupLabels = groupCounts[group] || [];
+                if (groupLabels.length === 0 && labels.length > 0) continue; // Skip empty groups when we have API data
+
+                const div = document.createElement('div');
+                div.className = 'entity-group';
+                div.innerHTML = `
+                    <div class="entity-group-header" data-group="${group}">
+                        <span class="entity-group-dot" style="background:${info.color}"></span>
+                        <span class="entity-group-name">${group}</span>
+                        <span class="entity-group-count">${groupLabels.length || info.labels.length}</span>
+                        <span class="entity-group-chevron">&#9656;</span>
+                    </div>
+                    <div class="entity-group-labels"></div>
+                `;
+
+                // Add label items
+                const labelsDiv = div.querySelector('.entity-group-labels');
+                const labelsToShow = groupLabels.length > 0
+                    ? groupLabels
+                    : info.labels.map(l => ({ label: l, count: undefined }));
+
+                for (const lbl of labelsToShow) {
+                    const labelName = lbl.label || lbl;
+                    const count = lbl.count !== undefined ? lbl.count : '';
+                    const item = document.createElement('div');
+                    item.className = 'entity-label-item';
+                    item.dataset.label = labelName;
+                    item.innerHTML = `
+                        <span>${labelName}</span>
+                        ${count !== '' ? `<span class="entity-label-count">${count}</span>` : ''}
+                    `;
+                    item.addEventListener('click', () => {
+                        if (dataMode === 'api') {
+                            loadSubgraph(labelName, 50);
+                        } else {
+                            filterByLabel(labelName);
+                        }
+                    });
+                    labelsDiv.appendChild(item);
+                }
+
+                // Toggle expand/collapse
+                div.querySelector('.entity-group-header').addEventListener('click', () => {
+                    div.classList.toggle('expanded');
+                });
+
+                container.appendChild(div);
+            }
+        }
+
+        function filterByLabel(label) {
+            if (dataMode !== 'mock' && dataMode !== 'none') return;
+
+            // In mock mode, highlight nodes of this label
+            deselectAll();
+            const matches = cy.nodes().filter(n => n.data('primaryLabel') === label);
+            if (matches.length > 0) {
+                cy.elements().addClass('dimmed');
+                matches.removeClass('dimmed').addClass('highlighted');
+                matches.connectedEdges().removeClass('dimmed').addClass('highlighted');
+                matches.connectedEdges().connectedNodes().removeClass('dimmed');
+                cy.fit(matches, 60);
+                toast(`${label}: ${matches.length}개 노드 표시`);
+            } else {
+                toast(`${label} 노드가 없습니다.`);
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Helpers
+        // -----------------------------------------------------------------
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text || '로딩 중...';
+            document.getElementById('loadingOverlay').classList.add('visible');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('visible');
+        }
+
+        function setStatus(type, text) {
+            const dot = document.getElementById('statusDot');
+            dot.className = 'status-dot';
+            if (type === 'error') dot.classList.add('disconnected');
+            if (type === 'mock') dot.classList.add('mock');
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function updateStatusSource() {
+            const src = document.getElementById('statusSource');
+            if (dataMode === 'api') {
+                src.textContent = '소스: Neo4j (API)';
+            } else if (dataMode === 'mock') {
+                src.textContent = '소스: Mock 데이터';
+            } else {
+                src.textContent = '소스: -';
+            }
+        }
+
+        function toast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const div = document.createElement('div');
+            div.className = 'toast' + (type === 'error' ? ' error' : '');
+            div.textContent = message;
+            container.appendChild(div);
+            setTimeout(() => div.remove(), 4000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function focusNode(nodeId) {
+            const node = cy.getElementById(nodeId);
+            if (node.length > 0) {
+                cy.animate({
+                    center: { eles: node },
+                    zoom: 2,
+                }, { duration: 400 });
+                selectNode(node);
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Event bindings
+        // -----------------------------------------------------------------
+        function bindEvents() {
+            // Search
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    clearTimeout(searchTimeout);
+                    searchNodes(searchInput.value.trim());
+                }
+            });
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                if (searchInput.value.trim().length >= 2) {
+                    searchTimeout = setTimeout(() => {
+                        // For mock mode, do live filtering
+                        if (dataMode === 'mock') {
+                            searchNodes(searchInput.value.trim());
+                        }
+                    }, 500);
+                } else if (searchInput.value.trim().length === 0) {
+                    deselectAll();
+                }
+            });
+
+            // Load button
+            document.getElementById('btnLoad').addEventListener('click', () => {
+                const label = document.getElementById('labelSelect').value;
+                if (!label) {
+                    toast('레이블을 선택하세요.');
+                    return;
+                }
+                if (dataMode === 'mock') {
+                    filterByLabel(label);
+                } else {
+                    dataMode = 'api';
+                    updateStatusSource();
+                    loadSubgraph(label, 50);
+                }
+            });
+
+            // Mock button
+            document.getElementById('btnMock').addEventListener('click', () => {
+                clearGraph();
+                dataMode = 'mock';
+                updateStatusSource();
+                const mockData = generateMockData();
+                loadMockDataToGraph(mockData);
+                setStatus('mock', 'Mock 데이터 로드됨');
+                toast('Mock 데이터가 로드되었습니다.');
+            });
+
+            // Clear button
+            document.getElementById('btnClear').addEventListener('click', () => {
+                clearGraph();
+                setStatus('', '초기화됨');
+            });
+
+            // Layout buttons
+            document.querySelectorAll('#layoutSelector .btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (cy.nodes().length > 0) {
+                        runLayout(btn.dataset.layout);
+                    }
+                });
+            });
+
+            // Zoom controls
+            document.getElementById('btnZoomIn').addEventListener('click', () => {
+                cy.zoom({ level: cy.zoom() * 1.3, renderedPosition: { x: cy.width()/2, y: cy.height()/2 } });
+            });
+            document.getElementById('btnZoomOut').addEventListener('click', () => {
+                cy.zoom({ level: cy.zoom() / 1.3, renderedPosition: { x: cy.width()/2, y: cy.height()/2 } });
+            });
+            document.getElementById('btnFit').addEventListener('click', () => {
+                cy.fit(null, 40);
+            });
+
+            // Modal buttons
+            document.getElementById('btnConnectNeo4j').addEventListener('click', () => {
+                document.getElementById('dataSourceModal').classList.remove('visible');
+                dataMode = 'api';
+                updateStatusSource();
+                loadSchema();
+            });
+
+            document.getElementById('btnUseMock').addEventListener('click', () => {
+                document.getElementById('dataSourceModal').classList.remove('visible');
+                dataMode = 'mock';
+                updateStatusSource();
+                populateDefaultLabels();
+                const mockData = generateMockData();
+                loadMockDataToGraph(mockData);
+                setStatus('mock', 'Mock 데이터 로드됨');
+            });
+        }
+
+        // -----------------------------------------------------------------
+        // Initialization
+        // -----------------------------------------------------------------
+        function init() {
+            initCytoscape();
+            bindEvents();
+            populateDefaultLabels();
+
+            // Expose API for detail panel click handlers
+            window._kgVis = {
+                expandNode: expandNode,
+                focusNode: focusNode,
+            };
+
+            // Try to connect to API, show modal if it fails
+            tryAutoConnect();
+        }
+
+        async function tryAutoConnect() {
+            try {
+                const resp = await fetch(API_BASE + '/api/schema', {
+                    signal: AbortSignal.timeout(3000),
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (!data.error) {
+                        dataMode = 'api';
+                        updateStatusSource();
+                        populateLabelSelect(data.labels || []);
+                        populateEntityGroups(data.labels || []);
+                        setStatus('connected', `Neo4j 연결됨: ${data.totalLabels || 0} labels`);
+                        toast('Neo4j API 서버에 연결되었습니다.');
+                        return;
+                    }
+                }
+            } catch (err) {
+                // API not available
+            }
+
+            // Show data source modal
+            document.getElementById('dataSourceModal').classList.add('visible');
+            setStatus('', '데이터 소스를 선택하세요.');
+        }
+
+        // Start
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+    })();
+    </script>
+</body>
+</html>

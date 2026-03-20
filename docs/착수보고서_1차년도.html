@@ -1,0 +1,3880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>착수보고서 (1차년도) — 해사 도메인 지식그래프 기반 대화형 서비스 플랫폼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+  color: #1a202c;
+  line-height: 1.85;
+  font-size: 15px;
+}
+
+/* ===== Container ===== */
+.container {
+  max-width: 920px;
+  margin: 30px auto;
+  background: #fff;
+  padding: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.content { padding: 40px 50px 60px; }
+
+/* ===== Cover Header ===== */
+.cover {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  color: white;
+  padding: 50px;
+  text-align: center;
+}
+.cover h1 {
+  font-size: 1.9em;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+.cover .subtitle {
+  font-size: 1.1em;
+  font-weight: 300;
+  opacity: 0.9;
+  margin-bottom: 25px;
+}
+.cover .meta {
+  display: inline-block;
+  background: rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 12px 25px;
+  font-size: 0.85em;
+  text-align: left;
+  line-height: 1.6;
+}
+
+/* ===== Headings ===== */
+h1 { font-size: 1.8em; color: #1a365d; }
+h2 {
+  font-size: 1.45em;
+  color: #1a365d;
+  border-bottom: 3px solid #1a365d;
+  padding-bottom: 10px;
+  margin: 55px 0 20px;
+  font-weight: 700;
+}
+h3 {
+  font-size: 1.15em;
+  color: #2d3748;
+  border-left: 4px solid #3182ce;
+  padding-left: 14px;
+  margin: 35px 0 12px;
+  font-weight: 600;
+}
+h4 {
+  font-size: 1.05em;
+  color: #4a5568;
+  margin: 25px 0 10px;
+  font-weight: 600;
+}
+h5 { font-size: 0.95em; color: #718096; margin: 18px 0 8px; }
+
+/* ===== Paragraphs & Lists ===== */
+p { margin: 10px 0; }
+ul, ol { margin: 10px 0 10px 25px; }
+li { margin: 4px 0; }
+strong { color: #1a365d; }
+a { color: #3182ce; text-decoration: none; }
+a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #e2e8f0; margin: 30px 0; }
+blockquote {
+  border-left: 4px solid #3182ce;
+  background: #ebf8ff;
+  padding: 15px 20px;
+  margin: 15px 0;
+  border-radius: 0 6px 6px 0;
+  color: #2c5282;
+}
+
+/* ===== Tables ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0 20px;
+  font-size: 0.88em;
+}
+thead th {
+  background: #2d3748;
+  color: white;
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 500;
+  white-space: nowrap;
+}
+td {
+  padding: 9px 14px;
+  border: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+tbody tr:nth-child(even) { background: #f7fafc; }
+tbody tr:hover { background: #edf2f7; }
+th:first-child, td:first-child { border-left: 1px solid #e2e8f0; }
+th:last-child, td:last-child { border-right: 1px solid #e2e8f0; }
+thead th { border: 1px solid #4a5568; }
+
+/* ===== Code & Pre ===== */
+code {
+  background: #edf2f7;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.88em;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: #c53030;
+}
+pre {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 18px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.55;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  margin: 15px 0;
+  color: #2d3748;
+}
+pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+/* ===== TOC ===== */
+.toc-wrap {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 25px 30px;
+  margin: 25px 0;
+}
+.toc-wrap h2 { border: none; margin: 0 0 12px; font-size: 1.2em; }
+
+/* ===== Appendix styling ===== */
+.content h2[id*="부록"], .content h2[id*="appendix"] {
+  background: #f7fafc;
+  padding: 15px;
+  border-radius: 6px;
+}
+
+/* ===== Print ===== */
+@media print {
+  body { background: white; font-size: 11pt; }
+  .container { box-shadow: none; margin: 0; border-radius: 0; }
+  .content { padding: 20px 25px; }
+  .cover { padding: 30px; }
+  h2 { page-break-before: always; margin-top: 20px; }
+  h2:first-of-type { page-break-before: avoid; }
+  table { page-break-inside: avoid; font-size: 9pt; }
+  pre { page-break-inside: avoid; font-size: 8pt; }
+  a { color: #1a365d; }
+  .no-print { display: none; }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+  .content { padding: 20px 18px; }
+  .cover { padding: 30px 20px; }
+  h1 { font-size: 1.3em; }
+  h2 { font-size: 1.2em; }
+  table { font-size: 0.8em; }
+  pre { font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="cover">
+    <h1>착수보고서 (1차년도)</h1>
+    <div class="subtitle">해사(Maritime) 도메인 지식그래프 기반 대화형 서비스 플랫폼</div>
+    <div class="meta">
+      문서번호: RPT-KO-001 &nbsp;|&nbsp; 버전: v1.0 &nbsp;|&nbsp; 작성일: 2026년 3월 &nbsp;|&nbsp; 보안등급: 일반
+    </div>
+  </div>
+  <div class="content">
+    <h2 id="_1">목차</h2>
+<ol>
+<li><a href="#1-과업-개요">과업 개요</a></li>
+<li><a href="#2-연구-배경-및-필요성">연구 배경 및 필요성</a></li>
+<li><a href="#3-연구-목표-및-범위">연구 목표 및 범위</a></li>
+<li><a href="#4-연구-내용-및-방법">연구 내용 및 방법</a></li>
+<li><a href="#5-추진-일정">추진 일정</a></li>
+<li><a href="#6-기대-성과-및-활용-방안">기대 성과 및 활용 방안</a></li>
+<li><a href="#7-연구-추진-체계">연구 추진 체계</a></li>
+<li><a href="#8-위험-관리-및-품질-계획">위험 관리 및 품질 계획</a></li>
+<li><a href="#9-평가-대응-전략">평가 대응 전략</a></li>
+<li><a href="#10-참고문헌">참고문헌</a></li>
+<li><a href="#부록-a-용어-정리">부록 A. 용어 정리</a></li>
+<li><a href="#부록-b-온톨로지-클래스속성-상세">부록 B. 온톨로지 클래스·속성 상세</a></li>
+</ol>
+<hr>
+<h2 id="1_1">1. 과업 개요</h2>
+<h3 id="11">1.1 과업 기본 정보</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>과업명</strong></td>
+<td>해사(Maritime) 도메인 지식그래프 기반 대화형 서비스 플랫폼 구축</td>
+</tr>
+<tr>
+<td><strong>영문명</strong></td>
+<td>Conversational Maritime Service Platform based on Domain Knowledge Graph</td>
+</tr>
+<tr>
+<td><strong>발주기관</strong></td>
+<td>[발주기관명]</td>
+</tr>
+<tr>
+<td><strong>수행기관</strong></td>
+<td>[수행기관명]</td>
+</tr>
+<tr>
+<td><strong>연구책임자</strong></td>
+<td>[연구책임자명]</td>
+</tr>
+<tr>
+<td><strong>수행기간</strong></td>
+<td>[계약일] ~ [종료일] (12개월)</td>
+</tr>
+<tr>
+<td><strong>총 연구비</strong></td>
+<td>[예산] 원 (정부출연금 [금액] / 민간부담금 [금액])</td>
+</tr>
+<tr>
+<td><strong>연차</strong></td>
+<td>1차년도 / 총 2차년도</td>
+</tr>
+<tr>
+<td><strong>1차년도 범위</strong></td>
+<td>설계 + PoC (멀티모달 메타데이터 관계 그래프화, 온톨로지 설계)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 과업 수행 배경</h3>
+<p>본 과업은 한국해양과학기술원 부설 <strong>선박해양플랜트연구소(KRISO)</strong>의 해사 데이터를 중심으로, 산재된 해사 도메인 데이터를 <strong>지식그래프(Knowledge Graph)</strong>로 통합하고 <strong>대화형 AI 인터페이스</strong>를 통해 비전문가도 해사 데이터에 접근할 수 있는 차세대 서비스 플랫폼을 구축하는 것을 목표로 한다.</p>
+<p>1차년도는 <strong>"설계 + PoC"</strong> 단계로, 해사 도메인 온톨로지 설계, 지식그래프 스키마 구축, ETL 파이프라인 프레임워크 개발, 그리고 GraphRAG 기반 자연어 질의응답 프로토타입 검증까지를 수행한다.</p>
+<h3 id="13">1.3 참여 인력 현황</h3>
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th>인원</th>
+<th>역할</th>
+<th>투입률</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>연구책임자</td>
+<td>1명</td>
+<td>총괄, 온톨로지 설계, 시스템 아키텍처</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>선임연구원</td>
+<td>[N]명</td>
+<td>KG 스키마 구현, ETL 개발, API 개발</td>
+<td>[투입률]</td>
+</tr>
+<tr>
+<td>연구원</td>
+<td>[N]명</td>
+<td>크롤러 개발, 테스트, 문서화</td>
+<td>[투입률]</td>
+</tr>
+<tr>
+<td>연구보조원</td>
+<td>[N]명</td>
+<td>데이터 수집, 검증 지원</td>
+<td>[투입률]</td>
+</tr>
+<tr>
+<td><strong>합계</strong></td>
+<td><strong>[N]명</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-kriso-8">1.4 KRISO 연계 시험시설 (8종)</h3>
+<p>본 과업의 지식그래프는 KRISO가 보유한 8종의 시험시설에서 생산되는 실험 데이터의 메타데이터를 체계적으로 관리하는 것을 핵심 목표 중 하나로 포함한다.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>시설명</th>
+<th>영문명</th>
+<th>주요 용도</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>해양공학수조</td>
+<td>Ocean Engineering Basin</td>
+<td>해양 구조물 파랑 시험, 부유체 동적 거동</td>
+</tr>
+<tr>
+<td>2</td>
+<td>선형시험수조/대형예인수조</td>
+<td>Towing Tank</td>
+<td>선박 저항/추진 시험, 200m x 16m x 7m</td>
+</tr>
+<tr>
+<td>3</td>
+<td>빙해수조</td>
+<td>Ice Tank</td>
+<td>빙해역 성능 시험, 쇄빙선 저항</td>
+</tr>
+<tr>
+<td>4</td>
+<td>심해공학수조</td>
+<td>Deep Ocean Engineering Basin</td>
+<td>심해 환경 시뮬레이션, 100m x 50m x 15m</td>
+</tr>
+<tr>
+<td>5</td>
+<td>파력발전 실해역 시험장</td>
+<td>Wave Energy Test Site</td>
+<td>파력발전 장치 실증, 104만m2</td>
+</tr>
+<tr>
+<td>6</td>
+<td>고압챔버</td>
+<td>Hyperbaric Chamber</td>
+<td>심해 환경 재현 시험, 600bar</td>
+</tr>
+<tr>
+<td>7</td>
+<td>캐비테이션터널</td>
+<td>Cavitation Tunnel</td>
+<td>프로펠러 캐비테이션 시험 (대형/중형/고속)</td>
+</tr>
+<tr>
+<td>8</td>
+<td>선박운항시뮬레이터</td>
+<td>Full Mission Bridge Simulator</td>
+<td>선박 운항 시뮬레이션 훈련</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2">2. 연구 배경 및 필요성</h2>
+<h3 id="21">2.1 해사 데이터 사일로 문제</h3>
+<p>현재 국내 해사 분야의 데이터는 <strong>다수의 기관에 분산</strong>되어 관리되고 있으며, 기관 간 데이터 상호운용성이 매우 낮은 상황이다.</p>
+<table>
+<thead>
+<tr>
+<th>기관</th>
+<th>보유 데이터</th>
+<th>현재 관리 방식</th>
+<th>문제점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>해양수산부</td>
+<td>해사 정책, 규정, 공시 데이터</td>
+<td>별도 DB + 문서</td>
+<td>비정형 데이터 검색 난이</td>
+</tr>
+<tr>
+<td>국립해양조사원</td>
+<td>해도, 조석, 해류, 수심</td>
+<td>전용 시스템</td>
+<td>API 표준화 미흡</td>
+</tr>
+<tr>
+<td>기상청</td>
+<td>해양 기상, 파고, 풍속, 수온</td>
+<td>실시간 스트림</td>
+<td>KG 미연계</td>
+</tr>
+<tr>
+<td>해양경찰청</td>
+<td>해양 사고, 수색 구조, 불법 활동</td>
+<td>내부 시스템</td>
+<td>타 기관 데이터 연계 부재</td>
+</tr>
+<tr>
+<td>KRISO</td>
+<td>선박 모형 시험, 실험 결과, 연구 논문</td>
+<td>개별 파일 시스템</td>
+<td>메타데이터 체계 부재</td>
+</tr>
+</tbody>
+</table>
+<p><strong>핵심 문제</strong>: 해사 공무원, 어민, 해운사, 연구자 등 다양한 이해관계자가 해사 데이터에 접근하려면 <strong>각 기관의 개별 시스템을 파악</strong>하고 <strong>전문 쿼리 언어(SQL 등)</strong>를 사용해야 하며, <strong>기관 간 데이터를 수동으로 매칭</strong>해야 한다.</p>
+<h3 id="22">2.2 지식그래프 기반 통합의 필요성</h3>
+<p>지식그래프(Knowledge Graph)는 이질적인 데이터를 <strong>엔티티(Entity)</strong>와 <strong>관계(Relationship)</strong>의 그래프 구조로 통합하여, 다음의 핵심 가치를 제공한다:</p>
+<ol>
+<li><strong>크로스도메인 연결</strong>: 선박-항만-화물-사고-기상-규정 간 관계를 명시적으로 표현</li>
+<li><strong>멀티홉 추론</strong>: "A 선박이 적재한 위험물 → 해당 규정 → 최근 위반 사례"와 같은 다단계 추론</li>
+<li><strong>자연어 접근</strong>: Text-to-Cypher 변환을 통해 비전문가도 자연어로 데이터 조회 가능</li>
+<li><strong>벡터 검색 통합</strong>: 그래프 구조 + 벡터 임베딩의 결합으로 의미 기반 검색 지원</li>
+<li><strong>온톨로지 기반 품질 관리</strong>: OWL 표준 온톨로지로 데이터 일관성 자동 검증</li>
+</ol>
+<h3 id="23">2.3 국내외 동향</h3>
+<h4 id="231">2.3.1 학술 동향</h4>
+<table>
+<thead>
+<tr>
+<th>분야</th>
+<th>주요 연구</th>
+<th>관련성</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maritime KG</td>
+<td>IMO 해사 안전 지식그래프 연구 (2023-2025)</td>
+<td>해사 온톨로지 설계 참조</td>
+</tr>
+<tr>
+<td>GraphRAG</td>
+<td>Microsoft GraphRAG (2024), Neo4j GraphRAG (2025)</td>
+<td>그래프 기반 RAG 아키텍처</td>
+</tr>
+<tr>
+<td>Text-to-Cypher</td>
+<td>LangChain GraphCypherQAChain, Neo4j NaLLM</td>
+<td>자연어-Cypher 변환 기법</td>
+</tr>
+<tr>
+<td>MMKG</td>
+<td>Multimodal KG Construction (ACL 2024)</td>
+<td>멀티모달 엔티티 정렬</td>
+</tr>
+<tr>
+<td>OWL 온톨로지</td>
+<td>W3C OWL 2 표준, Protege 기반 설계</td>
+<td>온톨로지 설계 방법론</td>
+</tr>
+<tr>
+<td>PROV-O</td>
+<td>W3C Provenance Ontology</td>
+<td>데이터 리니지 표준</td>
+</tr>
+</tbody>
+</table>
+<h4 id="232">2.3.2 산업 동향</h4>
+<table>
+<thead>
+<tr>
+<th>기업/기관</th>
+<th>적용 사례</th>
+<th>기술 요소</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Google</td>
+<td>Knowledge Graph (2012~)</td>
+<td>엔티티 관계 검색</td>
+</tr>
+<tr>
+<td>Neo4j</td>
+<td>Financial Fraud Detection, Supply Chain</td>
+<td>그래프 DB + 벡터 인덱스</td>
+</tr>
+<tr>
+<td>DNV</td>
+<td>Maritime Digital Twin</td>
+<td>선박 디지털 트윈 KG</td>
+</tr>
+<tr>
+<td>MarineTraffic</td>
+<td>AIS 기반 해사 데이터 플랫폼</td>
+<td>실시간 선박 추적</td>
+</tr>
+<tr>
+<td>Spire Maritime</td>
+<td>위성 AIS 데이터 서비스</td>
+<td>위성-AIS 데이터 융합</td>
+</tr>
+</tbody>
+</table>
+<h4 id="233">2.3.3 정부 정책 동향</h4>
+<ul>
+<li><strong>해양수산 분야 디지털 전환 추진계획</strong> (해양수산부, 2024): 해사 데이터 통합 활용 기반 구축</li>
+<li><strong>제4차 해양수산 과학기술 기본계획</strong> (2023-2027): 해양 빅데이터 및 AI 활용 강화</li>
+<li><strong>K-디지털 해양</strong> 전략: 디지털 트윈 기반 해양 안전 관리 체계 구축</li>
+</ul>
+<h3 id="24">2.4 본 과업의 차별성</h3>
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th>기존 접근</th>
+<th>본 과업 접근</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>데이터 모델</strong></td>
+<td>관계형 DB 중심</td>
+<td>OWL 2 온톨로지 기반 지식그래프 (127 엔티티, 83 관계)</td>
+</tr>
+<tr>
+<td><strong>검색 방식</strong></td>
+<td>SQL/키워드 검색</td>
+<td>GraphRAG (그래프 순회 + 벡터 유사도 + Text-to-Cypher)</td>
+</tr>
+<tr>
+<td><strong>사용자 인터페이스</strong></td>
+<td>전용 시스템 UI</td>
+<td>자연어 대화형 인터페이스</td>
+</tr>
+<tr>
+<td><strong>데이터 통합</strong></td>
+<td>ETL → RDBMS</td>
+<td>온톨로지 인식 ETL + W3C PROV-O 리니지 추적</td>
+</tr>
+<tr>
+<td><strong>품질 관리</strong></td>
+<td>수동 검증</td>
+<td>KG 품질 게이트 (8가지 자동 검증) + 환각 감지기</td>
+</tr>
+<tr>
+<td><strong>표준 준수</strong></td>
+<td>기관별 자체 표준</td>
+<td>W3C OWL 2, PROV-O, IHO S-100 참조</td>
+</tr>
+<tr>
+<td><strong>확장성</strong></td>
+<td>단일 도메인</td>
+<td>해사 도메인 특화 + 범용 확장 가능 아키텍처</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3">3. 연구 목표 및 범위</h2>
+<h3 id="31-2">3.1 최종 목표 (2차년도 완료 시)</h3>
+<p>자연어 대화를 통해 해사 데이터를 조회하고, 워크플로우를 자동 생성하며, 멀티모달 데이터를 통합 분석하는 <strong>AI 기반 해사 서비스 플랫폼</strong>을 구축한다.</p>
+<h3 id="32-1">3.2 1차년도 목표</h3>
+<blockquote>
+<p><strong>"해사 도메인 온톨로지 설계 및 지식그래프 PoC 구축"</strong></p>
+</blockquote>
+<p>1차년도는 설계와 PoC에 집중하며, 다음의 세부 목표를 달성한다:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>세부 목표</th>
+<th>달성 기준</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>해사 도메인 온톨로지 설계</td>
+<td>OWL 2 Turtle 파일 (127 엔티티, 83 관계, 29 속성정의)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Neo4j 지식그래프 스키마 구현</td>
+<td>24 제약조건, 44 인덱스 (벡터/공간/풀텍스트/범위)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>ETL 파이프라인 프레임워크</td>
+<td>FULL/INCREMENTAL 모드, DLQ, 온톨로지 인식 검증</td>
+</tr>
+<tr>
+<td>4</td>
+<td>W3C PROV-O 데이터 리니지</td>
+<td>리니지 레코더, RBAC 연동 기록 정책</td>
+</tr>
+<tr>
+<td>5</td>
+<td>GraphRAG 기반 NL QA PoC</td>
+<td>5종 Retriever, Text-to-Cypher, 30개 평가 질문</td>
+</tr>
+<tr>
+<td>6</td>
+<td>KRISO 데이터 크롤러</td>
+<td>4종 크롤러 (논문/시설/기상/사고)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>RBAC 접근제어</td>
+<td>5개 역할, 5개 데이터 분류 등급</td>
+</tr>
+<tr>
+<td>8</td>
+<td>기반 인프라 구축</td>
+<td>Docker Compose, Helm Chart, CI/CD</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 연차별 범위</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                        전체 과업 범위                                │
+├─────────────────────────────┬───────────────────────────────────────┤
+│      1차년도 (설계 + PoC)     │        2차년도 (구축 + 고도화)         │
+├─────────────────────────────┼───────────────────────────────────────┤
+│ - 온톨로지 설계 (OWL 2)       │ - 멀티모달 KG 고도화                   │
+│ - Neo4j 스키마 구현           │ - 크로스모달 엔티티 정렬                 │
+│ - ETL 프레임워크 개발          │ - 프론트엔드 UI 구축                   │
+│ - GraphRAG PoC              │ - Activepieces 워크플로우 통합          │
+│ - KRISO 크롤러 (Phase A)     │ - KRISO 공식 데이터 연동 (Phase B)     │
+│ - RBAC 정책 엔진             │ - LLM 파인튜닝 (해사 도메인)            │
+│ - 품질 게이트 / 환각 감지      │ - 성능 최적화 + 보안 감사               │
+│ - REST API (FastAPI)        │ - 통합 테스트 + 사용자 테스트            │
+│ - 기반 인프라 (Docker/K8s)    │ - 운영 배포 + 인수인계                 │
+└─────────────────────────────┴───────────────────────────────────────┘
+</code></pre>
+<h3 id="34">3.4 산출물 매핑</h3>
+<p>1차년도에 제출하는 8개 산출물과 연구 내용의 매핑:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>산출물</th>
+<th>제출 기한</th>
+<th>관련 연구 내용</th>
+<th>현재 상태</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>해사 데이터 현황 분석 보고서</td>
+<td>계약후 2개월</td>
+<td>데이터 소스 조사, 기관별 데이터 현황 분석</td>
+<td>문서 작성 중</td>
+</tr>
+<tr>
+<td>2</td>
+<td>KG 구축 대상 자원 선정 보고서</td>
+<td>계약후 2개월</td>
+<td>KRISO 시험시설 8종, 데이터 유형별 자원 선정</td>
+<td>초안 완료 (<code>docs/REQ-002</code>)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>해사 도메인 온톨로지 설계서</td>
+<td>계약후 5개월</td>
+<td>OWL 2 Turtle 온톨로지 (1,845줄, 1,433 트리플)</td>
+<td>구현 완료 (<code>kg/ontology/</code>)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>지식그래프 스키마 설계서</td>
+<td>계약후 5개월</td>
+<td>Neo4j 스키마 (24 제약조건, 44 인덱스)</td>
+<td>구현 완료 (<code>kg/schema/</code>)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>그래프 DB 기술 비교 분석 보고서</td>
+<td>계약후 5개월</td>
+<td>Neo4j vs Apache Jena vs ArangoDB 비교</td>
+<td>초안 완료 (<code>docs/REQ-003</code>)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>PoC 프로토타입 및 시험 결과 보고서</td>
+<td>종료 1달전</td>
+<td>GraphRAG PoC, NL QA 시연, 평가 결과</td>
+<td>PoC 구현 완료 (<code>poc/</code>)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>2차년도 구축 상세 설계서</td>
+<td>종료 2주전</td>
+<td>ETL/리니지 상세 설계, 멀티모달 파이프라인</td>
+<td>설계 진행 중</td>
+</tr>
+<tr>
+<td>8</td>
+<td>과업 완료 보고서</td>
+<td>종료 2주전</td>
+<td>전체 과업 종합 보고</td>
+<td>템플릿 준비 (<code>docs/RPT-001</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4">4. 연구 내용 및 방법</h2>
+<h3 id="41">4.1 해사 도메인 온톨로지 설계</h3>
+<h4 id="411">4.1.1 설계 방법론</h4>
+<p><strong>"W3C 표준 기반 설계, Neo4j로 구현"</strong> 원칙을 채택한다.</p>
+<pre><code>┌──────────────────┐     ┌───────────────────┐     ┌──────────────────┐
+│   Protege IDE    │────&gt;│  OWL 2 Turtle     │────&gt;│  Neo4j Property  │
+│  (온톨로지 설계)  │     │  (maritime.ttl)   │     │  Graph (n10s)    │
+└──────────────────┘     └───────────────────┘     └──────────────────┘
+     시각적 모델링           W3C 표준 파일            실행 가능한 KG
+</code></pre>
+<ol>
+<li><strong>Protege</strong>로 시각적 온톨로지 모델링</li>
+<li><strong>OWL 2 Turtle</strong> 형식으로 표준 파일 생성</li>
+<li><strong>Neosemantics (n10s)</strong>를 통해 Neo4j 프로퍼티 그래프로 자동 변환</li>
+</ol>
+<h4 id="412">4.1.2 온톨로지 규모</h4>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>수량</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>엔티티 타입</td>
+<td><strong>127개</strong></td>
+<td>Vessel, Port, Experiment, WeatherCondition 등</td>
+</tr>
+<tr>
+<td>관계 타입</td>
+<td><strong>83개</strong></td>
+<td>DOCKED_AT, ON_VOYAGE, CONDUCTED_AT 등</td>
+</tr>
+<tr>
+<td>속성 정의</td>
+<td><strong>29개</strong></td>
+<td>그룹별 속성 체계 (물리적, 시간적, 관측 등)</td>
+</tr>
+<tr>
+<td>OWL 파일</td>
+<td><strong>1,845줄</strong></td>
+<td>Turtle 형식, 1,433 RDF 트리플</td>
+</tr>
+</tbody>
+</table>
+<h4 id="413">4.1.3 온톨로지 계층 구조</h4>
+<pre><code>Thing
+├── PhysicalEntity
+│   ├── Vessel (선박) ─── CargoShip, Tanker, FishingVessel, ...
+│   ├── Port (항만) ─── TradePort, CoastalPort, FishingPort
+│   ├── PortFacility (항만시설) ─── Berth, Anchorage, Terminal
+│   ├── Waterway (항로) ─── TSS, Channel, FairwayRoute
+│   ├── Cargo (화물) ─── DangerousGoods, BulkCargo, ContainerCargo
+│   └── Sensor (센서) ─── AISTransceiver, Radar, CCTVCamera
+├── SpatialEntity
+│   ├── SeaArea (해역) ─── EEZ, TerritorialSea, InternalWaters
+│   ├── CoastalRegion (연안)
+│   └── GeoPoint (좌표)
+├── TemporalEntity
+│   ├── Voyage (항해)
+│   ├── PortCall (입출항)
+│   ├── TrackSegment (궤적 구간)
+│   ├── Incident (사고) ─── Collision, Grounding, Pollution, ...
+│   └── WeatherCondition (기상)
+├── InformationEntity
+│   ├── Regulation (규정) ─── COLREG, SOLAS, MARPOL, IMDGCode
+│   ├── Document (문서) ─── AccidentReport, InspectionReport, ...
+│   └── DataSource (데이터소스) ─── APIEndpoint, StreamSource
+├── ObservationEntity (멀티모달)
+│   ├── SARObservation (위성 레이더)
+│   ├── OpticalObservation (광학 위성)
+│   ├── CCTVObservation (CCTV)
+│   ├── AISObservation (AIS)
+│   └── WeatherObservation (기상 관측)
+├── KRISOEntity
+│   ├── Experiment (실험)
+│   ├── TestFacility (시험시설)
+│   ├── ModelShip (모형선)
+│   ├── ExperimentalDataset (실험 데이터셋)
+│   └── TestCondition (시험 조건)
+└── Actor
+    ├── Organization (기관)
+    └── Person (인물)
+</code></pre>
+<h3 id="42-neo4j">4.2 Neo4j 지식그래프 스키마</h3>
+<h4 id="421">4.2.1 스키마 구성</h4>
+<table>
+<thead>
+<tr>
+<th>구성 요소</th>
+<th>수량</th>
+<th>세부 내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>유니크 제약조건</strong></td>
+<td>24개</td>
+<td>엔티티 ID, MMSI, IMO, UNLOCODE 등</td>
+</tr>
+<tr>
+<td><strong>벡터 인덱스</strong></td>
+<td>4개</td>
+<td>시각 임베딩, 텍스트 임베딩, 궤적 임베딩, 융합 임베딩</td>
+</tr>
+<tr>
+<td><strong>공간 인덱스</strong></td>
+<td>5개</td>
+<td>선박 위치, 항만 위치, 사고 위치, 관측 위치, 해역 중심</td>
+</tr>
+<tr>
+<td><strong>풀텍스트 인덱스</strong></td>
+<td>5개</td>
+<td>문서 제목/내용, 규정 내용, 실험 제목, 선박명</td>
+</tr>
+<tr>
+<td><strong>범위 인덱스</strong></td>
+<td>8개</td>
+<td>타임스탬프, 속도, 톤수 등 범위 검색</td>
+</tr>
+<tr>
+<td><strong>RBAC 인덱스</strong></td>
+<td>22개</td>
+<td>역할, 권한, 데이터 분류 등급</td>
+</tr>
+</tbody>
+</table>
+<h4 id="422-neo4j">4.2.2 Neo4j 기술 사양</h4>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>사양</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Neo4j 버전</td>
+<td>5.26 Community Edition (GPLv3)</td>
+</tr>
+<tr>
+<td>APOC 플러그인</td>
+<td>포함 (유틸리티 프로시저)</td>
+</tr>
+<tr>
+<td>n10s (Neosemantics)</td>
+<td>OWL → Neo4j 프로퍼티 그래프 변환</td>
+</tr>
+<tr>
+<td>벡터 인덱스</td>
+<td>HNSW 기반, 코사인 유사도 (768차원)</td>
+</tr>
+<tr>
+<td>공간 인덱스</td>
+<td>WGS84 (EPSG:4326) 좌표계</td>
+</tr>
+<tr>
+<td>접근 프로토콜</td>
+<td>Bolt (bolt://), Neo4j Python Driver</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-etl">4.3 ETL 파이프라인 프레임워크</h3>
+<h4 id="431">4.3.1 파이프라인 아키텍처</h4>
+<pre><code>┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│ 데이터    │───&gt;│ 추출     │───&gt;│ 변환     │───&gt;│ 검증     │───&gt;│ 적재     │
+│ 소스     │    │ Extract  │    │Transform │    │ Validate │    │  Load    │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+                                                     │                │
+                                                     v                v
+                                              ┌──────────┐    ┌──────────┐
+                                              │   DLQ    │    │ 리니지   │
+                                              │(실패 큐)  │    │ 기록     │
+                                              └──────────┘    └──────────┘
+</code></pre>
+<h4 id="432-etl">4.3.2 ETL 핵심 기능</h4>
+<table>
+<thead>
+<tr>
+<th>기능</th>
+<th>설명</th>
+<th>구현 상태</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FULL 모드</td>
+<td>전체 데이터 재적재</td>
+<td>구현 완료</td>
+</tr>
+<tr>
+<td>INCREMENTAL 모드</td>
+<td>변경분만 증분 적재</td>
+<td>구현 완료</td>
+</tr>
+<tr>
+<td>온톨로지 인식 검증</td>
+<td>엔티티/관계 타입 자동 검증</td>
+<td>구현 완료</td>
+</tr>
+<tr>
+<td>Dead Letter Queue</td>
+<td>실패 레코드 격리 및 재처리</td>
+<td>구현 완료</td>
+</tr>
+<tr>
+<td>변환 단계</td>
+<td>DateTime/Text/Identifier 변환기</td>
+<td>구현 완료</td>
+</tr>
+<tr>
+<td>배치 로더</td>
+<td>Neo4j 배치 UNWIND 적재</td>
+<td>구현 완료</td>
+</tr>
+</tbody>
+</table>
+<h4 id="433-w3c-prov-o">4.3.3 W3C PROV-O 데이터 리니지</h4>
+<pre><code>┌─────────────┐    wasGeneratedBy    ┌─────────────┐    used    ┌─────────────┐
+│   Entity    │&lt;────────────────────│  Activity   │──────────&gt;│   Entity    │
+│ (결과 데이터) │                      │ (ETL 변환)  │           │ (원본 데이터) │
+└─────────────┘                      └─────────────┘           └─────────────┘
+                                          │
+                                    wasAssociatedWith
+                                          │
+                                          v
+                                   ┌─────────────┐
+                                   │    Agent    │
+                                   │ (수행자/시스템)│
+                                   └─────────────┘
+</code></pre>
+<ul>
+<li><strong>7종 Cypher 쿼리</strong>: 리니지 기록, 조회, 영향도 분석 등</li>
+<li><strong>RBAC 연동</strong>: 리니지 기록 시 접근 권한 검증 및 정책 적용</li>
+</ul>
+<h3 id="44-graphrag-poc">4.4 GraphRAG 기반 자연어 질의응답 PoC</h3>
+<h4 id="441-5-retriever">4.4.1 5종 Retriever 아키텍처</h4>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Retriever</th>
+<th>검색 방식</th>
+<th>용도</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>VectorRetriever</strong></td>
+<td>벡터 유사도 검색</td>
+<td>의미 기반 유사 엔티티 검색</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>VectorCypherRetriever</strong></td>
+<td>벡터 검색 + Cypher 후처리</td>
+<td>유사 엔티티 검색 후 관계 확장</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Text2CypherRetriever</strong></td>
+<td>자연어 → Cypher 변환</td>
+<td>정확한 그래프 쿼리</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>HybridRetriever</strong></td>
+<td>벡터 + 풀텍스트 결합</td>
+<td>복합 검색</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>ToolsRetriever</strong></td>
+<td>LLM 도구 선택 (Agentic)</td>
+<td>LLM이 질문에 최적 검색 전략 자동 선택</td>
+</tr>
+</tbody>
+</table>
+<h4 id="442-text-to-cypher-5">4.4.2 Text-to-Cypher 파이프라인 (5단계)</h4>
+<pre><code>사용자 자연어 질문
+       │
+       v
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│ 1. NL 파싱   │───&gt;│ 2. 쿼리 생성 │───&gt;│ 3. 쿼리 검증 │
+│ (한국어 NLP)  │    │ (CypherBuilder)│   │ (6가지 검증) │
+└──────────────┘    └──────────────┘    └──────────────┘
+                                              │
+                                              v
+                                   ┌──────────────┐    ┌──────────────┐
+                                   │ 4. 쿼리 교정 │───&gt;│ 5. 실행+응답 │
+                                   │ (규칙 기반)   │    │ (Neo4j 실행) │
+                                   └──────────────┘    └──────────────┘
+</code></pre>
+<h4 id="443-nlp">4.4.3 한국어 NLP 지원</h4>
+<table>
+<thead>
+<tr>
+<th>구성 요소</th>
+<th>규모</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>해사용어 사전</td>
+<td>105개 동의어</td>
+<td>"컨테이너선" = "화물선" = "container ship" 등</td>
+</tr>
+<tr>
+<td>관계 키워드</td>
+<td>22개</td>
+<td>"접안" → DOCKED_AT, "항해" → ON_VOYAGE 등</td>
+</tr>
+<tr>
+<td>NL 파서</td>
+<td>1개</td>
+<td>한국어 자연어 → StructuredQuery 변환기</td>
+</tr>
+</tbody>
+</table>
+<h4 id="444">4.4.4 평가 프레임워크</h4>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>평가 질문</td>
+<td>30개 해사 도메인 질문 데이터셋</td>
+</tr>
+<tr>
+<td>평가 지표</td>
+<td>CypherAccuracy, QueryRelevancy</td>
+</tr>
+<tr>
+<td>평가 실행기</td>
+<td>자동 평가 + 리포트 생성</td>
+</tr>
+</tbody>
+</table>
+<h3 id="45">4.5 보안 및 접근 제어</h3>
+<h4 id="451">4.5.1 이중 인증 체계</h4>
+<pre><code>┌──────────────────────────────────────────────────┐
+│                   클라이언트                       │
+│         (JWT Bearer Token 또는 API Key)           │
+└──────────────────────┬───────────────────────────┘
+                       │
+                       v
+┌──────────────────────────────────────────────────┐
+│              FastAPI 인증 미들웨어                  │
+│  ┌─────────────────┐  ┌───────────────────────┐  │
+│  │  JWT 검증       │  │   API Key 검증        │  │
+│  │  (HS256 서명)   │  │   (헤더 기반)          │  │
+│  └─────────────────┘  └───────────────────────┘  │
+└──────────────────────┬───────────────────────────┘
+                       │
+                       v
+┌──────────────────────────────────────────────────┐
+│              RBAC 정책 엔진 (576줄)                │
+│  5 Roles x 5 DataClass = 25가지 접근 조합          │
+└──────────────────────────────────────────────────┘
+</code></pre>
+<h4 id="452-rbac">4.5.2 RBAC 역할 및 데이터 분류</h4>
+<table>
+<thead>
+<tr>
+<th>역할</th>
+<th>설명</th>
+<th>접근 가능 데이터 등급</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADMIN</td>
+<td>시스템 관리자</td>
+<td>PUBLIC ~ TOP_SECRET</td>
+</tr>
+<tr>
+<td>RESEARCHER</td>
+<td>연구자</td>
+<td>PUBLIC ~ SECRET</td>
+</tr>
+<tr>
+<td>OPERATOR</td>
+<td>운영자</td>
+<td>PUBLIC ~ CONFIDENTIAL</td>
+</tr>
+<tr>
+<td>ANALYST</td>
+<td>분석가</td>
+<td>PUBLIC ~ INTERNAL</td>
+</tr>
+<tr>
+<td>VIEWER</td>
+<td>열람자</td>
+<td>PUBLIC</td>
+</tr>
+</tbody>
+</table>
+<h3 id="46">4.6 기술 스택 종합</h3>
+<table>
+<thead>
+<tr>
+<th>분류</th>
+<th>기술</th>
+<th>버전/사양</th>
+<th>라이선스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KG DB</strong></td>
+<td>Neo4j Community</td>
+<td>5.26</td>
+<td>GPLv3</td>
+</tr>
+<tr>
+<td><strong>GraphRAG</strong></td>
+<td>neo4j-graphrag</td>
+<td>1.13.0</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td><strong>OWL 통합</strong></td>
+<td>Neosemantics (n10s)</td>
+<td>Latest</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td><strong>LLM</strong></td>
+<td>Ollama + Qwen 2.5 7B</td>
+<td>7B 파라미터</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td><strong>LLM 프레임워크</strong></td>
+<td>LangChain</td>
+<td>Latest</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>임베딩</strong></td>
+<td>nomic-embed-text</td>
+<td>768차원</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td><strong>워크플로우</strong></td>
+<td>Activepieces</td>
+<td>0.78.0</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>API</strong></td>
+<td>FastAPI</td>
+<td>Latest</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>인증</strong></td>
+<td>JWT (HS256) + API Key</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>크롤링</strong></td>
+<td>BeautifulSoup4 + Requests</td>
+<td>-</td>
+<td>MIT/Apache</td>
+</tr>
+<tr>
+<td><strong>컨테이너</strong></td>
+<td>Docker + Docker Compose</td>
+<td>Multi-stage</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td><strong>오케스트레이션</strong></td>
+<td>Kubernetes (Helm Chart)</td>
+<td>초안</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td><strong>관측성</strong></td>
+<td>JSON 구조화 로깅 + Prometheus</td>
+<td>/metrics 엔드포인트</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td><strong>언어</strong></td>
+<td>Python</td>
+<td>3.10+</td>
+<td>PSF</td>
+</tr>
+</tbody>
+</table>
+<h3 id="47">4.7 현재 구현 현황 (착수 시점)</h3>
+<table>
+<thead>
+<tr>
+<th>지표</th>
+<th>수치</th>
+<th>비고</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python 파일 수</td>
+<td><strong>135개</strong></td>
+<td>프로덕션 + 테스트</td>
+</tr>
+<tr>
+<td>총 코드 라인 수</td>
+<td><strong>40,180줄</strong></td>
+<td>Python 기준</td>
+</tr>
+<tr>
+<td>프로덕션 코드</td>
+<td><strong>~22,000줄</strong></td>
+<td>kg/, poc/, workflows/</td>
+</tr>
+<tr>
+<td>테스트 코드</td>
+<td><strong>~18,000줄</strong></td>
+<td>tests/</td>
+</tr>
+<tr>
+<td>단위 테스트 수</td>
+<td><strong>1,148개</strong></td>
+<td>전체 통과 (Neo4j 불필요)</td>
+</tr>
+<tr>
+<td>전체 테스트 수</td>
+<td><strong>1,193개</strong></td>
+<td>단위 + 통합</td>
+</tr>
+<tr>
+<td>테스트 커버리지 비율</td>
+<td><strong>1:0.9</strong></td>
+<td>프로덕션:테스트 코드 비율</td>
+</tr>
+<tr>
+<td>커밋 수</td>
+<td><strong>55+</strong></td>
+<td>단독 개발 기준</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5">5. 추진 일정</h2>
+<h3 id="51-ascii">5.1 전체 일정 (ASCII 간트 차트)</h3>
+<pre><code>과업 기간: 계약일 ~ 종료일 (12개월)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        M1    M2    M3    M4    M5    M6    M7    M8    M9    M10   M11   M12
+        |     |     |     |     |     |     |     |     |     |     |     |
+
+Phase 1 ██████████████                                              기반 구축
+ 온톨로지 ████████████████████                                        설계
+ Neo4j  ██████████████                                              스키마
+ 인프라  ████████████████████████████████████████████████████████████  지속
+
+Phase 2           ██████████████████████                             데이터
+ ETL 개발         ████████████████████████████████                   파이프라인
+ 크롤러           ████████████████████████                           개발
+ 리니지                 ██████████████████████                       추적
+
+Phase 3                       ████████████████████████████████       PoC 구현
+ GraphRAG                     ██████████████████████████████████     구축
+ Text2Cypher                  ████████████████████████               개발
+ 품질게이트                         ██████████████████████████        구현
+
+Phase 4                                               ████████████  검증/문서
+ 평가                                                 ██████████    결과 정리
+ 문서화                                                     ████████ 보고서
+
+        |     |     |     |     |     |     |     |     |     |     |     |
+        M1    M2    M3    M4    M5    M6    M7    M8    M9    M10   M11   M12
+              ▲                       ▲                             ▲    ▲
+              │                       │                             │    │
+         마일스톤1               마일스톤2                      마일스톤3  마일스톤4
+       (산출물 1,2)           (산출물 3,4,5)                 (산출물6) (산출물7,8)
+</code></pre>
+<h3 id="52">5.2 마일스톤 정의</h3>
+<table>
+<thead>
+<tr>
+<th>마일스톤</th>
+<th>시점</th>
+<th>산출물</th>
+<th>달성 기준</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MS-1</strong></td>
+<td>계약후 2개월</td>
+<td>산출물 1, 2</td>
+<td>데이터 현황 분석 완료, KG 구축 대상 자원 선정</td>
+</tr>
+<tr>
+<td><strong>MS-2</strong></td>
+<td>계약후 5개월</td>
+<td>산출물 3, 4, 5</td>
+<td>온톨로지 설계 완료, 스키마 구현, DB 기술 비교 완료</td>
+</tr>
+<tr>
+<td><strong>MS-3</strong></td>
+<td>종료 1달전</td>
+<td>산출물 6</td>
+<td>PoC 프로토타입 시연, 시험 결과 보고</td>
+</tr>
+<tr>
+<td><strong>MS-4</strong></td>
+<td>종료 2주전</td>
+<td>산출물 7, 8</td>
+<td>2차년도 상세 설계, 과업 완료 보고</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53">5.3 산출물별 상세 일정</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>산출물</th>
+<th>착수</th>
+<th>중간검토</th>
+<th>완료</th>
+<th>제출</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>해사 데이터 현황 분석 보고서</td>
+<td>M1 1주</td>
+<td>M1 3주</td>
+<td>M2 2주</td>
+<td>M2 말</td>
+</tr>
+<tr>
+<td>2</td>
+<td>KG 구축 대상 자원 선정 보고서</td>
+<td>M1 1주</td>
+<td>M1 3주</td>
+<td>M2 2주</td>
+<td>M2 말</td>
+</tr>
+<tr>
+<td>3</td>
+<td>해사 도메인 온톨로지 설계서</td>
+<td>M1 2주</td>
+<td>M3 2주</td>
+<td>M5 2주</td>
+<td>M5 말</td>
+</tr>
+<tr>
+<td>4</td>
+<td>지식그래프 스키마 설계서</td>
+<td>M2 1주</td>
+<td>M3 3주</td>
+<td>M5 2주</td>
+<td>M5 말</td>
+</tr>
+<tr>
+<td>5</td>
+<td>그래프 DB 기술 비교 분석 보고서</td>
+<td>M2 1주</td>
+<td>M4 1주</td>
+<td>M5 2주</td>
+<td>M5 말</td>
+</tr>
+<tr>
+<td>6</td>
+<td>PoC 프로토타입 및 시험 결과 보고서</td>
+<td>M4 1주</td>
+<td>M8 1주</td>
+<td>M11 1주</td>
+<td>M11 말</td>
+</tr>
+<tr>
+<td>7</td>
+<td>2차년도 구축 상세 설계서</td>
+<td>M9 1주</td>
+<td>M11 1주</td>
+<td>M11 3주</td>
+<td>M12 2주</td>
+</tr>
+<tr>
+<td>8</td>
+<td>과업 완료 보고서</td>
+<td>M10 1주</td>
+<td>M11 2주</td>
+<td>M11 3주</td>
+<td>M12 2주</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54">5.4 주요 검토 회의</h3>
+<table>
+<thead>
+<tr>
+<th>회의</th>
+<th>시점</th>
+<th>참석 범위</th>
+<th>주요 안건</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>착수 보고</strong></td>
+<td>M1 1주</td>
+<td>발주/수행기관 전원</td>
+<td>과업 범위 확정, 일정 합의</td>
+</tr>
+<tr>
+<td><strong>1차 중간 보고</strong></td>
+<td>M2 말</td>
+<td>발주/수행기관</td>
+<td>산출물 1,2 제출, 데이터 현황 공유</td>
+</tr>
+<tr>
+<td><strong>2차 중간 보고</strong></td>
+<td>M5 말</td>
+<td>발주/수행기관</td>
+<td>산출물 3,4,5 제출, 설계 검토</td>
+</tr>
+<tr>
+<td><strong>PoC 시연</strong></td>
+<td>M10</td>
+<td>발주/수행기관 + 평가위원</td>
+<td>프로토타입 시연, 질의응답</td>
+</tr>
+<tr>
+<td><strong>최종 보고</strong></td>
+<td>M12 2주</td>
+<td>발주/수행기관 + 평가위원</td>
+<td>산출물 6,7,8 제출, 과업 완료 보고</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6">6. 기대 성과 및 활용 방안</h2>
+<h3 id="61-kpi">6.1 정량적 성과 지표 (KPI)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>지표</th>
+<th>목표값</th>
+<th>측정 방법</th>
+<th>달성 시기</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>온톨로지 엔티티 타입 수</td>
+<td>127개 이상</td>
+<td>OWL 파일 파싱</td>
+<td>M5</td>
+</tr>
+<tr>
+<td>2</td>
+<td>온톨로지 관계 타입 수</td>
+<td>83개 이상</td>
+<td>OWL 파일 파싱</td>
+<td>M5</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Neo4j 제약조건 수</td>
+<td>24개 이상</td>
+<td>스키마 확인</td>
+<td>M5</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Neo4j 인덱스 수 (벡터/공간/풀텍스트/범위)</td>
+<td>44개 이상</td>
+<td>스키마 확인</td>
+<td>M5</td>
+</tr>
+<tr>
+<td>5</td>
+<td>GraphRAG Retriever 종류</td>
+<td>5종</td>
+<td>PoC 시연</td>
+<td>M10</td>
+</tr>
+<tr>
+<td>6</td>
+<td>NL QA 평가 질문 수</td>
+<td>30개 이상</td>
+<td>평가 데이터셋</td>
+<td>M10</td>
+</tr>
+<tr>
+<td>7</td>
+<td>단위 테스트 통과율</td>
+<td>100% (1,148개)</td>
+<td>pytest 실행</td>
+<td>상시</td>
+</tr>
+<tr>
+<td>8</td>
+<td>전체 테스트 수</td>
+<td>1,193개 이상</td>
+<td>pytest 실행</td>
+<td>M12</td>
+</tr>
+<tr>
+<td>9</td>
+<td>코드 라인 수</td>
+<td>40,000줄 이상</td>
+<td>cloc 측정</td>
+<td>M12</td>
+</tr>
+<tr>
+<td>10</td>
+<td>KRISO 데이터 크롤러 수</td>
+<td>4종 이상</td>
+<td>실행 확인</td>
+<td>M8</td>
+</tr>
+<tr>
+<td>11</td>
+<td>ETL 파이프라인 모드</td>
+<td>FULL + INCREMENTAL</td>
+<td>기능 시연</td>
+<td>M8</td>
+</tr>
+<tr>
+<td>12</td>
+<td>RBAC 역할/분류 등급</td>
+<td>5역할 x 5등급</td>
+<td>정책 검증</td>
+<td>M6</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 정성적 성과</h3>
+<table>
+<thead>
+<tr>
+<th>성과 항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>해사 도메인 표준 온톨로지</strong></td>
+<td>국내 최초 W3C OWL 2 기반 해사 도메인 온톨로지 설계 및 공개</td>
+</tr>
+<tr>
+<td><strong>KRISO 데이터 체계화</strong></td>
+<td>8종 시험시설 실험 데이터의 메타데이터 그래프 체계 수립</td>
+</tr>
+<tr>
+<td><strong>GraphRAG PoC</strong></td>
+<td>지식그래프 기반 자연어 질의응답의 해사 도메인 적용 가능성 검증</td>
+</tr>
+<tr>
+<td><strong>오픈소스 기반 아키텍처</strong></td>
+<td>상용 라이선스 비용 없는 전체 스택 구성, 기술 종속성 최소화</td>
+</tr>
+<tr>
+<td><strong>데이터 리니지 체계</strong></td>
+<td>W3C PROV-O 표준 기반 데이터 출처 추적 체계 수립</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63-2">6.3 2차년도 확장 계획</h3>
+<table>
+<thead>
+<tr>
+<th>영역</th>
+<th>1차년도 (설계+PoC)</th>
+<th>2차년도 (구축+고도화)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>온톨로지</td>
+<td>OWL 2 설계 완료</td>
+<td>Protege → n10s 자동 동기화</td>
+</tr>
+<tr>
+<td>KG</td>
+<td>Neo4j 스키마 + 샘플 데이터</td>
+<td>전체 데이터 적재 + 실시간 갱신</td>
+</tr>
+<tr>
+<td>ETL</td>
+<td>프레임워크 개발</td>
+<td>운영 파이프라인 + 모니터링</td>
+</tr>
+<tr>
+<td>GraphRAG</td>
+<td>PoC (5종 Retriever)</td>
+<td>프로덕션 서비스화 + 파인튜닝</td>
+</tr>
+<tr>
+<td>크로스모달</td>
+<td>설계만</td>
+<td>시공간 매칭 + CLIP 유사도 구현</td>
+</tr>
+<tr>
+<td>KRISO</td>
+<td>Phase A (크롤링)</td>
+<td>Phase B (공식 데이터 수신)</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>API만</td>
+<td>Next.js 프론트엔드 + React Flow</td>
+</tr>
+<tr>
+<td>워크플로우</td>
+<td>Activepieces 정의</td>
+<td>자연어 → 워크플로우 자동 생성</td>
+</tr>
+<tr>
+<td>LLM</td>
+<td>Qwen 2.5 7B 기본</td>
+<td>해사 도메인 LoRA 파인튜닝</td>
+</tr>
+</tbody>
+</table>
+<h3 id="64">6.4 산업 활용 방안</h3>
+<table>
+<thead>
+<tr>
+<th>활용 분야</th>
+<th>활용 시나리오</th>
+<th>수혜 대상</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>해사 안전</strong></td>
+<td>위험물 선박 실시간 모니터링, 사고 예방</td>
+<td>해양경찰청, 해양수산부</td>
+</tr>
+<tr>
+<td><strong>항만 운영</strong></td>
+<td>항만 혼잡도 예측, 선석 배정 최적화</td>
+<td>항만공사, 해운사</td>
+</tr>
+<tr>
+<td><strong>해사 연구</strong></td>
+<td>KRISO 실험 데이터 통합 검색, 논문 연관 분석</td>
+<td>KRISO, 대학교 연구실</td>
+</tr>
+<tr>
+<td><strong>어업 안전</strong></td>
+<td>기상 기반 출항 권고, 어장 정보 제공</td>
+<td>어민, 수산업 종사자</td>
+</tr>
+<tr>
+<td><strong>해양 환경</strong></td>
+<td>오염 사고 영향 범위 분석, 규정 위반 추적</td>
+<td>환경부, 해양환경공단</td>
+</tr>
+<tr>
+<td><strong>디지털 트윈</strong></td>
+<td>지식그래프 기반 해양 디지털 트윈 기초 데이터</td>
+<td>범정부 디지털 전환</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7">7. 연구 추진 체계</h2>
+<h3 id="71">7.1 조직 구성</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    [발주기관] 과제 관리                        │
+│                    과업 감독 / 평가 / 검수                     │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           v
+┌─────────────────────────────────────────────────────────────┐
+│                 연구책임자 (PM)                               │
+│            총괄 기획 / 아키텍처 설계 / 대외 협력               │
+├─────────────┬─────────────┬─────────────┬───────────────────┤
+│   온톨로지   │   KG/ETL    │    PoC     │    인프라/QA       │
+│   설계 팀   │   개발 팀    │   개발 팀   │    지원 팀         │
+├─────────────┼─────────────┼─────────────┼───────────────────┤
+│ OWL 설계    │ Neo4j 스키마 │ GraphRAG   │ Docker/K8s        │
+│ n10s 통합   │ ETL 프레임워크│ NL QA     │ CI/CD             │
+│ 표준 준수   │ 크롤러 개발  │ 평가 프레임워크│ 테스트 자동화     │
+│ 도메인 분석  │ 리니지 추적  │ API 개발   │ 관측성/모니터링    │
+└─────────────┴─────────────┴─────────────┴───────────────────┘
+</code></pre>
+<h3 id="72">7.2 역할 분담</h3>
+<table>
+<thead>
+<tr>
+<th>역할</th>
+<th>담당 업무</th>
+<th>산출물 책임</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>연구책임자</strong></td>
+<td>과업 총괄, 온톨로지 아키텍처, KRISO 협력</td>
+<td>산출물 3, 8 총괄</td>
+</tr>
+<tr>
+<td><strong>온톨로지 설계</strong></td>
+<td>OWL 2 설계, n10s 통합, 표준 분석</td>
+<td>산출물 1, 3</td>
+</tr>
+<tr>
+<td><strong>KG/ETL 개발</strong></td>
+<td>Neo4j 스키마, ETL, 크롤러, 리니지</td>
+<td>산출물 2, 4, 7</td>
+</tr>
+<tr>
+<td><strong>PoC 개발</strong></td>
+<td>GraphRAG, Text-to-Cypher, API, 평가</td>
+<td>산출물 5, 6</td>
+</tr>
+<tr>
+<td><strong>인프라/QA</strong></td>
+<td>Docker, K8s, CI/CD, 테스트, 문서</td>
+<td>전체 품질 관리</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73-kriso">7.3 KRISO 협력 체계</h3>
+<table>
+<thead>
+<tr>
+<th>협력 항목</th>
+<th>내용</th>
+<th>주기</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>데이터 현황 공유</strong></td>
+<td>KRISO 보유 데이터 목록, 형식, 접근 방법</td>
+<td>착수 시 1회</td>
+</tr>
+<tr>
+<td><strong>시험시설 인터뷰</strong></td>
+<td>8종 시험시설 담당자 인터뷰, 데이터 구조 파악</td>
+<td>M1~M2</td>
+</tr>
+<tr>
+<td><strong>온톨로지 검토</strong></td>
+<td>해사 도메인 전문가의 온톨로지 설계 검토</td>
+<td>M3, M5</td>
+</tr>
+<tr>
+<td><strong>PoC 피드백</strong></td>
+<td>프로토타입 시연 및 사용성 피드백</td>
+<td>M8, M10</td>
+</tr>
+<tr>
+<td><strong>Phase B 협의</strong></td>
+<td>2차년도 공식 데이터 수신 방안 협의</td>
+<td>M9~M12</td>
+</tr>
+</tbody>
+</table>
+<h3 id="74">7.4 의사소통 체계</h3>
+<table>
+<thead>
+<tr>
+<th>소통 채널</th>
+<th>목적</th>
+<th>주기</th>
+<th>참여자</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>주간 보고</strong></td>
+<td>진행 상황 공유, 이슈 보고</td>
+<td>매주</td>
+<td>PM + 발주기관</td>
+</tr>
+<tr>
+<td><strong>기술 회의</strong></td>
+<td>설계 검토, 기술 의사결정</td>
+<td>격주</td>
+<td>수행팀 전원</td>
+</tr>
+<tr>
+<td><strong>월간 보고</strong></td>
+<td>월간 실적, KPI 달성 현황</td>
+<td>매월</td>
+<td>PM + 발주기관</td>
+</tr>
+<tr>
+<td><strong>KRISO 회의</strong></td>
+<td>데이터 협력, 피드백</td>
+<td>분기</td>
+<td>PM + KRISO 담당</td>
+</tr>
+<tr>
+<td><strong>산출물 검토</strong></td>
+<td>중간 산출물 사전 검토</td>
+<td>MS별</td>
+<td>PM + 발주기관</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="8">8. 위험 관리 및 품질 계획</h2>
+<h3 id="81">8.1 리스크 매트릭스</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>리스크</th>
+<th>발생 가능성</th>
+<th>영향도</th>
+<th>위험 등급</th>
+<th>대응 전략</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1</td>
+<td><strong>KRISO 데이터 접근 지연</strong> — 공식 데이터 수신 협약 지연으로 Phase B 지연</td>
+<td>높음</td>
+<td>중간</td>
+<td><strong>높음</strong></td>
+<td>Phase A 크롤링으로 PoC 진행, Phase B는 2차년도로 확정 분리</td>
+</tr>
+<tr>
+<td>R2</td>
+<td><strong>온톨로지 복잡도 초과</strong> — 127 엔티티, 83 관계의 복잡도로 설계 일정 지연</td>
+<td>중간</td>
+<td>높음</td>
+<td><strong>높음</strong></td>
+<td>핵심 엔티티 우선 설계 (Vessel, Port, Experiment), 점진적 확장</td>
+</tr>
+<tr>
+<td>R3</td>
+<td><strong>LLM 한국어 성능 부족</strong> — Qwen 2.5 7B의 해사 한국어 질의 이해도 부족</td>
+<td>중간</td>
+<td>중간</td>
+<td><strong>중간</strong></td>
+<td>한국어 해사용어 사전 (105 동의어) 구축, 프롬프트 엔지니어링, 2차년도 파인튜닝 대비</td>
+</tr>
+<tr>
+<td>R4</td>
+<td><strong>Neo4j Community 기능 제약</strong> — Community 에디션의 클러스터링 미지원</td>
+<td>낮음</td>
+<td>중간</td>
+<td><strong>낮음</strong></td>
+<td>1차년도는 단일 인스턴스로 충분, 2차년도 Enterprise 검토</td>
+</tr>
+<tr>
+<td>R5</td>
+<td><strong>테스트 마커 누락</strong> — 69% 테스트에 <code>@pytest.mark.unit</code> 미적용</td>
+<td>중간</td>
+<td>낮음</td>
+<td><strong>낮음</strong></td>
+<td>점진적 마커 적용, CI 파이프라인에서 분리 실행 체계 구축</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82">8.2 리스크 대응 방안 상세</h3>
+<h4 id="r1-kriso">R1: KRISO 데이터 접근 지연</h4>
+<table>
+<thead>
+<tr>
+<th>대응 단계</th>
+<th>내용</th>
+<th>시점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>예방</strong></td>
+<td>착수 시 KRISO 데이터 담당자 지정 요청</td>
+<td>M1</td>
+</tr>
+<tr>
+<td><strong>완화</strong></td>
+<td>Phase A 크롤링 (ScholarWorks 11,159건) 선행 확보</td>
+<td>M1~M4</td>
+</tr>
+<tr>
+<td><strong>전환</strong></td>
+<td>크롤링 데이터 → 공식 데이터 자동 전환 파이프라인 설계</td>
+<td>M5~M8</td>
+</tr>
+<tr>
+<td><strong>대체</strong></td>
+<td>공개 해사 데이터(공공데이터포털) 활용 PoC 확장</td>
+<td>M6~M10</td>
+</tr>
+</tbody>
+</table>
+<h4 id="r2">R2: 온톨로지 복잡도 초과</h4>
+<table>
+<thead>
+<tr>
+<th>대응 단계</th>
+<th>내용</th>
+<th>시점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>예방</strong></td>
+<td>3단계 점진적 설계 (핵심 → 확장 → KRISO 전용)</td>
+<td>M1~M5</td>
+</tr>
+<tr>
+<td><strong>완화</strong></td>
+<td>Python 온톨로지 ↔ OWL 2 Turtle 자동 변환기 (owl_exporter.py)</td>
+<td>M2~M4</td>
+</tr>
+<tr>
+<td><strong>검증</strong></td>
+<td>온톨로지 로더/검증기 (maritime_loader.py) 자동 일관성 검사</td>
+<td>M3~M5</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83-qa">8.3 QA 전략</h3>
+<h4 id="831">8.3.1 테스트 체계</h4>
+<table>
+<thead>
+<tr>
+<th>테스트 유형</th>
+<th>수량</th>
+<th>실행 환경</th>
+<th>주기</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>단위 테스트</strong></td>
+<td>1,148개</td>
+<td>Neo4j 불필요</td>
+<td>매 커밋</td>
+</tr>
+<tr>
+<td><strong>통합 테스트</strong></td>
+<td>45개</td>
+<td>Neo4j 필요</td>
+<td>매일</td>
+</tr>
+<tr>
+<td><strong>성능 벤치마크</strong></td>
+<td>별도</td>
+<td>Neo4j 필요</td>
+<td>주간</td>
+</tr>
+<tr>
+<td><strong>온톨로지 검증</strong></td>
+<td>자동</td>
+<td>파일 기반</td>
+<td>매 커밋</td>
+</tr>
+</tbody>
+</table>
+<h4 id="832">8.3.2 테스트 범위 (모듈별)</h4>
+<table>
+<thead>
+<tr>
+<th>모듈</th>
+<th>테스트 수</th>
+<th>주요 검증 항목</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Entity Resolution</td>
+<td>68개</td>
+<td>퍼지 매칭, 3단계 엔티티 해석</td>
+</tr>
+<tr>
+<td>평가 프레임워크</td>
+<td>62개</td>
+<td>CypherAccuracy, QueryRelevancy 측정</td>
+</tr>
+<tr>
+<td>데이터 리니지</td>
+<td>62개</td>
+<td>W3C PROV-O 레코딩, 영향도 분석</td>
+</tr>
+<tr>
+<td>ETL 파이프라인</td>
+<td>61개</td>
+<td>FULL/INCREMENTAL, DLQ, 온톨로지 검증</td>
+</tr>
+<tr>
+<td>RBAC 정책</td>
+<td>56개</td>
+<td>5역할 x 5등급 접근제어</td>
+</tr>
+<tr>
+<td>환각 감지기</td>
+<td>50개</td>
+<td>온톨로지 기반 LLM 환각 필터링</td>
+</tr>
+<tr>
+<td>KG 품질 게이트</td>
+<td>48개</td>
+<td>8가지 자동 검증 규칙</td>
+</tr>
+<tr>
+<td>Cypher 검증기</td>
+<td>46개</td>
+<td>6가지 검증 + FailureType 분류</td>
+</tr>
+<tr>
+<td>NL 파서</td>
+<td>43개</td>
+<td>한국어 해사 자연어 → 구조화 쿼리</td>
+</tr>
+<tr>
+<td>n10s 통합</td>
+<td>35개</td>
+<td>OWL → Neo4j 임포트/익스포트</td>
+</tr>
+<tr>
+<td>NLP 용어 사전</td>
+<td>31개</td>
+<td>105 동의어, 22 관계 키워드</td>
+</tr>
+<tr>
+<td>GraphRAG</td>
+<td>27개</td>
+<td>5종 Retriever 기능</td>
+</tr>
+<tr>
+<td>임베딩</td>
+<td>22개</td>
+<td>Ollama 배치 생성</td>
+</tr>
+<tr>
+<td>Cypher 교정기</td>
+<td>21개</td>
+<td>규칙 기반 쿼리 교정</td>
+</tr>
+<tr>
+<td>인증 미들웨어</td>
+<td>21개</td>
+<td>JWT + API Key 이중 인증</td>
+</tr>
+</tbody>
+</table>
+<h4 id="833-8">8.3.3 품질 게이트 (자동 검증 8가지)</h4>
+<ol>
+<li><strong>스키마 일관성</strong> — 노드 레이블이 온톨로지에 정의된 엔티티와 일치하는지 검증</li>
+<li><strong>관계 유효성</strong> — 관계 타입이 온톨로지에 정의된 유효한 조합인지 검증</li>
+<li><strong>필수 속성 존재</strong> — 필수 속성의 누락 여부 검증</li>
+<li><strong>데이터 타입 정합성</strong> — 속성값의 데이터 타입 일치 검증</li>
+<li><strong>유니크 제약조건</strong> — 중복 엔티티 존재 여부 검증</li>
+<li><strong>고아 노드 탐지</strong> — 관계가 없는 고립 노드 탐지</li>
+<li><strong>순환 참조 감지</strong> — 비정상 순환 관계 감지</li>
+<li><strong>벡터 차원 일관성</strong> — 임베딩 벡터 차원수 일치 검증</li>
+</ol>
+<h3 id="84">8.4 품질 지표</h3>
+<table>
+<thead>
+<tr>
+<th>지표</th>
+<th>목표값</th>
+<th>측정 도구</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>단위 테스트 통과율</td>
+<td>100%</td>
+<td>pytest</td>
+</tr>
+<tr>
+<td>코드 품질 (Ruff 린팅)</td>
+<td>경고 0건</td>
+<td>ruff check</td>
+</tr>
+<tr>
+<td>타입 검사 통과</td>
+<td>오류 0건</td>
+<td>mypy</td>
+</tr>
+<tr>
+<td>Cypher 검증 통과율</td>
+<td>95% 이상</td>
+<td>자체 검증기</td>
+</tr>
+<tr>
+<td>온톨로지 일관성</td>
+<td>100%</td>
+<td>n10s 검증 + 자체 검증</td>
+</tr>
+<tr>
+<td>API 응답 시간</td>
+<td>2초 이내 (P95)</td>
+<td>Prometheus</td>
+</tr>
+<tr>
+<td>환각 감지율</td>
+<td>90% 이상</td>
+<td>자체 감지기</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="9">9. 평가 대응 전략</h2>
+<p>본 과업의 평가에 대응하는 전략을 6대 평가 기준별로 수립한다.</p>
+<h3 id="91">9.1 평가 기준별 대응</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>평가 기준</th>
+<th>대응 전략</th>
+<th>근거</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>우수성</strong> (기술적 탁월성)</td>
+<td>W3C OWL 2 표준 온톨로지 설계, Neosemantics 통합, 5종 GraphRAG Retriever, 환각 감지기, KG 품질 게이트 등 <strong>업계 최고 수준의 기술 적용</strong></td>
+<td>127 엔티티, 83 관계의 대규모 온톨로지, 1,148개 테스트 전량 통과</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>타당성</strong> (방법론의 적절성)</td>
+<td>"W3C 표준 기반 설계, Neo4j로 구현" 방법론 채택. OWL 2 → n10s → Neo4j 프로퍼티 그래프 변환 파이프라인은 <strong>국제 표준 준수</strong>와 <strong>실용적 구현</strong>을 동시에 달성</td>
+<td>W3C OWL 2, PROV-O 표준 준수, IHO S-100 참조</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>필요성</strong> (과업의 당위성)</td>
+<td>해사 데이터 사일로 문제 해결, 비전문가 자연어 접근, 정부 디지털 전환 정책 부합. KRISO 8종 시험시설 데이터 체계화는 <strong>국가 연구 인프라 고도화</strong>에 직결</td>
+<td>해양수산 디지털 전환 추진계획, 제4차 해양수산 과학기술 기본계획</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>적정성</strong> (자원 배분의 합리성)</td>
+<td>전체 오픈소스 스택으로 <strong>라이선스 비용 제로</strong>, 단독 개발자 체제에서 40,180줄 코드 + 1,148 테스트 달성. <strong>단위 비용 대비 최대 산출물</strong></td>
+<td>프로덕션:테스트 코드 비율 1:0.9 (높은 품질 보증)</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>활용 가능성</strong> (확장성/재사용성)</td>
+<td>오픈소스 기반 아키텍처, Docker/K8s 컨테이너화, REST API 표준 인터페이스. <strong>타 도메인 확장</strong> 및 <strong>정부 기관 간 공유</strong> 가능</td>
+<td>MIT/Apache 라이선스 중심, Helm Chart 제공</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>역량</strong> (수행 능력)</td>
+<td>착수 시점에 이미 <strong>40,180줄 구현 완료</strong>, 1,148개 테스트 전량 통과, 55+ 커밋 이력. <strong>설계부터 구현까지 검증된 실행력</strong></td>
+<td>현재 코드 라인 수, 테스트 통과 현황, 모듈 성숙도</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 시연 대응 계획</h3>
+<table>
+<thead>
+<tr>
+<th>시연 항목</th>
+<th>내용</th>
+<th>준비 사항</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NL QA 시연</strong></td>
+<td>"부산항에 정박 중인 위험물 선박" 등 자연어 질의</td>
+<td>샘플 데이터 사전 적재, 질문 시나리오 5개 준비</td>
+</tr>
+<tr>
+<td><strong>온톨로지 시각화</strong></td>
+<td>Cytoscape.js 기반 그래프 시각화</td>
+<td>kg_visualizer.html 사전 준비</td>
+</tr>
+<tr>
+<td><strong>ETL 시연</strong></td>
+<td>크롤러 → ETL → Neo4j 적재 전 과정</td>
+<td>Docker Compose 환경 사전 구동</td>
+</tr>
+<tr>
+<td><strong>테스트 시연</strong></td>
+<td>1,148개 테스트 일괄 실행 및 결과</td>
+<td>pytest 실행 환경 준비</td>
+</tr>
+<tr>
+<td><strong>코드 품질</strong></td>
+<td>Ruff 린팅 + mypy 타입 검사 결과</td>
+<td>CI 파이프라인 결과 캡처</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="10">10. 참고문헌</h2>
+<h3 id="101">10.1 국제 표준 및 규격</h3>
+<ol>
+<li>W3C, "OWL 2 Web Ontology Language Document Overview (Second Edition)," W3C Recommendation, 2012.</li>
+<li>W3C, "PROV-O: The PROV Ontology," W3C Recommendation, 2013.</li>
+<li>IHO, "S-100 Universal Hydrographic Data Model," Edition 5.0.0, 2022.</li>
+<li>IMO, "International Maritime Dangerous Goods (IMDG) Code," 2022 Edition.</li>
+<li>IMO, "COLREG - International Regulations for Preventing Collisions at Sea," 1972 (Consolidated Edition 2022).</li>
+<li>IMO, "SOLAS - International Convention for the Safety of Life at Sea," 1974 (Consolidated Edition 2020).</li>
+</ol>
+<h3 id="102">10.2 기술 문서</h3>
+<ol>
+<li>Neo4j, Inc., "Neo4j Graph Database Documentation," v5.x, 2024-2025.</li>
+<li>Neo4j, Inc., "neo4j-graphrag-python Documentation," v1.x, 2025.</li>
+<li>LangChain, "LangChain Documentation - GraphCypherQAChain," 2024-2025.</li>
+<li>Alibaba Cloud, "Qwen2.5 Technical Report," 2024.</li>
+<li>Activepieces, "Activepieces Documentation &amp; Piece SDK," 2024-2025.</li>
+</ol>
+<h3 id="103">10.3 해사 지식그래프 관련 연구</h3>
+<ol>
+<li>Zhang, Q., Wen, Y., Zhou, C., et al., "Construction of Knowledge Graphs for Maritime Dangerous Goods," <em>Sustainability</em>, 11(10), 2849, MDPI, 2019. DOI: 10.3390/su11102849</li>
+<li>Gan, L., Ye, B., Huang, Z., et al., "Knowledge graph construction based on ship collision accident reports to improve maritime traffic safety," <em>Ocean and Coastal Management</em>, 240, 106660, Elsevier, 2023. DOI: 10.1016/j.ocecoaman.2023.106660</li>
+<li>Liu, C., et al., "Knowledge graph for maritime pollution regulations based on deep learning methods," <em>Ocean and Coastal Management</em>, 244, 106808, Elsevier, 2023. DOI: 10.1016/j.ocecoaman.2023.106808</li>
+<li>Liu, D. &amp; Cheng, L., "MAKG: A maritime accident knowledge graph for intelligent accident analysis and management," <em>Ocean Engineering</em>, 313, 119280, Elsevier, 2024. DOI: 10.1016/j.oceaneng.2024.119280</li>
+<li>Li, S., Xu, J., Chen, X., et al., "Maritime Traffic Knowledge Discovery via Knowledge Graph Theory," <em>Journal of Marine Science and Engineering</em>, 12(12), 2333, MDPI, 2024. DOI: 10.3390/jmse12122333</li>
+<li>"MaRAG: a knowledge graph and retrieval-augmented framework for maritime accident analysis," <em>Ocean Engineering</em>, Elsevier, 2025. DOI: 10.1016/j.oceaneng.2025.033049</li>
+<li>"Construction of a Maritime Knowledge Graph Using GraphRAG for Entity and Relationship Extraction from Maritime Documents," <em>Journal of Computer and Communications</em>, SCIRP, 2025.</li>
+</ol>
+<h3 id="104-graphrag-rag">10.4 GraphRAG 및 RAG 관련 연구</h3>
+<ol>
+<li>Edge, D., Trinh, H., Cheng, N., et al., "From Local to Global: A Graph RAG Approach to Query-Focused Summarization," arXiv:2404.16130, Microsoft Research, 2024.</li>
+<li>Peng, B., Zhu, Y., Liu, Y., et al., "Graph Retrieval-Augmented Generation: A Survey," <em>ACM Transactions on Information Systems</em>, 2024. DOI: 10.1145/3777378. arXiv:2408.08921</li>
+<li>Lewis, P., Perez, E., Piktus, A., et al., "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," <em>NeurIPS</em>, 33, 9459–9474, 2020. arXiv:2005.11401</li>
+<li>"Retrieval-Augmented Generation with Graphs (GraphRAG)," arXiv:2501.00309, 2025.</li>
+</ol>
+<h3 id="105">10.5 멀티모달 지식그래프 관련 연구</h3>
+<ol>
+<li>Zhu, X., Li, Z., Wang, X., et al., "Multi-Modal Knowledge Graph Construction and Application: A Survey," <em>IEEE Transactions on Knowledge and Data Engineering</em>, 36(2), 715–735, 2022. DOI: 10.1109/TKDE.2022.3224228</li>
+<li>Chen, Z., Zhang, Y., Fang, Y., et al., "Knowledge Graphs Meet Multi-Modal Learning: A Comprehensive Survey," arXiv:2402.05391, 2024.</li>
+<li>Zhang, N., Li, L., Chen, X., et al., "A Survey of Multi-modal Knowledge Graphs: Technologies and Trends," <em>ACM Computing Surveys</em>, 2024. DOI: 10.1145/3656579</li>
+<li>"Multi-Modal Spatio-Temporal Knowledge Graph of Ship Management," <em>Applied Sciences</em>, 13(16), 9393, MDPI, 2023. DOI: 10.3390/app13169393</li>
+</ol>
+<h3 id="106-text-to-cypher">10.6 Text-to-Cypher 및 자연어 쿼리 관련 연구</h3>
+<ol>
+<li>Ozsoy, M. G., Messallem, L., et al., "Text2Cypher: Bridging Natural Language and Graph Databases," arXiv:2412.10064, 2024. (GenAIK Workshop 2025)</li>
+<li>Hornsteiner, M., et al., "Real-Time Text-to-Cypher Query Generation with Large Language Models for Graph Databases," <em>Future Internet</em>, 16(12), 438, MDPI, 2024. DOI: 10.3390/fi16120438</li>
+<li>"Enhancing knowledge graph interactions: A comprehensive Text-to-Cypher pipeline with large language models," <em>Information Processing &amp; Management</em>, Elsevier, 2025.</li>
+</ol>
+<h3 id="107">10.7 해사 온톨로지 관련 연구</h3>
+<ol>
+<li>Riga, M., Kontopoulos, E., et al., "EUCISE-OWL: An ontology-based representation of the Common Information Sharing Environment (CISE) for the maritime domain," <em>Semantic Web</em>, 12(4), IOS Press, 2021. DOI: 10.3233/SW-200403</li>
+<li>Fafalios, P., Kritsotaki, A. &amp; Doerr, M., "The SeaLiT Ontology — An Extension of CIDOC-CRM for the Modeling and Integration of Maritime History Information," <em>ACM JOCCH</em>, 2023. DOI: 10.1145/3586080</li>
+<li>Burbach, S., Mackert, L. &amp; Maleshkova, M., "AISHIP: An Ontology for Extended Vessel Representation," <em>CEUR Workshop Proceedings</em>, Vol. 4093, WOP 2025, ISWC 2025.</li>
+<li>Santipantakis, G. M., et al., "An Ontology for Representing and Querying Semantic Trajectories in the Maritime Domain," <em>ADBIS 2023</em>, LNCS, Springer, 2023. DOI: 10.1007/978-3-031-42914-9_16</li>
+<li>Zhou, C., Wen, K., et al., "Ontology-Based Method for Identifying Abnormal Ship Behavior: A Navigation Rule Perspective," <em>JMSE</em>, 12(6), 881, MDPI, 2024. DOI: 10.3390/jmse12060881</li>
+</ol>
+<h3 id="108">10.8 지식그래프 기반 이론</h3>
+<ol>
+<li>Hogan, A., Blomqvist, E., Cochez, M., et al., "Knowledge Graphs," <em>ACM Computing Surveys</em>, 54(4), 71:1–71:37, 2021. DOI: 10.1145/3447772</li>
+</ol>
+<h3 id="109">10.9 정부 정책 문서</h3>
+<ol>
+<li>해양수산부, "제3차 해양수산발전기본계획 (2021-2030)," 2021.</li>
+<li>해양수산부, "제4차 해양수산 과학기술 기본계획 (2023-2027)," 2023.</li>
+<li>한국해양수산개발원(KMI), "해양수산전략 리포트 2023," 2023.</li>
+<li>해양수산부, "해양수산부 데이터 공동활용체계 (VADA Hub)," 2022-현재. https://www.vadahub.go.kr/</li>
+<li>과학기술정보통신부, "국가 R&amp;D 혁신 방안," 2024.</li>
+<li>해양수산부, "해양수산 분야 디지털 전환 추진계획," 2024.</li>
+</ol>
+<hr>
+<h2 id="a">부록 A. 용어 정리</h2>
+<p>본 프로젝트에서 사용되는 해사 도메인 및 기술 용어를 정리한다. 해사 분야에 익숙하지 않은 독자도 본 보고서를 이해할 수 있도록 일상적인 비유를 포함하여 설명한다.</p>
+<h3 id="a1">A.1 선박 관련 용어</h3>
+<table>
+<thead>
+<tr>
+<th>용어</th>
+<th>영문</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MMSI</td>
+<td>Maritime Mobile Service Identity</td>
+<td>해상이동업무식별번호. 선박에 부여되는 9자리 고유 번호. 전화번호처럼 선박을 식별하는 데 사용</td>
+</tr>
+<tr>
+<td>IMO 번호</td>
+<td>IMO Number</td>
+<td>국제해사기구가 부여하는 선박 고유 번호(7자리). 선박이 이름이나 국적을 바꿔도 평생 바뀌지 않음</td>
+</tr>
+<tr>
+<td>호출부호</td>
+<td>Call Sign</td>
+<td>선박의 무선 통신용 식별 부호. 항공기 편명처럼 선박을 부를 때 사용</td>
+</tr>
+<tr>
+<td>총톤수</td>
+<td>Gross Tonnage (GT)</td>
+<td>선박의 전체 용적을 나타내는 단위. 무게가 아니라 '부피'의 개념 (1GT ≈ 2.83m³)</td>
+</tr>
+<tr>
+<td>재화중량톤수</td>
+<td>Deadweight Tonnage (DWT)</td>
+<td>선박이 실을 수 있는 최대 화물+연료+물 무게 (톤). 트럭의 '적재량'과 비슷한 개념</td>
+</tr>
+<tr>
+<td>흘수</td>
+<td>Draft</td>
+<td>수면 아래 잠기는 선박 깊이(m). 화물을 많이 실을수록 깊어짐. 항구 수심보다 크면 입항 불가</td>
+</tr>
+<tr>
+<td>선폭</td>
+<td>Beam</td>
+<td>선박의 가장 넓은 부분의 너비(m)</td>
+</tr>
+<tr>
+<td>선종</td>
+<td>Vessel Type</td>
+<td>선박의 용도에 따른 분류 (화물선, 유조선, 어선, 여객선 등)</td>
+</tr>
+<tr>
+<td>선급</td>
+<td>Classification Society</td>
+<td>선박의 안전성을 검사·인증하는 기관 (한국선급 KR, DNV, Lloyd's Register 등). 자동차의 '검사소' 역할</td>
+</tr>
+<tr>
+<td>기국</td>
+<td>Flag State</td>
+<td>선박이 등록된 국가. 선박 뒤에 걸리는 국기의 나라. 파나마, 라이베리아 등 '편의치적'도 있음</td>
+</tr>
+<tr>
+<td>AIS</td>
+<td>Automatic Identification System</td>
+<td>자동식별시스템. 선박이 자신의 위치·속도·방향을 자동으로 송신하는 장치. 항공기의 트랜스폰더와 유사</td>
+</tr>
+<tr>
+<td>자율운항선박</td>
+<td>Maritime Autonomous Surface Ship (MASS)</td>
+<td>사람이 타지 않거나 원격 조종하는 무인 선박</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a2">A.2 항만·항해 관련 용어</h3>
+<table>
+<thead>
+<tr>
+<th>용어</th>
+<th>영문</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UNLOCODE</td>
+<td>UN Location Code</td>
+<td>유엔이 부여하는 항만/지역 코드 (예: KRPUS = 부산항). 전 세계 10만개+ 코드</td>
+</tr>
+<tr>
+<td>선석</td>
+<td>Berth</td>
+<td>항만에서 선박이 줄을 묶고 정박하는 자리. 주차장의 '주차면'과 비슷</td>
+</tr>
+<tr>
+<td>묘박지</td>
+<td>Anchorage</td>
+<td>항만 바깥에서 닻을 내려 대기하는 구역. 선석이 부족할 때 대기하는 '대기 장소'</td>
+</tr>
+<tr>
+<td>터미널</td>
+<td>Terminal</td>
+<td>특정 화물을 전문으로 처리하는 항만 구역 (컨테이너 터미널, 유류 터미널 등)</td>
+</tr>
+<tr>
+<td>항로</td>
+<td>Waterway/Channel</td>
+<td>선박이 안전하게 다닐 수 있도록 지정된 수로. 도로의 '차선'과 비슷</td>
+</tr>
+<tr>
+<td>TSS</td>
+<td>Traffic Separation Scheme</td>
+<td>통항분리대. 해상 교통이 많은 곳에서 상행/하행 선박의 통행 방향을 분리하는 구역. 고속도로의 '중앙분리대' 역할</td>
+</tr>
+<tr>
+<td>입출항</td>
+<td>Port Call</td>
+<td>선박이 항만에 들어오고(입항) 나가는(출항) 것</td>
+</tr>
+<tr>
+<td>항해</td>
+<td>Voyage</td>
+<td>출발항에서 도착항까지 한 번의 여정 전체</td>
+</tr>
+<tr>
+<td>ETA</td>
+<td>Estimated Time of Arrival</td>
+<td>도착 예정 시각</td>
+</tr>
+<tr>
+<td>ATA</td>
+<td>Actual Time of Arrival</td>
+<td>실제 도착 시각</td>
+</tr>
+<tr>
+<td>벙커링</td>
+<td>Bunkering</td>
+<td>선박에 연료유를 공급하는 작업. 자동차의 '주유'</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a3">A.3 해역·해양 관련 용어</h3>
+<table>
+<thead>
+<tr>
+<th>용어</th>
+<th>영문</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EEZ</td>
+<td>Exclusive Economic Zone</td>
+<td>배타적 경제수역. 해안선에서 200해리(약 370km)까지의 수역. 해당 국가가 어업·자원 개발 독점권 보유</td>
+</tr>
+<tr>
+<td>영해</td>
+<td>Territorial Sea</td>
+<td>해안선에서 12해리(약 22km)까지의 수역. 해당 국가의 주권이 미치는 바다</td>
+</tr>
+<tr>
+<td>해리</td>
+<td>Nautical Mile (NM)</td>
+<td>바다에서 사용하는 거리 단위. 1해리 = 1,852m (약 1.85km)</td>
+</tr>
+<tr>
+<td>노트</td>
+<td>Knot (kt)</td>
+<td>바다에서 사용하는 속도 단위. 1노트 = 시속 1.852km</td>
+</tr>
+<tr>
+<td>해상 상태</td>
+<td>Sea State</td>
+<td>파도의 높이로 바다 상태를 0~9 등급으로 나눈 것 (0=잔잔, 9=극심한 파도 14m+)</td>
+</tr>
+<tr>
+<td>파고</td>
+<td>Wave Height</td>
+<td>파도의 높이(m). 골에서 마루까지의 수직 거리</td>
+</tr>
+<tr>
+<td>조석</td>
+<td>Tide</td>
+<td>달과 태양의 인력에 의한 해수면 높이 변화 (밀물/썰물)</td>
+</tr>
+<tr>
+<td>수심</td>
+<td>Water Depth</td>
+<td>해수면에서 해저면까지의 깊이(m)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a4">A.4 해사 사고·규정 관련 용어</h3>
+<table>
+<thead>
+<tr>
+<th>용어</th>
+<th>영문</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>COLREG</td>
+<td>국제해상충돌예방규칙</td>
+<td>바다에서 선박 간 충돌을 방지하기 위한 국제 규칙. 도로의 '교통법규'에 해당</td>
+</tr>
+<tr>
+<td>SOLAS</td>
+<td>해상인명안전협약</td>
+<td>선박의 안전 기준을 정한 국제 협약. 화재, 침몰, 구명정 등 안전 장비와 절차를 규정</td>
+</tr>
+<tr>
+<td>MARPOL</td>
+<td>선박오염방지협약</td>
+<td>선박에 의한 해양 오염을 방지하기 위한 국제 협약. 기름, 화학물질, 쓰레기 배출 규제</td>
+</tr>
+<tr>
+<td>IMDG Code</td>
+<td>국제해상위험물규칙</td>
+<td>위험물(화학물, 폭발물 등) 해상 운송 규칙. 위험물의 분류, 포장, 표시 방법을 규정</td>
+</tr>
+<tr>
+<td>IUU 어업</td>
+<td>Illegal, Unreported, Unregulated Fishing</td>
+<td>불법·비보고·비규제 어업. 허가 없이 남의 수역에서 물고기를 잡는 행위</td>
+</tr>
+<tr>
+<td>PSC</td>
+<td>Port State Control</td>
+<td>항만국통제. 외국 선박이 입항했을 때 안전 기준 충족 여부를 검사하는 제도</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a5-kriso">A.5 KRISO 시험시설 관련 용어</h3>
+<table>
+<thead>
+<tr>
+<th>용어</th>
+<th>영문</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>예인수조</td>
+<td>Towing Tank</td>
+<td>길이 200m의 긴 수조에서 모형 선박을 끌며 저항·추진 성능을 측정하는 시설</td>
+</tr>
+<tr>
+<td>해양공학수조</td>
+<td>Ocean Engineering Basin</td>
+<td>인공 파도를 만들어 부유체(선박, 해양구조물)의 거동을 시험하는 시설</td>
+</tr>
+<tr>
+<td>빙해수조</td>
+<td>Ice Tank</td>
+<td>인공 얼음판 위에서 모형 선박의 쇄빙 성능을 측정하는 시설. 세계에서 몇 개 안 되는 희귀 시설</td>
+</tr>
+<tr>
+<td>심해공학수조</td>
+<td>Deep Ocean Engineering Basin</td>
+<td>깊이 15m 수조로 심해 환경(조류, 파랑)을 재현하는 시설</td>
+</tr>
+<tr>
+<td>캐비테이션터널</td>
+<td>Cavitation Tunnel</td>
+<td>프로펠러 주변에 발생하는 '기포(캐비테이션)' 현상을 연구하는 터널형 수조. 캐비테이션은 소음·진동·침식의 원인</td>
+</tr>
+<tr>
+<td>고압챔버</td>
+<td>Hyperbaric Chamber</td>
+<td>심해의 고압 환경(600bar)을 재현하여 장비를 시험하는 밀폐 시설</td>
+</tr>
+<tr>
+<td>선박운항시뮬레이터</td>
+<td>Full Mission Bridge Simulator</td>
+<td>실제 선교(조종실)와 동일한 환경에서 항해 훈련을 하는 시뮬레이터</td>
+</tr>
+<tr>
+<td>모형선</td>
+<td>Model Ship</td>
+<td>실제 선박을 축소한 모형. 보통 1:20~1:80 축척. 수조 시험에 사용</td>
+</tr>
+<tr>
+<td>저항 시험</td>
+<td>Resistance Test</td>
+<td>모형선을 물 속에서 끌어 받는 저항력(항력)을 측정하는 시험</td>
+</tr>
+<tr>
+<td>추진 시험</td>
+<td>Propulsion Test</td>
+<td>프로펠러의 추진 성능(추력, 효율)을 측정하는 시험</td>
+</tr>
+<tr>
+<td>조종 시험</td>
+<td>Maneuvering Test</td>
+<td>선박의 선회 능력, 정지 거리 등 조종 성능을 측정하는 시험</td>
+</tr>
+<tr>
+<td>내항 시험</td>
+<td>Seakeeping Test</td>
+<td>파도 속에서 선박의 흔들림(롤링, 피칭)을 측정하는 시험</td>
+</tr>
+<tr>
+<td>쇄빙 시험</td>
+<td>Ice Performance Test</td>
+<td>얼음을 깨며 전진하는 성능을 측정하는 시험</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a6-ai">A.6 지식그래프·AI 관련 용어</h3>
+<table>
+<thead>
+<tr>
+<th>용어</th>
+<th>영문</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>지식그래프</td>
+<td>Knowledge Graph (KG)</td>
+<td>데이터를 '노드(사물)'와 '엣지(관계)'로 표현하는 그래프 데이터베이스. "부산항 ←DOCKED_AT← 해운대호" 처럼 관계를 명시</td>
+</tr>
+<tr>
+<td>온톨로지</td>
+<td>Ontology</td>
+<td>특정 분야의 개념과 관계를 체계적으로 정의한 '사전'. 기계가 읽을 수 있는 분류 체계</td>
+</tr>
+<tr>
+<td>OWL</td>
+<td>Web Ontology Language</td>
+<td>W3C가 정한 온톨로지 표현 표준 언어</td>
+</tr>
+<tr>
+<td>Turtle (TTL)</td>
+<td>Terse RDF Triple Language</td>
+<td>RDF 데이터를 간결하게 작성하는 형식. OWL 온톨로지를 저장하는 파일 형식</td>
+</tr>
+<tr>
+<td>Cypher</td>
+<td>-</td>
+<td>Neo4j 그래프 데이터베이스의 쿼리 언어. SQL의 그래프 버전</td>
+</tr>
+<tr>
+<td>GraphRAG</td>
+<td>Graph Retrieval-Augmented Generation</td>
+<td>지식그래프에서 관련 정보를 검색(Retrieval)하여 LLM의 답변을 보강(Augmentation)하는 기법</td>
+</tr>
+<tr>
+<td>Text-to-Cypher</td>
+<td>-</td>
+<td>자연어 질문을 Cypher 쿼리로 자동 변환하는 기술. "부산항 선박 보여줘" → <code>MATCH (v:Vessel)-[:DOCKED_AT]-&gt;(p:Port {name:'부산항'}) RETURN v</code></td>
+</tr>
+<tr>
+<td>임베딩</td>
+<td>Embedding</td>
+<td>텍스트/이미지를 AI가 비교할 수 있는 숫자 벡터(768차원)로 변환한 것. '의미의 좌표'</td>
+</tr>
+<tr>
+<td>환각</td>
+<td>Hallucination</td>
+<td>AI가 사실이 아닌 정보를 그럴듯하게 생성하는 현상. 온톨로지 기반 검증으로 방지</td>
+</tr>
+<tr>
+<td>PROV-O</td>
+<td>Provenance Ontology</td>
+<td>W3C 표준 데이터 출처(리니지) 추적 온톨로지</td>
+</tr>
+<tr>
+<td>RBAC</td>
+<td>Role-Based Access Control</td>
+<td>역할 기반 접근 제어. 사용자의 역할(관리자, 연구자 등)에 따라 접근 가능한 데이터를 제한</td>
+</tr>
+<tr>
+<td>ETL</td>
+<td>Extract, Transform, Load</td>
+<td>데이터를 추출→변환→적재하는 파이프라인</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a7">A.7 데이터 형식·표준</h3>
+<table>
+<thead>
+<tr>
+<th>용어</th>
+<th>영문</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IHO S-100</td>
+<td>Universal Hydrographic Data Model</td>
+<td>국제수로기구의 해양 데이터 표준 프레임워크. 전자해도(ENC) 등의 기반</td>
+</tr>
+<tr>
+<td>n10s (Neosemantics)</td>
+<td>-</td>
+<td>Neo4j에서 OWL/RDF 데이터를 처리하는 플러그인. OWL 온톨로지를 그래프로 자동 변환</td>
+</tr>
+<tr>
+<td>APOC</td>
+<td>Awesome Procedures on Cypher</td>
+<td>Neo4j의 확장 프로시저 라이브러리. 데이터 변환, 가져오기 등 유틸리티 모음</td>
+</tr>
+<tr>
+<td>WGS84</td>
+<td>World Geodetic System 1984</td>
+<td>전 세계 GPS가 사용하는 좌표계 (위도/경도)</td>
+</tr>
+<tr>
+<td>HNSW</td>
+<td>Hierarchical Navigable Small World</td>
+<td>벡터 유사도 검색에 사용되는 고속 인덱스 알고리즘</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="b">부록 B. 온톨로지 클래스·속성 상세</h2>
+<p>본 프로젝트의 해사 도메인 온톨로지(127 엔티티, 83 관계, 29 속성정의)를 10개 엔티티 그룹별로 상세히 기술한다. 각 클래스의 의미, 하위 유형, 주요 속성을 포함하며, 실제 구현 코드(<code>kg/ontology/maritime_ontology.py</code>)에 기반한다.</p>
+<h3 id="b1-physicalentity">B.1 PhysicalEntity — 물리적 객체</h3>
+<p>물리적으로 존재하는 해사 객체. 바다 위에서 움직이거나, 항만에 고정되어 있는 실체.</p>
+<h4 id="b11-vessel">B.1.1 Vessel (선박)</h4>
+<p>바다 위에서 운항하는 모든 수상 선박. 화물선, 유조선, 어선, 여객선 등을 포함.</p>
+<ul>
+<li><strong>하위 유형</strong>: CargoShip(화물선), Tanker(유조선), FishingVessel(어선), PassengerShip(여객선), NavalVessel(군함/경비정), AutonomousVessel(자율운항선박)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mmsi</td>
+<td>INTEGER</td>
+<td>✅</td>
+<td>해상이동업무식별번호 (9자리, 예: 440123456)</td>
+</tr>
+<tr>
+<td>imo</td>
+<td>INTEGER</td>
+<td></td>
+<td>IMO 번호 (7자리, 예: 9876543)</td>
+</tr>
+<tr>
+<td>name</td>
+<td>STRING</td>
+<td>✅</td>
+<td>선박명 (예: "해운대호")</td>
+</tr>
+<tr>
+<td>callSign</td>
+<td>STRING</td>
+<td></td>
+<td>호출부호 (예: "HLBQ")</td>
+</tr>
+<tr>
+<td>vesselType</td>
+<td>STRING</td>
+<td></td>
+<td>선종 (CargoShip, Tanker, FishingVessel 등)</td>
+</tr>
+<tr>
+<td>flag</td>
+<td>STRING</td>
+<td></td>
+<td>기국 코드 (예: "KR", "PA")</td>
+</tr>
+<tr>
+<td>grossTonnage</td>
+<td>FLOAT</td>
+<td></td>
+<td>총톤수 (GT)</td>
+</tr>
+<tr>
+<td>deadweight</td>
+<td>FLOAT</td>
+<td></td>
+<td>재화중량톤수 (DWT)</td>
+</tr>
+<tr>
+<td>length</td>
+<td>FLOAT</td>
+<td></td>
+<td>전장 (m)</td>
+</tr>
+<tr>
+<td>beam</td>
+<td>FLOAT</td>
+<td></td>
+<td>선폭 (m)</td>
+</tr>
+<tr>
+<td>draft</td>
+<td>FLOAT</td>
+<td></td>
+<td>흘수 (m)</td>
+</tr>
+<tr>
+<td>yearBuilt</td>
+<td>INTEGER</td>
+<td></td>
+<td>건조년도</td>
+</tr>
+<tr>
+<td>currentStatus</td>
+<td>STRING</td>
+<td></td>
+<td>현재 상태 (underway, moored, anchored 등)</td>
+</tr>
+<tr>
+<td>currentLocation</td>
+<td>POINT</td>
+<td></td>
+<td>현재 위치 (위도, 경도)</td>
+</tr>
+<tr>
+<td>speed</td>
+<td>FLOAT</td>
+<td></td>
+<td>현재 속력 (노트)</td>
+</tr>
+<tr>
+<td>course</td>
+<td>FLOAT</td>
+<td></td>
+<td>대지침로 (도, 0-360)</td>
+</tr>
+<tr>
+<td>heading</td>
+<td>FLOAT</td>
+<td></td>
+<td>선수방향 (도, 0-360)</td>
+</tr>
+<tr>
+<td>destination</td>
+<td>STRING</td>
+<td></td>
+<td>목적지</td>
+</tr>
+<tr>
+<td>eta</td>
+<td>DATETIME</td>
+<td></td>
+<td>도착 예정 시각</td>
+</tr>
+<tr>
+<td>lastUpdated</td>
+<td>DATETIME</td>
+<td></td>
+<td>마지막 업데이트 시각</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b12-port">B.1.2 Port (항만)</h4>
+<p>선박이 접안하여 화물을 싣고 내리는 시설.</p>
+<ul>
+<li><strong>하위 유형</strong>: TradePort(무역항), CoastalPort(연안항), FishingPort(어항)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unlocode</td>
+<td>STRING</td>
+<td>✅</td>
+<td>UN 위치 코드 (예: "KRPUS" = 부산항)</td>
+</tr>
+<tr>
+<td>name</td>
+<td>STRING</td>
+<td>✅</td>
+<td>항만명 (예: "부산항")</td>
+</tr>
+<tr>
+<td>nameEn</td>
+<td>STRING</td>
+<td></td>
+<td>영문명 (예: "Busan Port")</td>
+</tr>
+<tr>
+<td>country</td>
+<td>STRING</td>
+<td></td>
+<td>국가 코드</td>
+</tr>
+<tr>
+<td>location</td>
+<td>POINT</td>
+<td></td>
+<td>위치 좌표</td>
+</tr>
+<tr>
+<td>portType</td>
+<td>STRING</td>
+<td></td>
+<td>항만 유형 (trade, coastal, fishing)</td>
+</tr>
+<tr>
+<td>maxDraft</td>
+<td>FLOAT</td>
+<td></td>
+<td>최대 허용 흘수 (m) — 이보다 깊이 잠기는 선박은 입항 불가</td>
+</tr>
+<tr>
+<td>berthCount</td>
+<td>INTEGER</td>
+<td></td>
+<td>선석 수</td>
+</tr>
+<tr>
+<td>anchorageCount</td>
+<td>INTEGER</td>
+<td></td>
+<td>묘박지 수</td>
+</tr>
+<tr>
+<td>timezone</td>
+<td>STRING</td>
+<td></td>
+<td>시간대</td>
+</tr>
+<tr>
+<td>operatingHours</td>
+<td>STRING</td>
+<td></td>
+<td>운영 시간</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b13-portfacility-berth-anchorage-terminal">B.1.3 PortFacility — Berth(선석), Anchorage(묘박지), Terminal(터미널)</h4>
+<p>항만 내부 시설. 선석은 선박이 줄을 묶는 자리, 묘박지는 닻을 내려 대기하는 구역, 터미널은 특정 화물 처리 전용 구역.</p>
+<h4 id="b14-waterway">B.1.4 Waterway (항로/수로)</h4>
+<p>선박이 안전하게 항해할 수 있도록 지정된 수로.</p>
+<ul>
+<li><strong>하위 유형</strong>: TSS(통항분리대), Channel(표시 수로), FairwayRoute(페어웨이)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>STRING</td>
+<td>✅</td>
+<td>항로명</td>
+</tr>
+<tr>
+<td>waterwayType</td>
+<td>STRING</td>
+<td></td>
+<td>유형 (strait, canal, river, fairway)</td>
+</tr>
+<tr>
+<td>minDepth</td>
+<td>FLOAT</td>
+<td></td>
+<td>최소 수심 (m)</td>
+</tr>
+<tr>
+<td>maxWidth</td>
+<td>FLOAT</td>
+<td></td>
+<td>최대 폭 (m)</td>
+</tr>
+<tr>
+<td>trafficDensity</td>
+<td>STRING</td>
+<td></td>
+<td>교통 밀도 (low, medium, high)</td>
+</tr>
+<tr>
+<td>tssApplicable</td>
+<td>BOOLEAN</td>
+<td></td>
+<td>TSS 적용 여부</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b15-cargo">B.1.5 Cargo (화물)</h4>
+<p>선박이 운송하는 화물.</p>
+<ul>
+<li><strong>하위 유형</strong>: DangerousGoods(위험물), BulkCargo(벌크화물), ContainerCargo(컨테이너화물)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cargoId</td>
+<td>STRING</td>
+<td>✅</td>
+<td>화물 식별번호</td>
+</tr>
+<tr>
+<td>cargoType</td>
+<td>STRING</td>
+<td></td>
+<td>화물 유형</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>FLOAT</td>
+<td></td>
+<td>무게 (톤)</td>
+</tr>
+<tr>
+<td>volume</td>
+<td>FLOAT</td>
+<td></td>
+<td>체적 (m³)</td>
+</tr>
+<tr>
+<td>hazardClass</td>
+<td>STRING</td>
+<td></td>
+<td>위험물 등급 (IMDG 기준)</td>
+</tr>
+<tr>
+<td>unNumber</td>
+<td>STRING</td>
+<td></td>
+<td>UN 번호 (위험물 식별, 예: UN1203=가솔린)</td>
+</tr>
+<tr>
+<td>temperature</td>
+<td>FLOAT</td>
+<td></td>
+<td>요구 온도 (냉동 화물의 경우)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b16-sensor">B.1.6 Sensor (센서)</h4>
+<p>관측 데이터를 생산하는 장치.</p>
+<ul>
+<li><strong>하위 유형</strong>: AISTransceiver, Radar, CCTVCamera, WeatherStation</li>
+</ul>
+<h3 id="b2-spatialentity">B.2 SpatialEntity — 공간 객체</h3>
+<p>지리적 위치를 나타내는 객체.</p>
+<ul>
+<li><strong>SeaArea</strong> (해역): EEZ(배타적경제수역), TerritorialSea(영해) 등</li>
+<li><strong>CoastalRegion</strong> (연안 지역)</li>
+<li><strong>GeoPoint</strong> (좌표): 위도/경도 단일 좌표점</li>
+</ul>
+<h3 id="b3-temporalentity">B.3 TemporalEntity — 시간적 사건</h3>
+<p>시간 축 위에서 발생하는 사건이나 상태.</p>
+<h4 id="b31-voyage">B.3.1 Voyage (항해)</h4>
+<p>출발항에서 도착항까지의 완전한 여정.</p>
+<h4 id="b32-portcall">B.3.2 PortCall (입출항)</h4>
+<p>선박이 특정 항만을 방문한 기록.</p>
+<h4 id="b33-incident">B.3.3 Incident (해사 사고)</h4>
+<p>해상에서 발생하는 사건/사고.</p>
+<ul>
+<li><strong>하위 유형</strong>: Collision(충돌), Grounding(좌초), Pollution(오염), Distress(조난), IllegalFishing(불법어업)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>incidentId</td>
+<td>STRING</td>
+<td>✅</td>
+<td>사고 식별번호</td>
+</tr>
+<tr>
+<td>incidentType</td>
+<td>STRING</td>
+<td></td>
+<td>사고 유형 (collision, grounding, pollution 등)</td>
+</tr>
+<tr>
+<td>date</td>
+<td>DATETIME</td>
+<td>✅</td>
+<td>발생 일시</td>
+</tr>
+<tr>
+<td>location</td>
+<td>POINT</td>
+<td></td>
+<td>발생 위치</td>
+</tr>
+<tr>
+<td>severity</td>
+<td>STRING</td>
+<td></td>
+<td>심각도 (minor, moderate, major, critical)</td>
+</tr>
+<tr>
+<td>description</td>
+<td>STRING</td>
+<td></td>
+<td>사고 개요</td>
+</tr>
+<tr>
+<td>casualties</td>
+<td>INTEGER</td>
+<td></td>
+<td>사상자 수</td>
+</tr>
+<tr>
+<td>pollutionAmount</td>
+<td>FLOAT</td>
+<td></td>
+<td>오염 유출량 (톤)</td>
+</tr>
+<tr>
+<td>resolved</td>
+<td>BOOLEAN</td>
+<td></td>
+<td>해결 여부</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b34-weathercondition">B.3.4 WeatherCondition (기상 상태)</h4>
+<p>특정 해역의 기상 관측 또는 예보.</p>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>timestamp</td>
+<td>DATETIME</td>
+<td>✅</td>
+<td>관측/예보 시각</td>
+</tr>
+<tr>
+<td>windSpeed</td>
+<td>FLOAT</td>
+<td></td>
+<td>풍속 (m/s)</td>
+</tr>
+<tr>
+<td>windDirection</td>
+<td>FLOAT</td>
+<td></td>
+<td>풍향 (도, 0=북)</td>
+</tr>
+<tr>
+<td>waveHeight</td>
+<td>FLOAT</td>
+<td></td>
+<td>유의파고 (m)</td>
+</tr>
+<tr>
+<td>wavePeriod</td>
+<td>FLOAT</td>
+<td></td>
+<td>파주기 (초)</td>
+</tr>
+<tr>
+<td>visibility</td>
+<td>FLOAT</td>
+<td></td>
+<td>시정 (km)</td>
+</tr>
+<tr>
+<td>seaState</td>
+<td>INTEGER</td>
+<td></td>
+<td>해상 상태 (0~9 등급)</td>
+</tr>
+<tr>
+<td>temperature</td>
+<td>FLOAT</td>
+<td></td>
+<td>기온 (°C)</td>
+</tr>
+<tr>
+<td>humidity</td>
+<td>FLOAT</td>
+<td></td>
+<td>습도 (%)</td>
+</tr>
+<tr>
+<td>pressure</td>
+<td>FLOAT</td>
+<td></td>
+<td>기압 (hPa)</td>
+</tr>
+<tr>
+<td>precipitation</td>
+<td>FLOAT</td>
+<td></td>
+<td>강수량 (mm)</td>
+</tr>
+<tr>
+<td>riskLevel</td>
+<td>STRING</td>
+<td></td>
+<td>위험 등급</td>
+</tr>
+<tr>
+<td>forecast</td>
+<td>BOOLEAN</td>
+<td></td>
+<td>예보 여부 (true=예보, false=관측)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b35-activity">B.3.5 Activity (운항 활동)</h4>
+<p>선박이 수행하는 개별 작업.</p>
+<ul>
+<li><strong>하위 유형</strong>: Loading(적재), Unloading(양하), Bunkering(급유), Anchoring(정박), Loitering(배회)</li>
+</ul>
+<h3 id="b4-informationentity">B.4 InformationEntity — 정보 객체</h3>
+<p>규정, 문서 등 정보를 나타내는 객체.</p>
+<h4 id="b41-regulation">B.4.1 Regulation (규정)</h4>
+<p>해사 국제 규정 및 협약.</p>
+<ul>
+<li><strong>하위 유형</strong>: COLREG, SOLAS, MARPOL, IMDGCode</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>code</td>
+<td>STRING</td>
+<td>✅</td>
+<td>규정 코드</td>
+</tr>
+<tr>
+<td>title</td>
+<td>STRING</td>
+<td>✅</td>
+<td>규정 제목</td>
+</tr>
+<tr>
+<td>regulationType</td>
+<td>STRING</td>
+<td></td>
+<td>유형 (convention, code, regulation)</td>
+</tr>
+<tr>
+<td>effectiveDate</td>
+<td>DATE</td>
+<td></td>
+<td>발효일</td>
+</tr>
+<tr>
+<td>issuingBody</td>
+<td>STRING</td>
+<td></td>
+<td>발행 기관 (IMO, IHO 등)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b42-document">B.4.2 Document (문서)</h4>
+<p>사고보고서, 검사보고서, 항해경보 등.</p>
+<ul>
+<li><strong>하위 유형</strong>: AccidentReport, InspectionReport, NavigationalWarning, CargoManifest</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>docId</td>
+<td>STRING</td>
+<td>✅</td>
+<td>문서 식별번호</td>
+</tr>
+<tr>
+<td>title</td>
+<td>STRING</td>
+<td>✅</td>
+<td>제목</td>
+</tr>
+<tr>
+<td>content</td>
+<td>STRING</td>
+<td></td>
+<td>본문</td>
+</tr>
+<tr>
+<td>docType</td>
+<td>STRING</td>
+<td></td>
+<td>문서 유형</td>
+</tr>
+<tr>
+<td>issueDate</td>
+<td>DATE</td>
+<td></td>
+<td>발행일</td>
+</tr>
+<tr>
+<td>textEmbedding</td>
+<td>LIST&lt;FLOAT&gt;</td>
+<td></td>
+<td>텍스트 임베딩 벡터 (768차원) — 의미 기반 검색용</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b43-datasource">B.4.3 DataSource (데이터 소스)</h4>
+<p>외부 데이터 제공처.</p>
+<ul>
+<li><strong>하위 유형</strong>: APIEndpoint, StreamSource, FileSource</li>
+</ul>
+<h3 id="b5-observationentity">B.5 ObservationEntity — 관측 데이터</h3>
+<p>다양한 센서로부터 수집되는 관측 기록.</p>
+<table>
+<thead>
+<tr>
+<th>관측 유형</th>
+<th>설명</th>
+<th>데이터 예시</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SARObservation</td>
+<td>위성 레이더(SAR) 관측</td>
+<td>해상 선박 탐지, 유류 유출 감지</td>
+</tr>
+<tr>
+<td>OpticalObservation</td>
+<td>광학 위성 관측</td>
+<td>고해상도 해상 이미지</td>
+</tr>
+<tr>
+<td>CCTVObservation</td>
+<td>CCTV 영상 관측</td>
+<td>항만 감시 영상</td>
+</tr>
+<tr>
+<td>AISObservation</td>
+<td>AIS 위치 보고</td>
+<td>선박 위치, 속도, 방향</td>
+</tr>
+<tr>
+<td>RadarObservation</td>
+<td>레이더 관측</td>
+<td>선박/물체 탐지</td>
+</tr>
+<tr>
+<td>WeatherObservation</td>
+<td>기상 관측</td>
+<td>풍속, 파고, 시정</td>
+</tr>
+</tbody>
+</table>
+<p>공통 속성:</p>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>observationId</td>
+<td>STRING</td>
+<td>✅</td>
+<td>관측 식별번호</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>DATETIME</td>
+<td>✅</td>
+<td>관측 시각</td>
+</tr>
+<tr>
+<td>location</td>
+<td>POINT</td>
+<td></td>
+<td>관측 위치</td>
+</tr>
+<tr>
+<td>modalityType</td>
+<td>STRING</td>
+<td></td>
+<td>관측 유형 (SAR, optical, AIS 등)</td>
+</tr>
+<tr>
+<td>confidence</td>
+<td>FLOAT</td>
+<td></td>
+<td>신뢰도 (0.0~1.0)</td>
+</tr>
+<tr>
+<td>visualEmbedding</td>
+<td>LIST&lt;FLOAT&gt;</td>
+<td></td>
+<td>시각 임베딩 벡터</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b6-krisoentity-kriso">B.6 KRISOEntity — KRISO 실험 객체</h3>
+<p>KRISO(선박해양플랜트연구소) 시험시설과 실험 데이터.</p>
+<h4 id="b61-experiment">B.6.1 Experiment (실험)</h4>
+<p>KRISO에서 수행되는 실험 캠페인.</p>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>experimentId</td>
+<td>STRING</td>
+<td>✅</td>
+<td>실험 번호 (예: "EXP-2024-001")</td>
+</tr>
+<tr>
+<td>title</td>
+<td>STRING</td>
+<td>✅</td>
+<td>실험 제목 (예: "KCS 선형 저항 시험")</td>
+</tr>
+<tr>
+<td>objective</td>
+<td>STRING</td>
+<td></td>
+<td>실험 목적</td>
+</tr>
+<tr>
+<td>date</td>
+<td>DATE</td>
+<td></td>
+<td>실험 날짜</td>
+</tr>
+<tr>
+<td>duration</td>
+<td>FLOAT</td>
+<td></td>
+<td>소요 시간 (시간)</td>
+</tr>
+<tr>
+<td>status</td>
+<td>STRING</td>
+<td></td>
+<td>상태 (planned, running, completed)</td>
+</tr>
+<tr>
+<td>principalInvestigator</td>
+<td>STRING</td>
+<td></td>
+<td>책임 연구원</td>
+</tr>
+<tr>
+<td>projectCode</td>
+<td>STRING</td>
+<td></td>
+<td>프로젝트 코드</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b62-testfacility">B.6.2 TestFacility (시험시설)</h4>
+<p>KRISO가 보유한 8종의 시험시설.</p>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>facilityId</td>
+<td>STRING</td>
+<td>✅</td>
+<td>시설 코드 (예: "KRISO-TT-001")</td>
+</tr>
+<tr>
+<td>name</td>
+<td>STRING</td>
+<td>✅</td>
+<td>시설명</td>
+</tr>
+<tr>
+<td>facilityType</td>
+<td>STRING</td>
+<td></td>
+<td>시설 유형 (towingTank, oceanBasin, iceTank 등)</td>
+</tr>
+<tr>
+<td>length</td>
+<td>FLOAT</td>
+<td></td>
+<td>길이 (m)</td>
+</tr>
+<tr>
+<td>width</td>
+<td>FLOAT</td>
+<td></td>
+<td>너비 (m)</td>
+</tr>
+<tr>
+<td>depth</td>
+<td>FLOAT</td>
+<td></td>
+<td>수심 (m)</td>
+</tr>
+<tr>
+<td>maxSpeed</td>
+<td>FLOAT</td>
+<td></td>
+<td>최대 예인 속도 (m/s)</td>
+</tr>
+<tr>
+<td>waveCapability</td>
+<td>STRING</td>
+<td></td>
+<td>파도 생성 능력</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b63-testcondition">B.6.3 TestCondition (시험 조건)</h4>
+<p>실험 수행 시의 환경/운전 조건.</p>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>speed</td>
+<td>FLOAT</td>
+<td></td>
+<td>시험 속도 (m/s)</td>
+</tr>
+<tr>
+<td>waveHeight</td>
+<td>FLOAT</td>
+<td></td>
+<td>파고 (m)</td>
+</tr>
+<tr>
+<td>wavePeriod</td>
+<td>FLOAT</td>
+<td></td>
+<td>파주기 (초)</td>
+</tr>
+<tr>
+<td>windSpeed</td>
+<td>FLOAT</td>
+<td></td>
+<td>풍속 (m/s)</td>
+</tr>
+<tr>
+<td>waterDepth</td>
+<td>FLOAT</td>
+<td></td>
+<td>수심 (m)</td>
+</tr>
+<tr>
+<td>iceThickness</td>
+<td>FLOAT</td>
+<td></td>
+<td>빙두께 (m) — 빙해수조 시험 전용</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b64-modelship">B.6.4 ModelShip (모형선)</h4>
+<p>실제 선박을 축소한 모형.</p>
+<table>
+<thead>
+<tr>
+<th>속성명</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>modelId</td>
+<td>STRING</td>
+<td>✅</td>
+<td>모형 번호</td>
+</tr>
+<tr>
+<td>scale</td>
+<td>FLOAT</td>
+<td></td>
+<td>축척비 (예: 25.0 = 1:25 축소)</td>
+</tr>
+<tr>
+<td>length</td>
+<td>FLOAT</td>
+<td></td>
+<td>전장 (m)</td>
+</tr>
+<tr>
+<td>beam</td>
+<td>FLOAT</td>
+<td></td>
+<td>선폭 (m)</td>
+</tr>
+<tr>
+<td>draft</td>
+<td>FLOAT</td>
+<td></td>
+<td>흘수 (m)</td>
+</tr>
+<tr>
+<td>displacement</td>
+<td>FLOAT</td>
+<td></td>
+<td>배수량 (kg)</td>
+</tr>
+<tr>
+<td>hullForm</td>
+<td>STRING</td>
+<td></td>
+<td>선형 (예: "KCS", "KVLCC2")</td>
+</tr>
+<tr>
+<td>propellerType</td>
+<td>STRING</td>
+<td></td>
+<td>프로펠러 유형</td>
+</tr>
+</tbody>
+</table>
+<h4 id="b65-measurement">B.6.5 Measurement (측정값)</h4>
+<p>실험에서 생산되는 개별 측정 기록.</p>
+<ul>
+<li><strong>하위 유형</strong>: Resistance(저항), Propulsion(추진), Maneuvering(조종), Seakeeping(내항), IcePerformance(쇄빙), StructuralResponse(구조응답)</li>
+</ul>
+<h3 id="b7-multimodaldata">B.7 MultimodalData — 멀티모달 데이터</h3>
+<p>다양한 형식의 원본 데이터.</p>
+<table>
+<thead>
+<tr>
+<th>클래스</th>
+<th>설명</th>
+<th>주요 속성</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AISData</td>
+<td>AIS 위치 보고 배치</td>
+<td>mmsi, startTime, endTime, pointCount</td>
+</tr>
+<tr>
+<td>SatelliteImage</td>
+<td>위성 영상</td>
+<td>satellite, sensorType, resolution, cloudCover</td>
+</tr>
+<tr>
+<td>RadarImage</td>
+<td>레이더 영상</td>
+<td>radarType, range, resolution</td>
+</tr>
+<tr>
+<td>SensorReading</td>
+<td>IoT 센서 측정값</td>
+<td>metric, value, unit, quality</td>
+</tr>
+<tr>
+<td>MaritimeChart</td>
+<td>전자해도(ENC)</td>
+<td>chartType, scale, edition, datum</td>
+</tr>
+<tr>
+<td>VideoClip</td>
+<td>영상 클립</td>
+<td>duration, resolution, fps</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b8-multimodalrepresentation">B.8 MultimodalRepresentation — 임베딩 벡터</h3>
+<p>AI가 비교·검색할 수 있도록 변환된 수치 표현.</p>
+<table>
+<thead>
+<tr>
+<th>클래스</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VisualEmbedding</td>
+<td>이미지에서 추출한 768차원 벡터</td>
+</tr>
+<tr>
+<td>TrajectoryEmbedding</td>
+<td>선박 궤적에서 추출한 벡터</td>
+</tr>
+<tr>
+<td>TextEmbedding</td>
+<td>텍스트에서 추출한 768차원 벡터</td>
+</tr>
+<tr>
+<td>FusedEmbedding</td>
+<td>여러 모달리티를 결합한 통합 벡터</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b9-actor">B.9 Actor — 행위자</h3>
+<p>시스템에 참여하는 기관과 인물.</p>
+<table>
+<thead>
+<tr>
+<th>클래스</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Organization</td>
+<td>기관/회사 — GovernmentAgency, ShippingCompany, ResearchInstitute, ClassificationSociety</td>
+</tr>
+<tr>
+<td>Person</td>
+<td>개인 — CrewMember(선원), Inspector(검사관)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b10-platformresource">B.10 PlatformResource — 플랫폼 리소스</h3>
+<p>서비스 플랫폼의 내부 구성요소.</p>
+<table>
+<thead>
+<tr>
+<th>클래스</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Workflow</td>
+<td>자동화 워크플로우 정의</td>
+</tr>
+<tr>
+<td>WorkflowNode</td>
+<td>워크플로우 내 개별 처리 단계</td>
+</tr>
+<tr>
+<td>WorkflowExecution</td>
+<td>워크플로우 실행 인스턴스</td>
+</tr>
+<tr>
+<td>AIModel</td>
+<td>AI/ML 모델</td>
+</tr>
+<tr>
+<td>DataPipeline</td>
+<td>데이터 수집/변환 파이프라인</td>
+</tr>
+<tr>
+<td>AIAgent</td>
+<td>MCP 기반 자율 AI 에이전트</td>
+</tr>
+<tr>
+<td>MCPTool</td>
+<td>MCP 프로토콜로 노출된 도구</td>
+</tr>
+<tr>
+<td>MCPResource</td>
+<td>MCP 프로토콜로 노출된 리소스</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b11-rbac">B.11 RBAC — 접근 제어</h3>
+<p>플랫폼 보안 및 접근 권한 관리.</p>
+<table>
+<thead>
+<tr>
+<th>클래스</th>
+<th>설명</th>
+<th>주요 속성</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User</td>
+<td>사용자 계정</td>
+<td>userId, name, email, organization</td>
+</tr>
+<tr>
+<td>Role</td>
+<td>접근 역할 (5종)</td>
+<td>roleId, name, level</td>
+</tr>
+<tr>
+<td>DataClass</td>
+<td>데이터 보안 등급 (5종)</td>
+<td>classId, name, level</td>
+</tr>
+<tr>
+<td>Permission</td>
+<td>세부 접근 권한</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<blockquote>
+<p><strong>본 보고서는 1차년도 착수 시점의 과업 계획을 포함하며, 과업 진행에 따라 세부 내용이 변경될 수 있습니다.</strong></p>
+<p><strong>작성</strong>: [연구책임자명]
+<strong>검토</strong>: [검토자명]
+<strong>승인</strong>: [승인자명]</p>
+<hr>
+<p><strong>문서 이력</strong></p>
+<table>
+<thead>
+<tr>
+<th>버전</th>
+<th>일자</th>
+<th>변경 내용</th>
+<th>작성자</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0</td>
+<td>2026.03</td>
+<td>최초 작성</td>
+<td>[작성자]</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+  </div>
+</div>
+
+</body>
+</html>

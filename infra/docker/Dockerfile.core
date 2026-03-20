@@ -1,0 +1,50 @@
+# Multi-stage build for Maritime KG API
+# Stage 1: Build dependencies
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN pip install --no-cache-dir --upgrade pip
+
+# Copy dependency files
+COPY requirements.txt .
+
+# Install Python dependencies to a prefix
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt \
+    && pip install --no-cache-dir --prefix=/install PyJWT>=2.0.0
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+LABEL maintainer="인사이트마이닝 <info@insightmining.io>"
+LABEL description="Maritime KG REST API"
+LABEL version="0.1.0"
+
+# Create non-root user
+RUN groupadd -r maritime && useradd -r -g maritime -d /app maritime
+
+WORKDIR /app
+
+# Copy installed dependencies from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code
+COPY kg/ ./kg/
+COPY maritime/ ./maritime/
+COPY poc/ ./poc/
+
+# Set environment
+ENV PYTHONPATH=/app \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Switch to non-root user
+USER maritime
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" || exit 1
+
+CMD ["uvicorn", "kg.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,156 @@
+services:
+  # ===========================================================================
+  # Neo4j - Knowledge Graph Database
+  # ===========================================================================
+  neo4j:
+    image: neo4j:5.26.0-community
+    container_name: maritime-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"   # Neo4j Browser
+      - "7687:7687"   # Bolt protocol
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env}
+      NEO4J_PLUGINS: '["apoc", "n10s"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*,n10s.*
+      NEO4J_dbms_security_procedures_allowlist: apoc.*,n10s.*
+      NEO4J_server_memory_heap_initial__size: 1G
+      NEO4J_server_memory_heap_max__size: 1G
+      NEO4J_server_memory_pagecache_size: 1G
+      NEO4J_dbms_directories_import: /import
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_plugins:/plugins
+      - neo4j_import:/import
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "${NEO4J_USER:-neo4j}", "-p", "${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env}", "RETURN 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ===========================================================================
+  # Maritime KG API - FastAPI REST API
+  # ===========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maritime-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env}
+      NEO4J_DATABASE: ${NEO4J_DATABASE:-neo4j}
+      ENV: ${ENV:-production}
+      APP_API_KEY: ${APP_API_KEY:-}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+
+  # ===========================================================================
+  # Activepieces - Workflow Automation Engine
+  # ===========================================================================
+  activepieces:
+    image: ghcr.io/activepieces/activepieces:0.78.0
+    container_name: maritime-activepieces
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Engine settings
+      AP_ENGINE_EXECUTABLE_PATH: dist/packages/engine/main.js
+      AP_EXECUTION_MODE: UNSANDBOXED
+      # Frontend URL (change for production)
+      AP_FRONTEND_URL: ${AP_FRONTEND_URL:-http://localhost:8080}
+      # Security keys (generate with: openssl rand -hex 16/32)
+      AP_ENCRYPTION_KEY: ${AP_ENCRYPTION_KEY:?Set AP_ENCRYPTION_KEY in .env}
+      AP_JWT_SECRET: ${AP_JWT_SECRET:?Set AP_JWT_SECRET in .env}
+      # PostgreSQL connection
+      AP_POSTGRES_HOST: postgres
+      AP_POSTGRES_PORT: 5432
+      AP_POSTGRES_DATABASE: activepieces
+      AP_POSTGRES_USERNAME: ${AP_POSTGRES_USERNAME:-postgres}
+      AP_POSTGRES_PASSWORD: ${AP_POSTGRES_PASSWORD:?Set AP_POSTGRES_PASSWORD in .env}
+      AP_POSTGRES_USE_SSL: "false"
+      # Redis connection
+      AP_REDIS_HOST: redis
+      AP_REDIS_PORT: 6379
+      # Pieces configuration
+      AP_PIECES_SOURCE: CLOUD_AND_DB
+      AP_PIECES_SYNC_MODE: OFFICIAL_AUTO
+      # Limits
+      AP_WEBHOOK_TIMEOUT_SECONDS: 30
+      AP_TRIGGER_DEFAULT_POLL_INTERVAL: 5
+      AP_FLOW_TIMEOUT_SECONDS: 600
+    volumes:
+      - activepieces_cache:/usr/src/app/cache
+
+  # ===========================================================================
+  # PostgreSQL - Activepieces Metadata Database
+  # ===========================================================================
+  postgres:
+    image: postgres:14.4
+    container_name: maritime-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: activepieces
+      POSTGRES_USER: ${AP_POSTGRES_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${AP_POSTGRES_PASSWORD:?Set AP_POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AP_POSTGRES_USERNAME:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # Redis - Activepieces Job Queue (BullMQ)
+  # ===========================================================================
+  redis:
+    image: redis:7.0.7
+    container_name: maritime-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_plugins:
+    driver: local
+  neo4j_import:
+    driver: local
+  activepieces_cache:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
