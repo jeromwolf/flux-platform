@@ -27,6 +27,7 @@ Usage::
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
@@ -39,6 +40,9 @@ from kg.lineage.models import (
     LineageNode,
 )
 from kg.lineage.policy import LineagePolicy, RecordingLevel
+from kg.lineage.queries import MERGE_LINEAGE_EDGE, MERGE_LINEAGE_NODE
+
+logger = logging.getLogger(__name__)
 
 
 def _new_id() -> str:
@@ -275,6 +279,62 @@ class LineageRecorder:
                 subgraph.add_edge(edge)
 
         return subgraph
+
+    def flush(self, session: Any) -> int:
+        """인메모리 리니지 그래프를 Neo4j에 영속화.
+
+        Args:
+            session: Neo4j session (sync)
+
+        Returns:
+            영속화된 노드 + 엣지 수
+        """
+        graph = self.get_graph()
+        if not graph.nodes and not graph.edges:
+            return 0
+
+        count = 0
+        try:
+            # 노드 먼저 영속화
+            for node in graph.nodes.values():
+                session.run(
+                    MERGE_LINEAGE_NODE,
+                    {
+                        "nodeId": node.node_id,
+                        "entityType": node.entity_type,
+                        "entityId": node.entity_id,
+                        "createdAt": node.created_at.isoformat() if node.created_at else None,
+                        "metadata": node.metadata or {},
+                    },
+                )
+                count += 1
+
+            # 엣지 영속화
+            for edge in graph.edges:
+                session.run(
+                    MERGE_LINEAGE_EDGE,
+                    {
+                        "sourceId": edge.source_id,
+                        "targetId": edge.target_id,
+                        "edgeId": edge.edge_id,
+                        "eventType": edge.event_type.value if hasattr(edge.event_type, "value") else str(edge.event_type),
+                        "timestamp": edge.timestamp.isoformat() if edge.timestamp else None,
+                        "agent": edge.agent or "system",
+                        "activity": edge.activity or "",
+                        "metadata": edge.metadata or {},
+                    },
+                )
+                count += 1
+
+            logger.info(
+                "Lineage flushed: %d nodes, %d edges",
+                len(graph.nodes),
+                len(graph.edges),
+            )
+        except Exception as e:
+            logger.error("Lineage flush failed: %s", e)
+
+        return count
 
     def clear(self) -> None:
         """Reset the recorder, clearing all recorded data."""

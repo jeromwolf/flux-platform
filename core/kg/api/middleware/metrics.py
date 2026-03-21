@@ -33,6 +33,7 @@ class _MetricsStore:
         self._request_duration_count: dict[str, int] = defaultdict(int)
         self._error_count: dict[str, int] = defaultdict(int)
         self._active_requests: int = 0
+        self._business_counters: dict[str, float] = defaultdict(float)
 
     def record_request(self, method: str, path: str, status: int, duration: float) -> None:
         """Record a completed request."""
@@ -52,6 +53,21 @@ class _MetricsStore:
     def decrement_active(self) -> None:
         with self._lock:
             self._active_requests -= 1
+
+    def record_business_metric(
+        self, name: str, labels: dict[str, str], value: float = 1.0
+    ) -> None:
+        """Record a business-domain metric (counter increment).
+
+        Args:
+            name: Metric name (e.g. "imsp_kg_queries_total").
+            labels: Label key-value pairs.
+            value: Value to add (default 1.0).
+        """
+        label_str = ",".join(f'{k}="{v}"' for k, v in sorted(labels.items()))
+        key = f"{name}{{{label_str}}}"
+        with self._lock:
+            self._business_counters[key] += value
 
     def format_prometheus(self) -> str:
         """Format metrics in Prometheus text exposition format."""
@@ -97,6 +113,16 @@ class _MetricsStore:
                 )
 
         lines.append("")
+
+        # Business metrics
+        if self._business_counters:
+            lines.append("# HELP imsp_business_metrics IMSP domain-specific metrics")
+            lines.append("# TYPE imsp_business_metrics counter")
+            with self._lock:
+                for key, value in sorted(self._business_counters.items()):
+                    lines.append(f"{key} {value}")
+            lines.append("")
+
         return "\n".join(lines)
 
 

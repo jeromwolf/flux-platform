@@ -96,7 +96,7 @@ class TestQueryEndpointValid:
         mock_session.run = AsyncMock(return_value=mock_result)
 
         client, _ = _make_client(mock_session)
-        resp = client.post("/api/query", json={"text": "부산항 선박"})
+        resp = client.post("/api/v1/query", json={"text": "부산항 선박"})
 
         assert resp.status_code == 200
         data = resp.json()
@@ -117,7 +117,7 @@ class TestQueryEndpointValid:
 
         client, _ = _make_client(mock_session)
         resp = client.post(
-            "/api/query",
+            "/api/v1/query",
             json={"text": "선박 목록", "execute": True, "limit": 10},
         )
 
@@ -142,7 +142,7 @@ class TestQueryEndpointNoExecute:
 
         client, _ = _make_client(mock_session)
         resp = client.post(
-            "/api/query",
+            "/api/v1/query",
             json={"text": "항구 정보", "execute": False},
         )
 
@@ -157,7 +157,7 @@ class TestQueryEndpointNoExecute:
         """Parse-only mode still returns confidence and parse_details."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/query",
+            "/api/v1/query",
             json={"text": "컨테이너선 현황", "execute": False},
         )
 
@@ -179,7 +179,7 @@ class TestQueryEndpointInvalid:
     def test_empty_text_returns_422(self) -> None:
         """Empty text field triggers Pydantic validation error (422)."""
         client, _ = _make_client()
-        resp = client.post("/api/query", json={"text": ""})
+        resp = client.post("/api/v1/query", json={"text": ""})
 
         # FastAPI min_length=1 validation returns 422
         assert resp.status_code == 422

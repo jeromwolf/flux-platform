@@ -10,6 +10,10 @@ from __future__ import annotations
 class KGError(Exception):
     """Base exception for all knowledge-graph errors."""
 
+    def __init__(self, message: str = "", *, error_code: str = "") -> None:
+        super().__init__(message)
+        self.error_code = error_code
+
 
 # Backward compatibility alias
 MaritimeKGError = KGError

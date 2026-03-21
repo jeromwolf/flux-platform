@@ -122,7 +122,7 @@ class TestHealthEndpoint:
         mock_session.run = AsyncMock(return_value=mock_result)
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/health")
+        resp = client.get("/api/v1/health")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -136,7 +136,7 @@ class TestHealthEndpoint:
         mock_session.run = AsyncMock(side_effect=Exception("connection refused"))
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/health")
+        resp = client.get("/api/v1/health")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -161,7 +161,7 @@ class TestSubgraphEndpoint:
         mock_session.run = AsyncMock(return_value=mock_result)
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/subgraph", params={"label": "Vessel", "limit": 10})
+        resp = client.get("/api/v1/subgraph", params={"label": "Vessel", "limit": 10})
 
         assert resp.status_code == 200
         data = resp.json()
@@ -173,7 +173,7 @@ class TestSubgraphEndpoint:
     def test_subgraph_endpoint_rejects_invalid_label(self):
         """Subgraph with non-alphanumeric label returns error in meta."""
         client, _ = _make_client()
-        resp = client.get("/api/subgraph", params={"label": "DROP; --"})
+        resp = client.get("/api/v1/subgraph", params={"label": "DROP; --"})
 
         assert resp.status_code == 200
         data = resp.json()
@@ -187,7 +187,7 @@ class TestNeighborsEndpoint:
     def test_neighbors_endpoint_requires_node_id(self):
         """Neighbors endpoint requires nodeId query parameter."""
         client, _ = _make_client()
-        resp = client.get("/api/neighbors")
+        resp = client.get("/api/v1/neighbors")
 
         # FastAPI returns 422 for missing required query params
         assert resp.status_code == 422
@@ -198,14 +198,14 @@ class TestSearchEndpoint:
     def test_search_endpoint_requires_query(self):
         """Search endpoint requires q query parameter."""
         client, _ = _make_client()
-        resp = client.get("/api/search")
+        resp = client.get("/api/v1/search")
 
         assert resp.status_code == 422
 
     def test_search_endpoint_rejects_empty_query(self):
         """Search endpoint rejects empty string for q."""
         client, _ = _make_client()
-        resp = client.get("/api/search", params={"q": ""})
+        resp = client.get("/api/v1/search", params={"q": ""})
 
         # FastAPI min_length=1 validation returns 422
         assert resp.status_code == 422
@@ -245,7 +245,7 @@ class TestSchemaEndpoint:
         )
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/schema")
+        resp = client.get("/api/v1/schema")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -272,7 +272,7 @@ class TestCORS:
 
         client, _ = _make_client(mock_session)
         resp = client.get(
-            "/api/health",
+            "/api/v1/health",
             headers={"Origin": "http://localhost:3000"},
         )
 
@@ -379,7 +379,7 @@ class TestAuthMiddleware:
         client, _ = _make_client(mock_session)
 
         # Request without API key should succeed in dev mode
-        resp = client.get("/api/health")
+        resp = client.get("/api/v1/health")
         assert resp.status_code == 200
 
 
@@ -423,7 +423,7 @@ class TestAuthProduction:
         """Request without X-API-Key header returns 401 in production."""
         with patch.dict(os.environ, {"APP_API_KEY": "test-secret-key"}):
             client = _make_prod_client()
-            resp = client.get("/api/schema")
+            resp = client.get("/api/v1/schema")
         assert resp.status_code == 401
 
     def test_auth_valid_key_in_production(self):
@@ -442,14 +442,14 @@ class TestAuthProduction:
 
         with patch.dict(os.environ, {"APP_API_KEY": "test-secret-key"}):
             client = _make_prod_client(mock_session)
-            resp = client.get("/api/schema", headers={"X-API-Key": "test-secret-key"})
+            resp = client.get("/api/v1/schema", headers={"X-API-Key": "test-secret-key"})
         assert resp.status_code == 200
 
     def test_auth_invalid_key_in_production(self):
         """Request with wrong X-API-Key returns 401 in production."""
         with patch.dict(os.environ, {"APP_API_KEY": "test-secret-key"}):
             client = _make_prod_client()
-            resp = client.get("/api/schema", headers={"X-API-Key": "wrong-key"})
+            resp = client.get("/api/v1/schema", headers={"X-API-Key": "wrong-key"})
         assert resp.status_code == 401
 
     def test_health_no_auth_required(self):
@@ -459,6 +459,6 @@ class TestAuthProduction:
 
         with patch.dict(os.environ, {"APP_API_KEY": "test-secret-key"}):
             client = _make_prod_client(mock_session)
-            resp = client.get("/api/health")
+            resp = client.get("/api/v1/health")
         assert resp.status_code == 200
         assert resp.json()["status"] == "degraded"

@@ -14,29 +14,9 @@ import sys
 from pathlib import Path
 
 from kg.config import get_config, get_driver
+from kg.utils.cypher_parser import parse_cypher_file
 
 _SCHEMA_DIR = Path(__file__).resolve().parent.parent.parent / "maritime" / "schema"
-
-
-def _read_cypher_statements(filepath: Path) -> list[str]:
-    """Parse a .cypher file and return individual statements.
-
-    Lines starting with ``//`` are treated as comments and ignored.
-    Statements are delimited by ``;``.
-    """
-    text = filepath.read_text(encoding="utf-8")
-    statements: list[str] = []
-    for raw in text.split(";"):
-        # Strip comments and whitespace
-        lines = [
-            line
-            for line in raw.strip().splitlines()
-            if line.strip() and not line.strip().startswith("//")
-        ]
-        stmt = " ".join(lines).strip()
-        if stmt:
-            statements.append(stmt)
-    return statements
 
 
 def _execute_statements(
@@ -70,13 +50,13 @@ def init_schema() -> None:
         with driver.session(database=get_config().neo4j.database) as session:
             # --- Constraints ---
             constraints_file = _SCHEMA_DIR / "constraints.cypher"
-            constraints = _read_cypher_statements(constraints_file)
+            constraints = parse_cypher_file(constraints_file)
             print(f"\n=== Applying {len(constraints)} constraints ===")
             c_ok, c_err = session.execute_write(_execute_statements, constraints, "constraints")
 
             # --- Indexes ---
             indexes_file = _SCHEMA_DIR / "indexes.cypher"
-            indexes = _read_cypher_statements(indexes_file)
+            indexes = parse_cypher_file(indexes_file)
             print(f"\n=== Applying {len(indexes)} indexes ===")
             i_ok, i_err = session.execute_write(_execute_statements, indexes, "indexes")
 

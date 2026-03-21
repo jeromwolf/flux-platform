@@ -39,7 +39,7 @@ class JSONFormatter(logging.Formatter):
             }
 
         # Include extra fields passed via logging.info("msg", extra={...})
-        for key in ("request_id", "method", "path", "status_code", "duration_ms", "client_ip"):
+        for key in ("request_id", "trace_id", "span_id", "parent_span_id", "method", "path", "status_code", "duration_ms", "client_ip"):
             if hasattr(record, key):
                 log_entry[key] = getattr(record, key)
 

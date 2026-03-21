@@ -88,7 +88,7 @@ def _collect_graph(records: list[Any]) -> tuple[dict[str, Any], dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-@router.get("/api/subgraph", response_model=GraphResponse)
+@router.get("/subgraph", response_model=GraphResponse)
 async def subgraph(
     label: str = Query(default="Vessel", description="Node label to query"),  # noqa: B008
     limit: int = Query(  # noqa: B008
@@ -132,7 +132,7 @@ async def subgraph(
     )
 
 
-@router.get("/api/neighbors", response_model=GraphResponse)
+@router.get("/neighbors", response_model=GraphResponse)
 async def neighbors(
     nodeId: str = Query(..., description="Element ID of the center node"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
@@ -164,7 +164,7 @@ async def neighbors(
     )
 
 
-@router.get("/api/search", response_model=GraphResponse)
+@router.get("/search", response_model=GraphResponse)
 async def search(
     q: str = Query(..., min_length=1, description="Search query string"),  # noqa: B008
     limit: int = Query(default=30, ge=1, le=100, description="Maximum results"),  # noqa: B008

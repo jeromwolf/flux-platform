@@ -23,6 +23,22 @@ logger = logging.getLogger(__name__)
 
 _API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
 
+# API Key → Role mapping (admin 자동 부여 제거)
+# 실제 운영에서는 DB 또는 Keycloak에서 관리
+_API_KEY_ROLES: dict[str, dict] = {}
+
+
+def _resolve_api_key_identity(api_key: str) -> dict:
+    """API Key에 매핑된 역할을 반환. 미등록 키는 read-only."""
+    if api_key in _API_KEY_ROLES:
+        return _API_KEY_ROLES[api_key]
+    # 미등록 API Key는 최소 권한 (read-only)
+    return {
+        "sub": "api-key-user",
+        "role": "viewer",
+        "auth_method": "api-key",
+    }
+
 
 def get_current_api_key(
     api_key: Optional[str] = Security(_API_KEY_HEADER),  # noqa: B008, UP045
@@ -85,6 +101,15 @@ def get_current_user(
         HTTPException: 401 if neither JWT nor API key is valid in production.
     """
     if config.env == "development":
+        logger.critical(
+            "SECURITY WARNING: Running in development mode - ALL AUTH BYPASSED. "
+            "Set ENV=production for production deployments."
+        )
+        if os.environ.get("APP_API_KEY"):
+            logger.warning(
+                "APP_API_KEY is set but ENV=development. "
+                "Auth is bypassed in development mode. Set ENV=production to enforce auth."
+            )
         return {"sub": "dev-user", "role": "admin", "auth_method": "dev-bypass"}
 
     if jwt_payload is not None:
@@ -95,11 +120,7 @@ def get_current_user(
         }
 
     if api_key is not None:
-        return {
-            "sub": "api-key-user",
-            "role": "admin",
-            "auth_method": "api-key",
-        }
+        return _resolve_api_key_identity(api_key)
 
     raise HTTPException(
         status_code=401,

@@ -20,12 +20,6 @@ Usage::
     print(report.summary())
 """
 
-from kg.evaluation.dataset import (
-    Difficulty,
-    EvalDataset,
-    EvalQuestion,
-    ReasoningType,
-)
 from kg.evaluation.metrics import (
     CypherAccuracy,
     QueryRelevancy,
@@ -37,10 +31,24 @@ __all__ = [
     "CypherAccuracy",
     "QueryRelevancy",
     "ReasoningTypeMetric",
-    "EvalQuestion",
-    "EvalDataset",
     "EvaluationRunner",
     "EvalReport",
-    "ReasoningType",
-    "Difficulty",
 ]
+
+# Maritime evaluation dataset is optional; available only when maritime domain is installed.
+try:
+    from kg.evaluation.dataset import (  # noqa: F401
+        Difficulty,
+        EvalDataset,
+        EvalQuestion,
+        ReasoningType,
+    )
+
+    __all__ += [
+        "EvalQuestion",
+        "EvalDataset",
+        "ReasoningType",
+        "Difficulty",
+    ]
+except ImportError:
+    pass  # maritime domain not installed

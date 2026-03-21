@@ -1,8 +1,8 @@
-"""Crawler registry for discovery and management of built-in crawlers.
+"""Crawler registry for discovery and management of crawlers.
 
 Provides a ``CrawlerRegistry`` that maps crawler names to their classes,
-and a ``discover_builtins()`` helper that auto-registers the four
-built-in maritime crawlers.
+and a ``discover_builtins()`` helper that auto-registers crawlers from
+registered domain plugins.
 
 Usage::
 
@@ -86,31 +86,26 @@ class CrawlerRegistry:
 
 
 def discover_builtins() -> CrawlerRegistry:
-    """Create a new registry pre-populated with the four built-in crawlers.
+    """Create a registry populated from registered domain plugins.
+
+    Queries the plugin registry for all domain plugins and registers
+    their crawler classes.
 
     Returns
     -------
     CrawlerRegistry
-        A registry containing ``KRISOPapersCrawler``,
-        ``KRISOFacilitiesCrawler``, ``KMAMarineCrawler``, and
-        ``MaritimeAccidentsCrawler``.
+        A registry containing crawlers from all registered plugins.
     """
-    # 지연 임포트로 순환 참조 방지 (lazy imports to prevent circular deps)
-    from kg.crawlers.kma_marine import KMAMarineCrawler
-    from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
-    from kg.crawlers.kriso_papers import KRISOPapersCrawler
-    from kg.crawlers.maritime_accidents import MaritimeAccidentsCrawler
+    from kg.plugins.registry import get_plugin_registry
 
     registry = CrawlerRegistry()
-    for cls in (
-        KRISOPapersCrawler,
-        KRISOFacilitiesCrawler,
-        KMAMarineCrawler,
-        MaritimeAccidentsCrawler,
-    ):
-        registry.register(cls)
+    for plugin in get_plugin_registry().list_all():
+        crawler_classes = plugin.get_crawler_classes()
+        if crawler_classes:
+            for cls in crawler_classes:
+                registry.register(cls)
 
-    logger.debug("Discovered %d built-in crawlers", len(registry))
+    logger.debug("Discovered %d crawlers from plugins", len(registry))
     return registry
 
 

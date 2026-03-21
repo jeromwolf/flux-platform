@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from kg.etl.dlq import DLQManager
@@ -240,7 +240,7 @@ class ETLPipeline:
             A PipelineResult with processing metrics.
         """
         result = PipelineResult(
-            started_at=datetime.now(),
+            started_at=datetime.now(timezone.utc),
             mode=self._mode.value,
             total_input=len(records),
         )
@@ -315,15 +315,22 @@ class ETLPipeline:
                 result.records_failed += len(loadable)
                 self._status = PipelineStatus.FAILED
                 result.duration_seconds = time.monotonic() - start_time
-                result.completed_at = datetime.now()
+                result.completed_at = datetime.now(timezone.utc)
                 return result
         elif loadable:
             # No loader set -- count records as processed
             result.records_processed = len(loadable)
 
+        # Lineage 영속화
+        if self._lineage_recorder and session:
+            try:
+                self._lineage_recorder.flush(session)
+            except Exception as e:
+                logger.warning("Lineage flush warning: %s", e)
+
         elapsed = time.monotonic() - start_time
         result.duration_seconds = elapsed
-        result.completed_at = datetime.now()
+        result.completed_at = datetime.now(timezone.utc)
         self._status = PipelineStatus.COMPLETED
 
         logger.info(

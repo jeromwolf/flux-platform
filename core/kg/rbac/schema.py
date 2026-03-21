@@ -19,23 +19,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-_SCHEMA_DIR = Path(__file__).resolve().parent.parent.parent / "maritime" / "schema"
+from kg.utils.cypher_parser import parse_cypher_file
 
-
-def _parse_cypher_file(filepath: Path) -> list[str]:
-    """Parse a .cypher file and return individual statements."""
-    text = filepath.read_text(encoding="utf-8")
-    statements: list[str] = []
-    for raw in text.split(";"):
-        lines = [
-            line
-            for line in raw.strip().splitlines()
-            if line.strip() and not line.strip().startswith("//")
-        ]
-        stmt = " ".join(lines).strip()
-        if stmt:
-            statements.append(stmt)
-    return statements
+_SCHEMA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "domains" / "maritime" / "schema"
 
 
 def _filter_rbac_statements(statements: list[str]) -> list[str]:
@@ -59,8 +45,8 @@ def get_rbac_schema_statements() -> list[str]:
     Returns:
         Combined list of Cypher statements for RBAC constraints and indexes.
     """
-    constraints = _parse_cypher_file(_SCHEMA_DIR / "constraints.cypher")
-    indexes = _parse_cypher_file(_SCHEMA_DIR / "indexes.cypher")
+    constraints = parse_cypher_file(_SCHEMA_DIR / "constraints.cypher")
+    indexes = parse_cypher_file(_SCHEMA_DIR / "indexes.cypher")
 
     rbac_constraints = _filter_rbac_statements(constraints)
     rbac_indexes = _filter_rbac_statements(indexes)

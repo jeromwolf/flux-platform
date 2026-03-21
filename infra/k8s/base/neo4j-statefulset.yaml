@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: imsp-neo4j
+  namespace: imsp
+  labels:
+    app.kubernetes.io/name: imsp-neo4j
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: imsp-platform
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  # Community Edition supports only single instance
+  replicas: 1
+  serviceName: neo4j
+  selector:
+    matchLabels:
+      app: imsp-neo4j
+  template:
+    metadata:
+      labels:
+        app: imsp-neo4j
+        app.kubernetes.io/name: imsp-neo4j
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: imsp-platform
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 7474
+        runAsGroup: 7474
+        fsGroup: 7474
+      containers:
+        - name: neo4j
+          image: neo4j:5.26.0-community
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: browser
+              containerPort: 7474
+              protocol: TCP
+            - name: bolt
+              containerPort: 7687
+              protocol: TCP
+          env:
+            # Compose NEO4J_AUTH from secret values.
+            # K8s dependent variable expansion: define intermediaries first, then reference via $(VAR).
+            - name: NEO4J_USER
+              valueFrom:
+                secretKeyRef:
+                  name: imsp-secrets
+                  key: NEO4J_USER
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: imsp-secrets
+                  key: NEO4J_PASSWORD
+            - name: NEO4J_AUTH
+              value: "$(NEO4J_USER)/$(NEO4J_PASSWORD)"
+            # Plugins
+            - name: NEO4J_PLUGINS
+              value: '["apoc", "n10s"]'
+            - name: NEO4J_dbms_security_procedures_unrestricted
+              value: "apoc.*,n10s.*"
+            - name: NEO4J_dbms_security_procedures_allowlist
+              value: "apoc.*,n10s.*"
+            # Memory tuning — stay within 2Gi limit
+            - name: NEO4J_server_memory_heap_initial__size
+              value: "512m"
+            - name: NEO4J_server_memory_heap_max__size
+              value: "1G"
+            - name: NEO4J_server_memory_pagecache_size
+              value: "512m"
+            - name: NEO4J_dbms_directories_import
+              value: "/import"
+          envFrom:
+            - configMapRef:
+                name: imsp-config
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          livenessProbe:
+            exec:
+              # Use shell so that $NEO4J_PASSWORD env var expands correctly at runtime
+              command:
+                - /bin/bash
+                - -c
+                - "cypher-shell -u $NEO4J_USER -p $NEO4J_PASSWORD 'RETURN 1'"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - "cypher-shell -u $NEO4J_USER -p $NEO4J_PASSWORD 'RETURN 1'"
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: neo4j-data
+              mountPath: /data
+            - name: neo4j-logs
+              mountPath: /logs
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+  volumeClaimTemplates:
+    - metadata:
+        name: neo4j-data
+        labels:
+          app.kubernetes.io/name: imsp-neo4j
+          app.kubernetes.io/component: database
+          app.kubernetes.io/part-of: imsp-platform
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi

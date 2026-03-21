@@ -56,3 +56,6 @@ credentials.json
 
 # Claude
 .claude/
+
+# OMC state
+.omc/

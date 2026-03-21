@@ -1031,7 +1031,7 @@ class TestRBACSchema:
         import tempfile
         from pathlib import Path
 
-        from kg.rbac.schema import _parse_cypher_file
+        from kg.utils.cypher_parser import parse_cypher_file as _parse_cypher_file
 
         content = """
         // Comment line

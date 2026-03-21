@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["lineage"])
 
 
-@router.get("/api/lineage/{entity_type}/{entity_id}", response_model=LineageResponse)
+@router.get("/lineage/{entity_type}/{entity_id}", response_model=LineageResponse)
 async def get_full_lineage(
     entity_type: str = Path(..., description="Entity label (e.g. Vessel)"),  # noqa: B008
     entity_id: str = Path(..., description="Entity identifier (e.g. VES-001)"),  # noqa: B008
@@ -92,7 +92,7 @@ async def get_full_lineage(
 
 
 @router.get(
-    "/api/lineage/{entity_type}/{entity_id}/ancestors",
+    "/lineage/{entity_type}/{entity_id}/ancestors",
     response_model=LineageNodesResponse,
 )
 async def get_ancestors(
@@ -146,7 +146,7 @@ async def get_ancestors(
 
 
 @router.get(
-    "/api/lineage/{entity_type}/{entity_id}/descendants",
+    "/lineage/{entity_type}/{entity_id}/descendants",
     response_model=LineageNodesResponse,
 )
 async def get_descendants(
@@ -200,7 +200,7 @@ async def get_descendants(
 
 
 @router.get(
-    "/api/lineage/{entity_type}/{entity_id}/timeline",
+    "/lineage/{entity_type}/{entity_id}/timeline",
     response_model=LineageTimelineResponse,
 )
 async def get_lineage_timeline(

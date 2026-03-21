@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["schema"])
 
 
-@router.get("/api/schema", response_model=SchemaResponse)
+@router.get("/schema", response_model=SchemaResponse)
 async def schema(
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
 ) -> SchemaResponse:

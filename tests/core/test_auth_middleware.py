@@ -206,7 +206,7 @@ class TestAuthMiddlewareIntegration:
         app.dependency_overrides[get_app_config] = lambda: dev_config
 
         client = TestClient(app)
-        resp = client.get("/api/health")
+        resp = client.get("/api/v1/health")
 
         assert resp.status_code == 200
         assert resp.json()["status"] == "degraded"
@@ -229,7 +229,7 @@ class TestAuthMiddlewareIntegration:
 
         with patch.dict(os.environ, {"APP_API_KEY": "test-secret-key"}):
             client = TestClient(app)
-            resp = client.get("/api/schema")
+            resp = client.get("/api/v1/schema")
 
         assert resp.status_code == 401
 
@@ -262,7 +262,7 @@ class TestAuthMiddlewareIntegration:
 
         with patch.dict(os.environ, {"APP_API_KEY": "test-secret-key"}):
             client = TestClient(app)
-            resp = client.get("/api/schema", headers={"X-API-Key": "test-secret-key"})
+            resp = client.get("/api/v1/schema", headers={"X-API-Key": "test-secret-key"})
 
         assert resp.status_code == 200
         assert "labels" in resp.json()
@@ -296,7 +296,7 @@ class TestAuthMiddlewareIntegration:
         with patch.dict(os.environ, {"APP_API_KEY": "test-key"}):
             client = TestClient(app)
             # Correct header name
-            resp = client.get("/api/schema", headers={"X-API-Key": "test-key"})
+            resp = client.get("/api/v1/schema", headers={"X-API-Key": "test-key"})
         assert resp.status_code == 200
 
     def test_prod_mode_wrong_header_name_returns_401(self):
@@ -318,7 +318,7 @@ class TestAuthMiddlewareIntegration:
         with patch.dict(os.environ, {"APP_API_KEY": "test-key"}):
             client = TestClient(app)
             # Wrong header name: Authorization instead of X-API-Key
-            resp = client.get("/api/schema", headers={"Authorization": "test-key"})
+            resp = client.get("/api/v1/schema", headers={"Authorization": "test-key"})
 
         assert resp.status_code == 401
 
@@ -341,7 +341,7 @@ class TestAuthMiddlewareIntegration:
         with patch.dict(os.environ, {"APP_API_KEY": "SecretKey123"}):
             client = TestClient(app)
             # Wrong case: secretkey123
-            resp = client.get("/api/schema", headers={"X-API-Key": "secretkey123"})
+            resp = client.get("/api/v1/schema", headers={"X-API-Key": "secretkey123"})
 
         assert resp.status_code == 401
 
@@ -374,7 +374,7 @@ class TestAuthMiddlewareIntegration:
         special_key = "my-key!@#$%^&*()_+-=[]{}|;':,.<>?/~`"
         with patch.dict(os.environ, {"APP_API_KEY": special_key}):
             client = TestClient(app)
-            resp = client.get("/api/schema", headers={"X-API-Key": special_key})
+            resp = client.get("/api/v1/schema", headers={"X-API-Key": special_key})
 
         assert resp.status_code == 200
 
@@ -398,7 +398,7 @@ class TestAuthMiddlewareIntegration:
 
         with patch.dict(os.environ, {"APP_API_KEY": "test-key"}):
             client = TestClient(app)
-            resp = client.get("/api/health")
+            resp = client.get("/api/v1/health")
 
         # Health endpoint should work without auth even in production
         assert resp.status_code == 200

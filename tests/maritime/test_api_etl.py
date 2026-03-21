@@ -87,7 +87,7 @@ class TestETLTrigger:
         """Trigger papers pipeline returns success response."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/etl/trigger",
+            "/api/v1/etl/trigger",
             json={
                 "source": "manual",
                 "pipeline_name": "papers",
@@ -107,7 +107,7 @@ class TestETLTrigger:
         """Triggering unknown pipeline returns 400 error."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/etl/trigger",
+            "/api/v1/etl/trigger",
             json={
                 "source": "manual",
                 "pipeline_name": "unknown_pipeline",
@@ -124,7 +124,7 @@ class TestETLTrigger:
         """Trigger with mode=full sets FULL mode."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/etl/trigger",
+            "/api/v1/etl/trigger",
             json={
                 "source": "schedule",
                 "pipeline_name": "facilities",
@@ -142,7 +142,7 @@ class TestETLTrigger:
         """Trigger with force_full=true applies FULL mode."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/etl/trigger",
+            "/api/v1/etl/trigger",
             json={
                 "source": "manual",
                 "pipeline_name": "weather",
@@ -160,7 +160,7 @@ class TestETLTrigger:
         """Trigger response contains valid run_id (UUID format)."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/etl/trigger",
+            "/api/v1/etl/trigger",
             json={
                 "source": "manual",
                 "pipeline_name": "accidents",
@@ -192,7 +192,7 @@ class TestETLWebhook:
         """Webhook with data_changed event triggers pipeline."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/etl/webhook/papers",
+            "/api/v1/etl/webhook/papers",
             json={
                 "event": "data_changed",
                 "entity_type": "Document",
@@ -210,7 +210,7 @@ class TestETLWebhook:
         """Webhook with unknown source returns 400."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/etl/webhook/unknown_source",
+            "/api/v1/etl/webhook/unknown_source",
             json={
                 "event": "file_created",
                 "data": {},
@@ -225,7 +225,7 @@ class TestETLWebhook:
         """Webhook creates a run record in history."""
         client, _ = _make_client()
         resp = client.post(
-            "/api/etl/webhook/facilities",
+            "/api/v1/etl/webhook/facilities",
             json={
                 "event": "file_created",
                 "data": {"filename": "test.csv"},
@@ -237,7 +237,7 @@ class TestETLWebhook:
         run_id = data["run_id"]
 
         # Check that run exists in history
-        status_resp = client.get(f"/api/etl/status/{run_id}")
+        status_resp = client.get(f"/api/v1/etl/status/{run_id}")
         assert status_resp.status_code == 200
 
 
@@ -256,7 +256,7 @@ class TestETLStatus:
 
         # Create a run first
         trigger_resp = client.post(
-            "/api/etl/trigger",
+            "/api/v1/etl/trigger",
             json={
                 "source": "manual",
                 "pipeline_name": "papers",
@@ -267,7 +267,7 @@ class TestETLStatus:
         run_id = trigger_resp.json()["run_id"]
 
         # Get status
-        resp = client.get(f"/api/etl/status/{run_id}")
+        resp = client.get(f"/api/v1/etl/status/{run_id}")
         assert resp.status_code == 200
         data = resp.json()
         assert data["run_id"] == run_id
@@ -277,7 +277,7 @@ class TestETLStatus:
     def test_get_status_not_found(self) -> None:
         """Get status for non-existent run returns 404."""
         client, _ = _make_client()
-        resp = client.get("/api/etl/status/00000000-0000-0000-0000-000000000000")
+        resp = client.get("/api/v1/etl/status/00000000-0000-0000-0000-000000000000")
 
         assert resp.status_code == 404
         data = resp.json()
@@ -289,7 +289,7 @@ class TestETLStatus:
 
         # Create a run
         trigger_resp = client.post(
-            "/api/etl/trigger",
+            "/api/v1/etl/trigger",
             json={
                 "source": "manual",
                 "pipeline_name": "weather",
@@ -300,7 +300,7 @@ class TestETLStatus:
         run_id = trigger_resp.json()["run_id"]
 
         # Get status
-        resp = client.get(f"/api/etl/status/{run_id}")
+        resp = client.get(f"/api/v1/etl/status/{run_id}")
         data = resp.json()
 
         # Verify all required fields
@@ -327,7 +327,7 @@ class TestETLHistory:
     def test_get_history_empty(self) -> None:
         """Get history with no runs returns empty list."""
         client, _ = _make_client()
-        resp = client.get("/api/etl/history")
+        resp = client.get("/api/v1/etl/history")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -341,7 +341,7 @@ class TestETLHistory:
         # Create multiple runs
         for pipeline_name in ["papers", "facilities", "weather"]:
             client.post(
-                "/api/etl/trigger",
+                "/api/v1/etl/trigger",
                 json={
                     "source": "manual",
                     "pipeline_name": pipeline_name,
@@ -351,7 +351,7 @@ class TestETLHistory:
             )
 
         # Get history
-        resp = client.get("/api/etl/history?limit=10")
+        resp = client.get("/api/v1/etl/history?limit=10")
         assert resp.status_code == 200
         data = resp.json()
 
@@ -375,7 +375,7 @@ class TestETLPipelines:
     def test_list_pipelines(self) -> None:
         """List pipelines returns all registered pipelines."""
         client, _ = _make_client()
-        resp = client.get("/api/etl/pipelines")
+        resp = client.get("/api/v1/etl/pipelines")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -395,7 +395,7 @@ class TestETLPipelines:
     def test_pipeline_info(self) -> None:
         """Each pipeline info contains required fields."""
         client, _ = _make_client()
-        resp = client.get("/api/etl/pipelines")
+        resp = client.get("/api/v1/etl/pipelines")
 
         assert resp.status_code == 200
         data = resp.json()

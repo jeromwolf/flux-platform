@@ -1,1 +1,1 @@
-"""KG utility modules."""
+"""Shared utility modules for the KG engine."""

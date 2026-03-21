@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../base
+
+namePrefix: dev-
+
+patches:
+  - path: api-patch.yaml
+  - path: neo4j-patch.yaml
+  - path: configmap-patch.yaml

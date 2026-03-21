@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
@@ -173,7 +173,7 @@ def _create_run_record(
         run_id=run_id,
         pipeline_name=pipeline_name,
         status=status,
-        started_at=datetime.now().isoformat(),
+        started_at=datetime.now(timezone.utc).isoformat(),
     )
     _run_history[run_id] = record
     return record
@@ -184,7 +184,7 @@ def _create_run_record(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/api/etl/trigger", response_model=ETLTriggerResponse)
+@router.post("/etl/trigger", response_model=ETLTriggerResponse)
 async def trigger_etl(
     body: ETLTriggerRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
@@ -231,7 +231,7 @@ async def trigger_etl(
         record.records_failed = result.records_failed
         record.records_skipped = result.records_skipped
         record.duration_seconds = result.duration_seconds
-        record.completed_at = datetime.now().isoformat()
+        record.completed_at = datetime.now(timezone.utc).isoformat()
         record.errors = result.errors
 
         logger.info(
@@ -251,7 +251,7 @@ async def trigger_etl(
     except Exception as exc:
         record.status = "FAILED"
         record.errors = [str(exc)]
-        record.completed_at = datetime.now().isoformat()
+        record.completed_at = datetime.now(timezone.utc).isoformat()
         logger.exception("ETL run %s failed", run_id)
         return ETLTriggerResponse(
             run_id=run_id,
@@ -261,7 +261,7 @@ async def trigger_etl(
         )
 
 
-@router.post("/api/etl/webhook/{source}", response_model=ETLTriggerResponse)
+@router.post("/etl/webhook/{source}", response_model=ETLTriggerResponse)
 async def webhook_trigger(
     source: str = Path(..., description="Webhook source (pipeline name)"),  # noqa: B008
     payload: WebhookPayload = ...,
@@ -300,7 +300,7 @@ async def webhook_trigger(
     return await trigger_etl(trigger_request, session)
 
 
-@router.get("/api/etl/status/{run_id}", response_model=ETLStatusResponse)
+@router.get("/etl/status/{run_id}", response_model=ETLStatusResponse)
 async def get_status(
     run_id: str = Path(..., description="Run identifier (UUID)"),  # noqa: B008
 ) -> ETLStatusResponse:
@@ -324,7 +324,7 @@ async def get_status(
     return record
 
 
-@router.get("/api/etl/history", response_model=ETLHistoryResponse)
+@router.get("/etl/history", response_model=ETLHistoryResponse)
 async def get_history(
     limit: int = Query(default=20, ge=1, le=100, description="Maximum number of runs to return"),  # noqa: B008
 ) -> ETLHistoryResponse:
@@ -350,7 +350,7 @@ async def get_history(
     )
 
 
-@router.get("/api/etl/pipelines", response_model=list[PipelineInfo])
+@router.get("/etl/pipelines", response_model=list[PipelineInfo])
 async def list_pipelines() -> list[PipelineInfo]:
     """사용 가능한 파이프라인 목록을 반환한다.
 

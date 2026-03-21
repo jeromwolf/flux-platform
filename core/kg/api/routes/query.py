@@ -24,7 +24,7 @@ router = APIRouter(tags=["query"])
 _pipeline = TextToCypherPipeline()
 
 
-@router.post("/api/query", response_model=NLQueryResponse)
+@router.post("/query", response_model=NLQueryResponse)
 async def natural_language_query(
     body: NLQueryRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008

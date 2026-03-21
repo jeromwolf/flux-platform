@@ -100,7 +100,7 @@ class TestGetFullLineage:
         mock_session.run = AsyncMock(return_value=mock_result)
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/lineage/Vessel/VES-001")
+        resp = client.get("/api/v1/lineage/Vessel/VES-001")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -143,7 +143,7 @@ class TestGetFullLineage:
         mock_session.run = AsyncMock(return_value=mock_result)
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/lineage/Vessel/VES-001")
+        resp = client.get("/api/v1/lineage/Vessel/VES-001")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -181,7 +181,7 @@ class TestGetAncestors:
         mock_session.run = AsyncMock(return_value=mock_result)
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/lineage/Vessel/VES-001/ancestors")
+        resp = client.get("/api/v1/lineage/Vessel/VES-001/ancestors")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -217,7 +217,7 @@ class TestGetDescendants:
         mock_session.run = AsyncMock(return_value=mock_result)
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/lineage/Vessel/VES-001/descendants")
+        resp = client.get("/api/v1/lineage/Vessel/VES-001/descendants")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -255,7 +255,7 @@ class TestGetLineageTimeline:
         mock_session.run = AsyncMock(return_value=mock_result)
 
         client, _ = _make_client(mock_session)
-        resp = client.get("/api/lineage/Vessel/VES-001/timeline")
+        resp = client.get("/api/v1/lineage/Vessel/VES-001/timeline")
 
         assert resp.status_code == 200
         data = resp.json()

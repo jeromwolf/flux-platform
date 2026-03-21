@@ -80,7 +80,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-API-Key", "Accept"],
+        allow_headers=["Authorization", "Content-Type", "X-API-Key", "Accept", "X-Request-ID", "Idempotency-Key"],
+        expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "X-Request-ID", "traceparent"],
     )
 
     # Metrics middleware (before CORS so it wraps all requests)
@@ -90,6 +91,38 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
 
     # Prometheus metrics endpoint (no auth required)
     app.add_route("/metrics", metrics_endpoint)
+
+    # Security headers (OWASP recommended)
+    from kg.api.middleware.security_headers import SecurityHeadersMiddleware
+
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # Distributed tracing (W3C Traceparent)
+    from kg.api.middleware.tracing import TracingMiddleware
+
+    app.add_middleware(TracingMiddleware)
+
+    # Request ID middleware
+    from kg.api.middleware.request_id import RequestIdMiddleware
+
+    app.add_middleware(RequestIdMiddleware)
+
+    # Audit logging for state-changing operations
+    from kg.api.middleware.audit import AuditMiddleware
+
+    app.add_middleware(AuditMiddleware)
+
+    # Error handlers (RFC 7807 Problem Details)
+    from kg.api.middleware.error_handler import register_error_handlers
+
+    register_error_handlers(app)
+
+    # Rate limiting (production only)
+    cfg = config if config is not None else get_config()
+    if cfg.env != "development":
+        from kg.api.middleware.rate_limit import RateLimitMiddleware
+
+        app.add_middleware(RateLimitMiddleware)
 
     # Import and include routers
     from kg.api.routes.etl import router as etl_router
@@ -101,12 +134,12 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
 
     _auth_deps = [Depends(get_current_api_key)]
 
-    app.include_router(health_router)
-    app.include_router(graph_router, dependencies=_auth_deps)
-    app.include_router(schema_router, dependencies=_auth_deps)
-    app.include_router(query_router, dependencies=_auth_deps)
-    app.include_router(lineage_router, dependencies=_auth_deps)
-    app.include_router(etl_router, dependencies=_auth_deps)
+    app.include_router(health_router, prefix="/api/v1")
+    app.include_router(graph_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(schema_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(query_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(lineage_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(etl_router, prefix="/api/v1", dependencies=_auth_deps)
 
     return app
 

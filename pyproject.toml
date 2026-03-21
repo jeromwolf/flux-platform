@@ -46,9 +46,11 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
+where = ["core", "domains"]
 include = ["kg*", "maritime*"]
 
 [tool.pytest.ini_options]
+pythonpath = [".", "core", "domains"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
@@ -87,4 +89,4 @@ omit = ["kg/crawlers/*", "maritime/crawlers/*", "maritime/schema/*", "maritime/r
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-fail_under = 60
+fail_under = 75

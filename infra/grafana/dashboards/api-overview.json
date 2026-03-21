@@ -1,0 +1,66 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "imsp-api-overview",
+    "title": "IMSP API Overview",
+    "tags": ["imsp", "api"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate (req/s)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{path}} {{status}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(http_errors_total[5m])",
+            "legendFormat": "{{method}} {{path}} {{error_class}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Active Requests",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "http_requests_active",
+            "legendFormat": "active"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Avg Response Time (s)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 18, "x": 6, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])",
+            "legendFormat": "{{method}} {{path}}"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 30,
+    "version": 1
+  }
+}

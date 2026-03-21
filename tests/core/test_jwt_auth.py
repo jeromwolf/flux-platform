@@ -278,7 +278,7 @@ class TestUnifiedAuth:
         prod_config = AppConfig(env="production")
         result = get_current_user(jwt_payload=None, api_key="valid-key", config=prod_config)
         assert result["sub"] == "api-key-user"
-        assert result["role"] == "admin"
+        assert result["role"] == "viewer"  # unregistered keys default to viewer
         assert result["auth_method"] == "api-key"
 
     def test_no_auth_raises_401(self):

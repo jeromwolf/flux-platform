@@ -11,10 +11,19 @@ Provides:
 from __future__ import annotations
 
 import contextlib
+import sys
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 
 import pytest
+
+# Ensure the project root is on sys.path so that top-level packages
+# (e.g. `agent`) are importable even when pytest's pythonpath config
+# only lists sub-directories such as `core` and `domains`.
+_PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
 
 from kg.ontology.core import (
     Cardinality,
@@ -189,6 +198,9 @@ def sample_ontology() -> Ontology:
 
     load_maritime_ontology()를 한 번만 호출하여 전체 테스트 세션에서 재사용.
     """
-    from kg.ontology.maritime_loader import load_maritime_ontology
+    try:
+        from maritime.ontology.maritime_loader import load_maritime_ontology
+    except ImportError:
+        from kg.ontology.maritime_loader import load_maritime_ontology
 
     return load_maritime_ontology()

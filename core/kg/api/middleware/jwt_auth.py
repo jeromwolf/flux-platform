@@ -156,6 +156,10 @@ def get_jwt_payload(
     """
     # Skip in development mode
     if config.env == "development":
+        logger.warning(
+            "SECURITY WARNING: JWT validation bypassed in development mode. "
+            "Set ENV=production to enforce JWT authentication."
+        )
         return None
 
     if credentials is None:
