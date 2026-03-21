@@ -8,7 +8,16 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query
 
 from kg.api.deps import get_async_neo4j_session
-from kg.api.entity_groups import _LABEL_TO_GROUP, get_color_for_label, get_group_for_label
+try:
+    from maritime.entity_groups import _LABEL_TO_GROUP, get_color_for_label, get_group_for_label
+except ImportError:
+    _LABEL_TO_GROUP: dict = {}  # type: ignore[assignment]
+
+    def get_color_for_label(label: str) -> str:  # type: ignore[misc]
+        return "#999999"
+
+    def get_group_for_label(label: str) -> str:  # type: ignore[misc]
+        return "unknown"
 from kg.api.models import GraphResponse
 from kg.api.serializers import serialize_neo4j_value
 

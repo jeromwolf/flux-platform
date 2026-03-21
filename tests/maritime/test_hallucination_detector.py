@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from kg.hallucination_detector import DetectionResult, HallucinationDetector
+from maritime.factories import create_maritime_detector
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -87,7 +88,7 @@ def detector() -> HallucinationDetector:
 @pytest.fixture
 def maritime_detector() -> HallucinationDetector:
     """Create a detector from the real maritime ontology."""
-    return HallucinationDetector.from_maritime_ontology()
+    return create_maritime_detector()
 
 
 # ===========================================================================
@@ -575,7 +576,7 @@ class TestPipelineIntegration:
         """TextToCypherPipeline accepts hallucination_detector kwarg."""
         from kg.pipeline import TextToCypherPipeline
 
-        detector = HallucinationDetector.from_maritime_ontology()
+        detector = create_maritime_detector()
         pipeline = TextToCypherPipeline(hallucination_detector=detector)
         assert pipeline._hallucination_detector is detector
 

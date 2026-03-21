@@ -81,7 +81,7 @@ def _make_objects_only_ontology() -> Ontology:
 
 def _load_maritime_ontology() -> Ontology:
     """Load the full maritime ontology."""
-    from kg.ontology.maritime_loader import load_maritime_ontology
+    from maritime.ontology.maritime_loader import load_maritime_ontology
 
     return load_maritime_ontology()
 

@@ -11,7 +11,7 @@ __all__ = [
 
 # Maritime-specific terms are optional; available only when the maritime domain is installed.
 try:
-    from kg.nlp.maritime_terms import (  # noqa: F401
+    from maritime.nlp.maritime_terms import (  # noqa: F401
         ENTITY_SYNONYMS,
         NAMED_ENTITIES,
         PROPERTY_VALUE_MAP,

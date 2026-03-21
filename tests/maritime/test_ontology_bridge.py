@@ -10,7 +10,7 @@ import warnings
 
 import pytest
 
-from kg.ontology.maritime_loader import load_maritime_ontology
+from maritime.ontology.maritime_loader import load_maritime_ontology
 from kg.ontology_bridge import (
     OntologyAwareCypherBuilder,
     get_ontology_context_for_query,

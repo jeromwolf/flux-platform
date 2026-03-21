@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kg.nlp.maritime_terms import (
+from maritime.nlp.maritime_terms import (
     ENTITY_SYNONYMS,
     NAMED_ENTITIES,
     PROPERTY_VALUE_MAP,

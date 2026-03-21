@@ -97,7 +97,7 @@ class CypherCorrector:
             DeprecationWarning,
             stacklevel=2,
         )
-        from kg.ontology.maritime_loader import load_maritime_ontology
+        from maritime.ontology.maritime_loader import load_maritime_ontology
 
         ontology = load_maritime_ontology()
         labels = {ot.name for ot in ontology.get_all_object_types()}

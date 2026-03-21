@@ -128,7 +128,7 @@ class NLParser:
 
     def __init__(self, terms: TermDictionary | None = None) -> None:
         if terms is None:
-            from kg.nlp.maritime_terms import (
+            from maritime.nlp.maritime_terms import (
                 ENTITY_SYNONYMS,
                 NAMED_ENTITIES,
                 PROPERTY_VALUE_MAP,

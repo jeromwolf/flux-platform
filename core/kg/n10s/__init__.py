@@ -16,7 +16,7 @@ __all__ = [
 
 # OWLExporter is a maritime-domain component; available only when maritime domain is installed.
 try:
-    from kg.n10s.owl_exporter import OWLExporter  # noqa: F401
+    from maritime.n10s.owl_exporter import OWLExporter  # noqa: F401
 
     __all__ += ["OWLExporter"]
 except ImportError:

@@ -101,12 +101,12 @@ class HallucinationDetector:
             DeprecationWarning,
             stacklevel=2,
         )
-        from kg.nlp.maritime_terms import ENTITY_SYNONYMS, NAMED_ENTITIES
+        from maritime.nlp.maritime_terms import ENTITY_SYNONYMS, NAMED_ENTITIES
 
         # Collect ontology labels via the loader
         known_labels: set[str] = set()
         try:
-            from kg.ontology.maritime_loader import load_maritime_ontology
+            from maritime.ontology.maritime_loader import load_maritime_ontology
 
             ontology = load_maritime_ontology()
             known_labels = {ot.name for ot in ontology.get_all_object_types()}
@@ -185,7 +185,7 @@ class HallucinationDetector:
 
         # 1. Check against known named entities (longest first to avoid
         #    partial overlaps like "부산" matching before "부산항")
-        from kg.nlp.maritime_terms import NAMED_ENTITIES
+        from maritime.nlp.maritime_terms import NAMED_ENTITIES
 
         for name in sorted(NAMED_ENTITIES.keys(), key=len, reverse=True):
             if name in text:

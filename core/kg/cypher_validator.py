@@ -124,7 +124,7 @@ class CypherValidator:
             DeprecationWarning,
             stacklevel=2,
         )
-        from kg.ontology.maritime_loader import load_maritime_ontology
+        from maritime.ontology.maritime_loader import load_maritime_ontology
 
         return cls(ontology=load_maritime_ontology())
 

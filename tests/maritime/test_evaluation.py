@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kg.evaluation.dataset import (
+from maritime.evaluation.dataset import (
     Difficulty,
     EvalDataset,
     EvalQuestion,

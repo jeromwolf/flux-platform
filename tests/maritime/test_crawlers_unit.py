@@ -25,8 +25,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests as req
 
-from kg.crawlers.kma_marine import KMAMarineCrawler
-from kg.crawlers.maritime_accidents import MaritimeAccidentsCrawler
+from maritime.crawlers.kma_marine import KMAMarineCrawler
+from maritime.crawlers.maritime_accidents import MaritimeAccidentsCrawler
 
 # ==============================================================================
 # BaseCrawler Tests
@@ -497,7 +497,7 @@ class TestKRISOPapersCrawlerMeta:
         """_meta returns content from citation_title meta tag."""
         from bs4 import BeautifulSoup
 
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = '<html><head><meta name="citation_title" content="Test Title"/></head></html>'
         soup = BeautifulSoup(html, "html.parser")
@@ -508,7 +508,7 @@ class TestKRISOPapersCrawlerMeta:
         """_meta returns content from DC.title fallback."""
         from bs4 import BeautifulSoup
 
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = '<html><head><meta name="DC.title" content="DC Title"/></head></html>'
         soup = BeautifulSoup(html, "html.parser")
@@ -519,7 +519,7 @@ class TestKRISOPapersCrawlerMeta:
         """_meta returns None when no matching meta tag found."""
         from bs4 import BeautifulSoup
 
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = "<html><head></head></html>"
         soup = BeautifulSoup(html, "html.parser")
@@ -530,7 +530,7 @@ class TestKRISOPapersCrawlerMeta:
         """_meta_list returns multiple author values."""
         from bs4 import BeautifulSoup
 
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = """<html><head>
             <meta name="citation_author" content="Author One"/>
@@ -546,7 +546,7 @@ class TestKRISOPapersCrawlerMeta:
         """_meta_list deduplicates repeated values."""
         from bs4 import BeautifulSoup
 
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = """<html><head>
             <meta name="citation_author" content="Same Author"/>
@@ -564,7 +564,7 @@ class TestKRISOPapersCrawlerParse:
 
     def test_parse_paper_with_full_html_returns_correct_fields(self):
         """parse_paper with full HTML returns correct record fields."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = """<html><head>
             <meta name="citation_title" content="Test Paper"/>
@@ -587,7 +587,7 @@ class TestKRISOPapersCrawlerParse:
 
     def test_parse_paper_with_missing_title_falls_back_to_h2(self):
         """parse_paper with missing meta title falls back to h2 text."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = """<html>
             <body><h2>H2 Title</h2></body>
@@ -601,7 +601,7 @@ class TestKRISOPapersCrawlerParse:
 
     def test_parse_paper_with_no_title_returns_none(self):
         """parse_paper with no title returns None."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = "<html><head></head><body></body></html>"
 
@@ -612,7 +612,7 @@ class TestKRISOPapersCrawlerParse:
 
     def test_parse_paper_record_has_all_expected_fields(self):
         """parse_paper record contains all expected fields."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = """<html><head>
             <meta name="citation_title" content="Test Paper"/>
@@ -636,7 +636,7 @@ class TestKRISOPapersCrawlerParse:
 
     def test_parse_paper_doc_id_format(self):
         """parse_paper docId format is SW-KRISO-{id}."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         html = '<html><head><meta name="citation_title" content="Test"/></head></html>'
 
@@ -653,7 +653,7 @@ class TestKRISOPapersCrawlerCrawl:
 
     def test_crawl_respects_limit(self):
         """crawl respects limit parameter."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         crawler = KRISOPapersCrawler(delay=0)
 
@@ -668,7 +668,7 @@ class TestKRISOPapersCrawlerCrawl:
 
     def test_crawl_skips_404_responses(self):
         """crawl skips 404 responses (fetch returning None)."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         crawler = KRISOPapersCrawler(delay=0)
 
@@ -694,7 +694,7 @@ class TestKRISOPapersCrawlerCrawl:
 
     def test_crawl_skips_pages_without_title(self):
         """crawl skips pages without title."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         crawler = KRISOPapersCrawler(delay=0)
 
@@ -708,7 +708,7 @@ class TestKRISOPapersCrawlerCrawl:
 
     def test_crawl_returns_list_of_dicts(self):
         """crawl returns list of dicts."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         crawler = KRISOPapersCrawler(delay=0)
 
@@ -733,7 +733,7 @@ class TestKRISOFacilitiesCrawlerParse:
 
     def test_parse_facility_extracts_title_from_h3_sub_title(self):
         """parse_facility extracts title from h3.sub_title."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         html = '<html><body><h3 class="sub_title">Ocean Basin</h3></body></html>'
 
@@ -744,7 +744,7 @@ class TestKRISOFacilitiesCrawlerParse:
 
     def test_parse_facility_extracts_title_from_og_title_fallback(self):
         """parse_facility extracts title from og:title fallback."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         html = '<html><head><meta property="og:title" content="Ice Tank"/></head></html>'
 
@@ -755,7 +755,7 @@ class TestKRISOFacilitiesCrawlerParse:
 
     def test_parse_facility_extracts_description_from_cont_area(self):
         """parse_facility extracts description from .cont_area paragraphs."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         html = """<html><body>
             <h3 class="sub_title">Test Facility</h3>
@@ -773,7 +773,7 @@ class TestKRISOFacilitiesCrawlerParse:
 
     def test_parse_facility_extracts_table_specs(self):
         """parse_facility extracts table specs."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         html = """<html><body>
             <h3 class="sub_title">Test Facility</h3>
@@ -793,7 +793,7 @@ class TestKRISOFacilitiesCrawlerParse:
 
     def test_parse_facility_returns_correct_facility_id(self):
         """parse_facility returns correct facilityId."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         html = '<html><body><h3 class="sub_title">Test</h3></body></html>'
 
@@ -803,7 +803,7 @@ class TestKRISOFacilitiesCrawlerParse:
 
     def test_parse_facility_with_empty_page_returns_none_description(self):
         """parse_facility with empty page returns None description."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         html = '<html><body><h3 class="sub_title">Test</h3></body></html>'
 
@@ -818,7 +818,7 @@ class TestKRISOFacilitiesCrawlerCrawl:
 
     def test_crawl_fetches_all_facility_urls(self):
         """crawl fetches all FACILITY_URLS."""
-        from kg.crawlers.kriso_facilities import FACILITY_URLS, KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import FACILITY_URLS, KRISOFacilitiesCrawler
 
         crawler = KRISOFacilitiesCrawler(delay=0)
 
@@ -833,7 +833,7 @@ class TestKRISOFacilitiesCrawlerCrawl:
 
     def test_crawl_skips_failed_fetches(self):
         """crawl skips failed fetches."""
-        from kg.crawlers.kriso_facilities import FACILITY_URLS, KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import FACILITY_URLS, KRISOFacilitiesCrawler
 
         crawler = KRISOFacilitiesCrawler(delay=0)
 
@@ -852,7 +852,7 @@ class TestKRISOFacilitiesCrawlerCrawl:
 
     def test_crawl_returns_list_of_dicts(self):
         """crawl returns list of dicts with correct keys."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         crawler = KRISOFacilitiesCrawler(delay=0)
 
@@ -867,7 +867,7 @@ class TestKRISOFacilitiesCrawlerCrawl:
 
     def test_crawl_record_has_required_keys(self):
         """crawl record has facilityId, title, description, specs, sourceUrl."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         crawler = KRISOFacilitiesCrawler(delay=0)
 
@@ -897,7 +897,7 @@ class TestExtractedRelation:
 
     def test_dataclass_fields(self):
         """ExtractedRelation has correct fields."""
-        from kg.crawlers.relation_extractor import ExtractedRelation
+        from maritime.crawlers.relation_extractor import ExtractedRelation
 
         rel = ExtractedRelation(
             source_id="DOC-001",
@@ -917,7 +917,7 @@ class TestExtractedRelation:
 
     def test_dataclass_creation(self):
         """ExtractedRelation can be created successfully."""
-        from kg.crawlers.relation_extractor import ExtractedRelation
+        from maritime.crawlers.relation_extractor import ExtractedRelation
 
         rel = ExtractedRelation("DOC-001", "Port", "KRPUS", "MENTIONS_PORT", 0.9, "context")
 
@@ -931,7 +931,7 @@ class TestRelationExtractorVessels:
 
     def test_extract_vessel_types_finds_korean_keyword(self):
         """extract_vessel_types finds Korean keyword 컨테이너선."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "이 논문은 컨테이너선의 안정성을 연구합니다."
@@ -943,7 +943,7 @@ class TestRelationExtractorVessels:
 
     def test_extract_vessel_types_finds_english_keyword(self):
         """extract_vessel_types finds English keyword 'tanker'."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "This paper studies tanker ship design."
@@ -955,7 +955,7 @@ class TestRelationExtractorVessels:
 
     def test_extract_vessel_types_case_insensitive(self):
         """extract_vessel_types is case insensitive."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "TANKER ship operations"
@@ -967,7 +967,7 @@ class TestRelationExtractorVessels:
 
     def test_extract_vessel_types_returns_empty_for_unrelated_text(self):
         """extract_vessel_types returns empty for unrelated text."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "This is about weather and birds."
@@ -978,7 +978,7 @@ class TestRelationExtractorVessels:
 
     def test_extract_vessel_types_confidence_is_0_7(self):
         """extract_vessel_types confidence is 0.7."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "컨테이너선 연구"
@@ -995,7 +995,7 @@ class TestRelationExtractorPorts:
 
     def test_extract_ports_finds_busan_port(self):
         """extract_ports finds 부산항."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "부산항에서 출발한 선박"
@@ -1007,7 +1007,7 @@ class TestRelationExtractorPorts:
 
     def test_extract_ports_returns_correct_port_code(self):
         """extract_ports returns correct port code KRPUS."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "부산항 분석"
@@ -1020,7 +1020,7 @@ class TestRelationExtractorPorts:
 
     def test_extract_ports_confidence_is_0_8(self):
         """extract_ports confidence is 0.8."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "부산항"
@@ -1037,7 +1037,7 @@ class TestRelationExtractorSeaAreas:
 
     def test_extract_sea_areas_finds_korean_east_sea(self):
         """extract_sea_areas finds 동해."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "동해 해역의 해양 환경"
@@ -1049,7 +1049,7 @@ class TestRelationExtractorSeaAreas:
 
     def test_extract_sea_areas_finds_english_east_sea(self):
         """extract_sea_areas finds English 'East Sea'."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "Research in the East Sea region"
@@ -1066,7 +1066,7 @@ class TestRelationExtractorTopics:
 
     def test_extract_topics_finds_fluid_dynamics(self):
         """extract_topics finds 유체역학."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "유체역학 시뮬레이션 연구"
@@ -1078,7 +1078,7 @@ class TestRelationExtractorTopics:
 
     def test_extract_topics_uses_keywords_parameter(self):
         """extract_topics uses keywords parameter."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "research on simulation"
@@ -1090,7 +1090,7 @@ class TestRelationExtractorTopics:
 
     def test_extract_topics_confidence_is_0_65(self):
         """extract_topics confidence is 0.65."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "유체역학"
@@ -1107,7 +1107,7 @@ class TestRelationExtractorRegulations:
 
     def test_extract_regulations_finds_solas(self):
         """extract_regulations finds SOLAS."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "This research complies with SOLAS regulations."
@@ -1119,7 +1119,7 @@ class TestRelationExtractorRegulations:
 
     def test_extract_regulations_confidence_is_0_85(self):
         """extract_regulations confidence is 0.85."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "SOLAS 규정"
@@ -1136,7 +1136,7 @@ class TestRelationExtractorFacilities:
 
     def test_extract_facilities_finds_towing_tank(self):
         """extract_facilities finds 예인수조."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "예인수조 실험 결과"
@@ -1148,7 +1148,7 @@ class TestRelationExtractorFacilities:
 
     def test_extract_facilities_case_insensitive(self):
         """extract_facilities is case insensitive."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "towing tank experiments"
@@ -1165,7 +1165,7 @@ class TestRelationExtractorAll:
 
     def test_extract_all_returns_combined_results(self):
         """extract_all returns combined results from all extractors."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "부산항에서 컨테이너선이 출발했다. 동해 해역에서 SOLAS 규정을 준수한다."
@@ -1178,7 +1178,7 @@ class TestRelationExtractorAll:
 
     def test_extract_all_deduplicates(self):
         """extract_all deduplicates identical relations."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "부산항 부산항 부산항"
@@ -1191,7 +1191,7 @@ class TestRelationExtractorAll:
 
     def test_extract_all_with_empty_text_returns_empty(self):
         """extract_all with empty text returns empty list."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = ""
@@ -1202,7 +1202,7 @@ class TestRelationExtractorAll:
 
     def test_extract_all_with_keywords(self):
         """extract_all accepts and uses keywords parameter."""
-        from kg.crawlers.relation_extractor import RelationExtractor
+        from maritime.crawlers.relation_extractor import RelationExtractor
 
         extractor = RelationExtractor()
         text = "research topic"

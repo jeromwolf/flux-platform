@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
-from kg.evaluation.dataset import EvalDataset, EvalQuestion
+from maritime.evaluation.dataset import EvalDataset, EvalQuestion
 from kg.evaluation.metrics import CypherAccuracy, QueryRelevancy, ReasoningTypeMetric
 
 

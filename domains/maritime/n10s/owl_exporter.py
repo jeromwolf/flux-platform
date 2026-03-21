@@ -241,7 +241,7 @@ class OWLExporter:
         Returns:
             Turtle block with all owl:Class declarations.
         """
-        from kg.ontology.maritime_ontology import ENTITY_LABELS
+        from maritime.ontology.maritime_ontology import ENTITY_LABELS
 
         lines: list[str] = [
             "# =====================================================================",
@@ -311,7 +311,7 @@ class OWLExporter:
         Returns:
             Turtle block with all owl:ObjectProperty declarations.
         """
-        from kg.ontology.maritime_ontology import RELATIONSHIP_TYPES
+        from maritime.ontology.maritime_ontology import RELATIONSHIP_TYPES
 
         lines: list[str] = [
             "# =====================================================================",
@@ -363,7 +363,7 @@ class OWLExporter:
         Returns:
             Turtle block with all owl:DatatypeProperty declarations.
         """
-        from kg.ontology.maritime_ontology import PROPERTY_DEFINITIONS
+        from maritime.ontology.maritime_ontology import PROPERTY_DEFINITIONS
 
         lines: list[str] = [
             "# =====================================================================",

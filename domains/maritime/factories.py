@@ -29,7 +29,7 @@ def create_maritime_validator():
         CypherValidator with all maritime labels and relationship types.
     """
     from kg.cypher_validator import CypherValidator
-    from kg.ontology.maritime_loader import load_maritime_ontology
+    from maritime.ontology.maritime_loader import load_maritime_ontology
 
     ontology = load_maritime_ontology()
     return CypherValidator(ontology=ontology)
@@ -42,7 +42,7 @@ def create_maritime_corrector():
         CypherCorrector with all maritime labels and relationship types.
     """
     from kg.cypher_corrector import CypherCorrector
-    from kg.ontology.maritime_loader import load_maritime_ontology
+    from maritime.ontology.maritime_loader import load_maritime_ontology
 
     ontology = load_maritime_ontology()
     labels = {ot.name for ot in ontology.get_all_object_types()}
@@ -63,12 +63,12 @@ def create_maritime_detector():
         HallucinationDetector configured for the maritime domain.
     """
     from kg.hallucination_detector import HallucinationDetector
-    from kg.nlp.maritime_terms import ENTITY_SYNONYMS, NAMED_ENTITIES
+    from maritime.nlp.maritime_terms import ENTITY_SYNONYMS, NAMED_ENTITIES
 
     # Collect ontology labels via the loader
     known_labels: set[str] = set()
     try:
-        from kg.ontology.maritime_loader import load_maritime_ontology
+        from maritime.ontology.maritime_loader import load_maritime_ontology
 
         ontology = load_maritime_ontology()
         known_labels = {ot.name for ot in ontology.get_all_object_types()}

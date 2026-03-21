@@ -12,12 +12,12 @@ from __future__ import annotations
 import pytest
 
 from kg.ontology.core import Ontology
-from kg.ontology.maritime_loader import (
+from maritime.ontology.maritime_loader import (
     export_ontology_to_cypher,
     get_schema_for_llm,
     load_maritime_ontology,
 )
-from kg.ontology.maritime_ontology import (
+from maritime.ontology.maritime_ontology import (
     ENTITY_LABELS,
     PROPERTY_DEFINITIONS,
     RELATIONSHIP_TYPES,

@@ -103,7 +103,7 @@ class TestCrawlerRegistry:
 
     def test_register_and_get(self):
         """register() stores and get() retrieves a crawler class."""
-        from kg.crawlers.kma_marine import KMAMarineCrawler
+        from maritime.crawlers.kma_marine import KMAMarineCrawler
 
         registry = CrawlerRegistry()
         registry.register(KMAMarineCrawler)
@@ -116,8 +116,8 @@ class TestCrawlerRegistry:
 
     def test_list_all_returns_sorted_classes(self):
         """list_all() returns crawler classes sorted by name."""
-        from kg.crawlers.kma_marine import KMAMarineCrawler
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kma_marine import KMAMarineCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         registry = CrawlerRegistry()
         registry.register(KRISOPapersCrawler)
@@ -131,8 +131,8 @@ class TestCrawlerRegistry:
 
     def test_names_returns_sorted_names(self):
         """names() returns sorted list of registered names."""
-        from kg.crawlers.kma_marine import KMAMarineCrawler
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kma_marine import KMAMarineCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         registry = CrawlerRegistry()
         registry.register(KRISOPapersCrawler)
@@ -143,7 +143,7 @@ class TestCrawlerRegistry:
 
     def test_len(self):
         """len(registry) returns count of registered crawlers."""
-        from kg.crawlers.kma_marine import KMAMarineCrawler
+        from maritime.crawlers.kma_marine import KMAMarineCrawler
 
         registry = CrawlerRegistry()
         assert len(registry) == 0
@@ -152,7 +152,7 @@ class TestCrawlerRegistry:
 
     def test_contains(self):
         """'name' in registry works correctly."""
-        from kg.crawlers.kma_marine import KMAMarineCrawler
+        from maritime.crawlers.kma_marine import KMAMarineCrawler
 
         registry = CrawlerRegistry()
         registry.register(KMAMarineCrawler)
@@ -219,7 +219,7 @@ class TestCrawlerInfoValues:
 
     def test_kriso_papers_info(self):
         """KRISOPapersCrawler.info() returns correct metadata."""
-        from kg.crawlers.kriso_papers import KRISOPapersCrawler
+        from maritime.crawlers.kriso_papers import KRISOPapersCrawler
 
         info = KRISOPapersCrawler.info()
         assert info.name == "kriso-papers"
@@ -228,7 +228,7 @@ class TestCrawlerInfoValues:
 
     def test_kriso_facilities_info(self):
         """KRISOFacilitiesCrawler.info() returns correct metadata."""
-        from kg.crawlers.kriso_facilities import KRISOFacilitiesCrawler
+        from maritime.crawlers.kriso_facilities import KRISOFacilitiesCrawler
 
         info = KRISOFacilitiesCrawler.info()
         assert info.name == "kriso-facilities"
@@ -237,7 +237,7 @@ class TestCrawlerInfoValues:
 
     def test_kma_marine_info(self):
         """KMAMarineCrawler.info() returns correct metadata."""
-        from kg.crawlers.kma_marine import KMAMarineCrawler
+        from maritime.crawlers.kma_marine import KMAMarineCrawler
 
         info = KMAMarineCrawler.info()
         assert info.name == "kma-marine"
@@ -246,7 +246,7 @@ class TestCrawlerInfoValues:
 
     def test_maritime_accidents_info(self):
         """MaritimeAccidentsCrawler.info() returns correct metadata."""
-        from kg.crawlers.maritime_accidents import MaritimeAccidentsCrawler
+        from maritime.crawlers.maritime_accidents import MaritimeAccidentsCrawler
 
         info = MaritimeAccidentsCrawler.info()
         assert info.name == "maritime-accidents"

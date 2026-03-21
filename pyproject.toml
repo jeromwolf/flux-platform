@@ -56,6 +56,11 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --strict-markers --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning:httpx._client",
+    "ignore::PendingDeprecationWarning:starlette.formparsers",
+    "ignore::pytest.PytestRemovedIn8Warning",
+]
 markers = [
     "unit: Pure Python unit tests (no external dependencies)",
     "integration: Tests requiring Neo4j connection",

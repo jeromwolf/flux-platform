@@ -311,8 +311,7 @@ class QualityGate:
             CheckResult with PASSED if all structural requirements are met.
         """
         try:
-            from kg.evaluation import EvalDataset
-            from kg.evaluation.dataset import Difficulty, ReasoningType
+            from maritime.evaluation.dataset import EvalDataset, Difficulty, ReasoningType
 
             dataset = EvalDataset.builtin()
             issues: list[str] = []
@@ -645,7 +644,7 @@ class QualityGate:
         """
         if ontology is None:
             try:
-                from kg.ontology.maritime_loader import load_maritime_ontology
+                from maritime.ontology.maritime_loader import load_maritime_ontology
 
                 ontology = load_maritime_ontology()
                 logger.info("Loaded maritime ontology for quality gate")
@@ -696,7 +695,7 @@ class QualityGate:
 if __name__ == "__main__":
     import sys
 
-    from kg.ontology.maritime_loader import load_maritime_ontology
+    from maritime.ontology.maritime_loader import load_maritime_ontology
 
     logging.basicConfig(level=logging.INFO)
     ontology = load_maritime_ontology()

@@ -101,7 +101,7 @@ class OntologyLabelRule(ValidationRule):
         if valid_labels is None:
             # Lazy import: preserve existing behaviour without a module-level
             # hard dependency on maritime_ontology.
-            from kg.ontology.maritime_ontology import ENTITY_LABELS  # noqa: PLC0415
+            from maritime.ontology.maritime_ontology import ENTITY_LABELS  # noqa: PLC0415
 
             self._valid_labels: set[str] = set(ENTITY_LABELS.keys())
         else:

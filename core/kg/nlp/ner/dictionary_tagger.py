@@ -134,7 +134,7 @@ class DictionaryTagger:
         """
         # Lazy import to avoid circular dependencies and allow use of the
         # tagger in environments where maritime terms may not be loaded.
-        from kg.nlp.maritime_terms import ENTITY_SYNONYMS, NAMED_ENTITIES  # noqa: PLC0415
+        from maritime.nlp.maritime_terms import ENTITY_SYNONYMS, NAMED_ENTITIES  # noqa: PLC0415
 
         entries: dict[str, NERTagType] = {}
 

@@ -571,7 +571,7 @@ class TestOWLExporter:
 
     def test_export_turtle_has_prefixes(self):
         """export_turtle() 출력에는 @prefix owl:, maritime:, s100: 가 포함되어야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         exporter = OWLExporter()
         turtle = exporter.export_turtle()
@@ -582,7 +582,7 @@ class TestOWLExporter:
 
     def test_export_turtle_has_ontology_header(self):
         """export_turtle() 출력에는 owl:Ontology 선언이 포함되어야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         exporter = OWLExporter()
         turtle = exporter.export_turtle()
@@ -591,7 +591,7 @@ class TestOWLExporter:
 
     def test_export_turtle_has_all_classes(self):
         """주요 클래스(Vessel, Port, Document, Experiment, TestFacility)가 출력에 있어야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         exporter = OWLExporter()
         turtle = exporter.export_turtle()
@@ -601,7 +601,7 @@ class TestOWLExporter:
 
     def test_export_turtle_has_superclass_hierarchy(self):
         """상위 클래스(PhysicalEntity, SpatialEntity 등)가 출력에 있어야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         exporter = OWLExporter()
         turtle = exporter.export_turtle()
@@ -617,7 +617,7 @@ class TestOWLExporter:
 
     def test_export_turtle_has_subclass_relations(self):
         """CargoShip 이 PhysicalEntity 의 하위 클래스임을 나타내는 triples 가 있어야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         exporter = OWLExporter()
         turtle = exporter.export_turtle()
@@ -628,7 +628,7 @@ class TestOWLExporter:
 
     def test_export_turtle_has_object_properties(self):
         """관계 타입이 ObjectProperty 로 선언되어야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         exporter = OWLExporter()
         turtle = exporter.export_turtle()
@@ -639,7 +639,7 @@ class TestOWLExporter:
 
     def test_export_turtle_has_datatype_properties(self):
         """핵심 속성(mmsi, name 등)이 DatatypeProperty 로 선언되어야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         exporter = OWLExporter()
         turtle = exporter.export_turtle()
@@ -649,7 +649,7 @@ class TestOWLExporter:
 
     def test_map_neo4j_type_to_xsd(self):
         """_map_neo4j_type_to_xsd()는 Neo4j 타입을 올바른 XSD 타입으로 변환해야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         assert OWLExporter._map_neo4j_type_to_xsd("STRING") == "xsd:string"
         assert OWLExporter._map_neo4j_type_to_xsd("INTEGER") == "xsd:integer"
@@ -665,7 +665,7 @@ class TestOWLExporter:
 
     def test_export_to_file(self, tmp_path: Path):
         """export_to_file()은 Turtle 내용을 파일에 쓰고 Path를 반환해야 한다."""
-        from kg.n10s.owl_exporter import OWLExporter
+        from maritime.n10s.owl_exporter import OWLExporter
 
         exporter = OWLExporter()
         dest = tmp_path / "maritime.ttl"
@@ -678,7 +678,7 @@ class TestOWLExporter:
 
     def test_generate_maritime_turtle_convenience(self):
         """모듈 레벨 generate_maritime_turtle() 함수가 Turtle 문자열을 반환해야 한다."""
-        from kg.n10s.owl_exporter import generate_maritime_turtle
+        from maritime.n10s.owl_exporter import generate_maritime_turtle
 
         result = generate_maritime_turtle()
 

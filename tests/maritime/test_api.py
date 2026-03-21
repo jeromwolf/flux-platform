@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 
 from kg.api.app import create_app
 from kg.api.deps import get_app_config, get_async_neo4j_session
-from kg.api.entity_groups import (
+from maritime.entity_groups import (
     ENTITY_GROUPS,
     GROUP_COLORS,
     get_color_for_label,

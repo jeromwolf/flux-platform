@@ -37,7 +37,7 @@ __all__ = [
 
 # Maritime evaluation dataset is optional; available only when maritime domain is installed.
 try:
-    from kg.evaluation.dataset import (  # noqa: F401
+    from maritime.evaluation.dataset import (  # noqa: F401
         Difficulty,
         EvalDataset,
         EvalQuestion,

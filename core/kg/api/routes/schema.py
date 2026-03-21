@@ -8,12 +8,22 @@ from typing import Any
 from fastapi import APIRouter, Depends
 
 from kg.api.deps import get_async_neo4j_session
-from kg.api.entity_groups import (
-    ENTITY_GROUPS,
-    GROUP_COLORS,
-    get_color_for_label,
-    get_group_for_label,
-)
+try:
+    from maritime.entity_groups import (
+        ENTITY_GROUPS,
+        GROUP_COLORS,
+        get_color_for_label,
+        get_group_for_label,
+    )
+except ImportError:
+    ENTITY_GROUPS: dict = {}  # type: ignore[assignment]
+    GROUP_COLORS: dict = {}  # type: ignore[assignment]
+
+    def get_color_for_label(label: str) -> str:  # type: ignore[misc]
+        return "#999999"
+
+    def get_group_for_label(label: str) -> str:  # type: ignore[misc]
+        return "unknown"
 from kg.api.models import SchemaResponse
 
 logger = logging.getLogger(__name__)
