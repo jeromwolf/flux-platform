@@ -1,0 +1,165 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { MiniMap } from '@vue-flow/minimap'
+import { Controls } from '@vue-flow/controls'
+import { Background } from '@vue-flow/background'
+import type { Node, Edge, Connection } from '@vue-flow/core'
+import CustomNode from './CustomNode.vue'
+
+import '@vue-flow/core/dist/style.css'
+import '@vue-flow/core/dist/theme-default.css'
+import '@vue-flow/minimap/dist/style.css'
+import '@vue-flow/controls/dist/style.css'
+
+const props = defineProps<{
+  initialNodes?: Node[]
+  initialEdges?: Edge[]
+}>()
+
+const emit = defineEmits<{
+  save: [nodes: Node[], edges: Edge[]]
+  nodeSelect: [node: Node | null]
+}>()
+
+const { onConnect, addEdges, onNodeClick, onPaneClick, fitView } = useVueFlow()
+
+const nodes = ref<Node[]>(props.initialNodes ?? [
+  {
+    id: '1',
+    type: 'custom',
+    position: { x: 100, y: 100 },
+    data: { label: '데이터 수집', type: 'input', icon: 'download', description: '원천 데이터를 수집합니다' },
+  },
+  {
+    id: '2',
+    type: 'custom',
+    position: { x: 400, y: 100 },
+    data: { label: '데이터 변환', type: 'process', icon: 'transform', description: 'ETL 변환을 수행합니다' },
+  },
+  {
+    id: '3',
+    type: 'custom',
+    position: { x: 700, y: 100 },
+    data: { label: 'KG 적재', type: 'output', icon: 'database', description: '지식그래프에 적재합니다' },
+  },
+])
+
+const edges = ref<Edge[]>(props.initialEdges ?? [
+  { id: 'e1-2', source: '1', target: '2', animated: true },
+  { id: 'e2-3', source: '2', target: '3', animated: true },
+])
+
+onConnect((connection: Connection) => {
+  addEdges([{
+    ...connection,
+    id: `e${connection.source}-${connection.target}`,
+    animated: true,
+  }])
+})
+
+onNodeClick(({ node }) => {
+  emit('nodeSelect', node)
+})
+
+onPaneClick(() => {
+  emit('nodeSelect', null)
+})
+
+onMounted(() => {
+  setTimeout(() => fitView({ padding: 0.2 }), 100)
+})
+
+function handleSave() {
+  // VueFlow Node/Edge generics are deeply nested; cast to avoid TS2589
+  emit('save', nodes.value as Node[], edges.value as Edge[])
+}
+
+defineExpose({ handleSave })
+</script>
+
+<template>
+  <div class="h-full w-full">
+    <VueFlow
+      v-model:nodes="nodes"
+      v-model:edges="edges"
+      class="imsp-flow"
+      :default-edge-options="{ type: 'smoothstep', animated: true }"
+      :snap-to-grid="true"
+      :snap-grid="[20, 20]"
+      fit-view-on-init
+    >
+      <template #node-custom="nodeProps">
+        <CustomNode v-bind="nodeProps" />
+      </template>
+      <Background :gap="20" :size="1" pattern-color="rgba(46, 61, 104, 0.3)" />
+      <MiniMap
+        class="!bg-surface-secondary !border-border-subtle"
+        node-color="#3b82f6"
+        mask-color="rgba(10, 14, 26, 0.7)"
+      />
+      <Controls class="!bg-surface-secondary !border-border-subtle !shadow-none" />
+    </VueFlow>
+  </div>
+</template>
+
+<style>
+.imsp-flow {
+  background-color: var(--color-navy-950);
+}
+
+.imsp-flow .vue-flow__edge-path {
+  stroke: var(--color-ocean-500);
+  stroke-width: 2;
+}
+
+.imsp-flow .vue-flow__edge.animated .vue-flow__edge-path {
+  stroke-dasharray: 5;
+  animation: dash 0.5s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.imsp-flow .vue-flow__controls-button {
+  background-color: var(--color-surface-secondary);
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  fill: var(--color-text-secondary);
+}
+
+.imsp-flow .vue-flow__controls-button:hover {
+  background-color: var(--color-navy-700);
+  color: var(--color-text-primary);
+  fill: var(--color-text-primary);
+}
+
+.imsp-flow .vue-flow__minimap {
+  background-color: var(--color-surface-secondary);
+  border-color: var(--color-border-subtle);
+}
+
+.imsp-flow .vue-flow__handle {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-ocean-500);
+  border: 2px solid var(--color-surface-primary);
+}
+
+.imsp-flow .vue-flow__handle:hover {
+  background-color: var(--color-ocean-400);
+}
+
+.imsp-flow .vue-flow__connection-line {
+  stroke: var(--color-ocean-400);
+  stroke-width: 2;
+}
+
+.vue-flow__edge.selected .vue-flow__edge-path {
+  stroke: var(--color-ocean-300);
+  stroke-width: 3;
+}
+</style>
