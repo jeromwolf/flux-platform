@@ -11,19 +11,10 @@ Provides:
 from __future__ import annotations
 
 import contextlib
-import sys
 from collections.abc import Generator
-from pathlib import Path
 from typing import Any
 
 import pytest
-
-# Ensure the project root is on sys.path so that top-level packages
-# (e.g. `agent`) are importable even when pytest's pythonpath config
-# only lists sub-directories such as `core` and `domains`.
-_PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
-if _PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, _PROJECT_ROOT)
 
 from kg.ontology.core import (
     Cardinality,
@@ -33,19 +24,6 @@ from kg.ontology.core import (
     PropertyDefinition,
     PropertyType,
 )
-
-# =========================================================================
-# pytest 마커 등록
-# =========================================================================
-
-
-def pytest_configure(config: Any) -> None:
-    """Register custom markers."""
-    config.addinivalue_line("markers", "unit: Pure Python unit tests (no external deps)")
-    config.addinivalue_line("markers", "integration: Tests requiring Neo4j connection")
-    config.addinivalue_line("markers", "e2e: End-to-end scenario tests")
-    config.addinivalue_line("markers", "slow: Long-running tests")
-
 
 # =========================================================================
 # Neo4j Fixtures (통합/E2E 테스트용)
@@ -79,8 +57,6 @@ def neo4j_session(neo4j_driver: Any) -> Generator[Any, None, None]:
     """Function-scoped Neo4j session.
 
     각 테스트 함수마다 새 세션을 생성하고, 테스트 후 세션을 닫는다.
-    참고: Neo4j Community Edition은 트랜잭션 롤백을 지원하지만,
-    데이터 격리를 위해 가능한 경우 트랜잭션을 사용한다.
     """
     from kg.config import NEO4J_DATABASE
 
@@ -96,10 +72,7 @@ def neo4j_session(neo4j_driver: Any) -> Generator[Any, None, None]:
 
 @pytest.fixture
 def sample_object_type_def() -> ObjectTypeDefinition:
-    """Vessel ObjectTypeDefinition 샘플.
-
-    단위 테스트에서 재사용 가능한 ObjectType 정의.
-    """
+    """Vessel ObjectTypeDefinition 샘플."""
     return ObjectTypeDefinition(
         name="Vessel",
         display_name="선박",
@@ -159,10 +132,8 @@ def minimal_ontology(
     """2개 ObjectType + 1개 LinkType을 가진 최소 온톨로지."""
     ontology = Ontology(name="test")
 
-    # Vessel 등록
     ontology.define_object_type(sample_object_type_def)
 
-    # Berth 등록
     ontology.define_object_type(
         ObjectTypeDefinition(
             name="Berth",
@@ -178,7 +149,6 @@ def minimal_ontology(
         )
     )
 
-    # DOCKED_AT 관계 등록
     ontology.define_link_type(
         LinkTypeDefinition(
             name="DOCKED_AT",
@@ -194,13 +164,7 @@ def minimal_ontology(
 
 @pytest.fixture(scope="session")
 def sample_ontology() -> Ontology:
-    """Session-scoped 해사 온톨로지 인스턴스.
-
-    load_maritime_ontology()를 한 번만 호출하여 전체 테스트 세션에서 재사용.
-    """
-    try:
-        from maritime.ontology.maritime_loader import load_maritime_ontology
-    except ImportError:
-        from kg.ontology.maritime_loader import load_maritime_ontology
+    """Session-scoped 해사 온톨로지 인스턴스."""
+    from maritime.ontology.maritime_loader import load_maritime_ontology
 
     return load_maritime_ontology()
