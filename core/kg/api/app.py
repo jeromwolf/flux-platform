@@ -128,6 +128,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     from kg.api.routes.agent import router as agent_router
     from kg.api.routes.algorithms import router as algorithms_router
     from kg.api.routes.cypher import router as cypher_router
+    from kg.api.routes.documents import router as documents_router
     from kg.api.routes.embeddings import router as embeddings_router
     from kg.api.routes.etl import router as etl_router
     from kg.api.routes.graph import router as graph_router
@@ -138,6 +139,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     from kg.api.routes.rag import router as rag_router
     from kg.api.routes.relationships import router as relationships_router
     from kg.api.routes.schema import router as schema_router
+    from kg.api.routes.workflows import router as workflows_router
 
     _auth_deps = [Depends(get_current_api_key)]
 
@@ -154,6 +156,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     app.include_router(algorithms_router, prefix="/api/v1", dependencies=_auth_deps)
     app.include_router(rag_router, prefix="/api/v1", dependencies=_auth_deps)
     app.include_router(agent_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(documents_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(workflows_router, prefix="/api/v1", dependencies=_auth_deps)
 
     return app
 

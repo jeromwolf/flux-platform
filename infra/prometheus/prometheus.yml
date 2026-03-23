@@ -37,6 +37,13 @@ scrape_configs:
       - targets: ['keycloak:8080']
     metrics_path: '/metrics'
 
+  # Zipkin tracing server metrics
+  - job_name: 'zipkin'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['zipkin:9411']
+    metrics_path: '/prometheus'
+
   # Neo4j metrics (if enterprise edition)
   # - job_name: "neo4j"
   #   metrics_path: "/metrics"

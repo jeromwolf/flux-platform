@@ -13,6 +13,11 @@ import type {
   CypherResponse,
   RAGQueryResponse,
   AgentChatResponse,
+  DocumentUploadResponse,
+  DocumentListResponse,
+  WorkflowResponse,
+  WorkflowListResponse,
+  WorkflowSaveData,
 } from './types'
 
 /** Health */
@@ -74,7 +79,7 @@ export const nlApi = {
     api.post<NLQueryResponse>('/v1/query', { text, execute: execute ?? true, limit: limit ?? 50 }),
 }
 
-/** Workflows */
+/** Workflows (legacy stub kept for backward compat) */
 export const workflowApi = {
   list: (page?: number, size?: number) =>
     api.get<PaginatedResponse<Workflow>>('/v1/workflows', { page, size }),
@@ -90,6 +95,61 @@ export const workflowApi = {
 
   delete: (id: string) =>
     api.delete<void>(`/v1/workflows/${id}`),
+}
+
+/** Workflow persistence API (maps to /api/v1/workflows backend) */
+export const workflowPersistApi = {
+  list: () =>
+    api.get<WorkflowListResponse>('/v1/workflows/'),
+
+  get: (id: string) =>
+    api.get<WorkflowResponse>(`/v1/workflows/${id}`),
+
+  create: (data: WorkflowSaveData) =>
+    api.post<WorkflowResponse>('/v1/workflows/', data),
+
+  update: (id: string, data: WorkflowSaveData) =>
+    api.put<WorkflowResponse>(`/v1/workflows/${id}`, data),
+
+  delete: (id: string) =>
+    api.delete<{ deleted: string }>(`/v1/workflows/${id}`),
+}
+
+/** Document upload API */
+const BASE_URL = typeof window !== 'undefined'
+  ? (import.meta.env?.VITE_API_BASE_URL || '/api')
+  : '/api'
+
+export const documentApi = {
+  upload: async (file: File, description = ''): Promise<DocumentUploadResponse> => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('description', description)
+
+    const response = await fetch(`${BASE_URL}/v1/documents/upload`, {
+      method: 'POST',
+      body: form,
+    })
+
+    if (!response.ok) {
+      let detail = response.statusText
+      try {
+        const err = await response.json()
+        detail = err.detail || detail
+      } catch {
+        // not JSON
+      }
+      throw new Error(`Upload failed (${response.status}): ${detail}`)
+    }
+
+    return response.json()
+  },
+
+  list: (limit = 50, offset = 0) =>
+    api.get<DocumentListResponse>('/v1/documents/', { limit, offset }),
+
+  delete: (id: string) =>
+    api.delete<{ deleted: string }>(`/v1/documents/${id}`),
 }
 
 /** RAG */

@@ -17,6 +17,8 @@ resources:
   - keycloak-service.yaml
   - keycloak-db-deployment.yaml
   - ingress.yaml
+  - cert-manager-issuer.yaml
+  - zipkin-deployment.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: imsp-platform

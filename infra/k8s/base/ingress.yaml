@@ -11,8 +11,13 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - imsp.kriso.re.kr
+      secretName: imsp-tls
   rules:
     - host: api.imsp.local
       http:

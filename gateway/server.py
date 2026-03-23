@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from uuid import uuid4
@@ -14,11 +15,15 @@ from uuid import uuid4
 import httpx
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 
 from gateway.app import create_gateway_app, GatewayApp
 from gateway.config import GatewayConfig
+from gateway.middleware.circuit_breaker import CircuitBreaker
+from gateway.middleware.metrics import gateway_metrics
 from gateway.middleware.rate_limit import RateLimitConfig, RateLimitMiddleware
 from gateway.middleware.request_id import RequestIDMiddleware
+from gateway.middleware.tracing import GatewayTracingMiddleware
 from gateway.ws.manager import ConnectionManager
 from gateway.ws.models import WSMessage, WSMessageType
 
@@ -30,6 +35,9 @@ _ws_manager = ConnectionManager()
 
 # Shared async HTTP client (created in lifespan, closed on shutdown)
 _http_client: httpx.AsyncClient | None = None
+
+# Circuit breaker for upstream API proxy
+_circuit_breaker = CircuitBreaker()
 
 
 def get_gateway() -> GatewayApp:
@@ -102,14 +110,17 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
     # 2. Request ID (CORS 다음)
     app.add_middleware(RequestIDMiddleware)
 
-    # 3. Rate Limit
+    # 3. Distributed Tracing (W3C Traceparent + Zipkin export)
+    app.add_middleware(GatewayTracingMiddleware)
+
+    # 4. Rate Limit
     rate_config = RateLimitConfig(
         requests_per_minute=gw.config.rate_limit_per_minute,
         exclude_paths=["/health", "/ready", "/docs", "/openapi.json"],
     )
     app.add_middleware(RateLimitMiddleware, config=rate_config)
 
-    # 4. Keycloak JWT middleware (optional — skipped if not configured)
+    # 5. Keycloak JWT middleware (optional — skipped if not configured)
     keycloak_url = os.getenv("KEYCLOAK_URL", "")
     if keycloak_url:
         from gateway.middleware.keycloak import KeycloakMiddleware
@@ -118,8 +129,19 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
             keycloak_url=keycloak_url,
             realm=os.getenv("KEYCLOAK_REALM", "imsp"),
             client_id=os.getenv("KEYCLOAK_CLIENT_ID", "imsp-api"),
-            public_paths=["/health", "/ready", "/docs", "/openapi.json", "/ws"],
+            public_paths=["/health", "/ready", "/metrics", "/docs", "/openapi.json", "/ws"],
         )
+
+    # 6. Metrics request-tracking middleware
+    @app.middleware("http")
+    async def _metrics_middleware(request: Request, call_next):
+        start = time.monotonic()
+        response = await call_next(request)
+        duration = time.monotonic() - start
+        # Skip recording metrics for the /metrics scrape endpoint itself
+        if request.url.path != "/metrics":
+            gateway_metrics.record_request(duration, response.status_code)
+        return response
 
     # --- Health endpoints ---
     @app.get("/health")
@@ -133,7 +155,35 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
 
     @app.get("/ready")
     async def readiness():
-        return {"status": "ready"}
+        """Readiness probe — checks gateway and upstream Core API health."""
+        upstream_url = gw.config.api_base_url + "/api/v1/health"
+        upstream_status = "unreachable"
+        http_status = 503
+
+        try:
+            client = get_http_client()
+            resp = await client.get(upstream_url, timeout=5.0)
+            if resp.status_code < 500:
+                upstream_status = "healthy"
+                http_status = 200
+        except Exception:
+            pass
+
+        body = {"status": "ready" if http_status == 200 else "degraded", "upstream": upstream_status}
+        return Response(
+            content=str(body).replace("'", '"'),
+            status_code=http_status,
+            media_type="application/json",
+        )
+
+    # --- Metrics endpoint ---
+    @app.get("/metrics")
+    async def metrics():
+        """Prometheus-format metrics scrape endpoint."""
+        payload = gateway_metrics.to_prometheus(
+            active_connections=_ws_manager.connection_count
+        )
+        return PlainTextResponse(content=payload, media_type="text/plain; version=0.0.4")
 
     # --- API Proxy endpoints ---
     @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
@@ -158,6 +208,15 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
         # Forward body for mutation methods
         body = await request.body() if method in ("POST", "PUT", "PATCH") else None
 
+        # Circuit breaker check — reject early if upstream is known-bad
+        if not _circuit_breaker.allow_request():
+            logger.warning("Circuit breaker OPEN — rejecting proxy request to %s", target_url)
+            return Response(
+                content='{"error": "Service temporarily unavailable", "detail": "Circuit breaker is open"}',
+                status_code=503,
+                media_type="application/json",
+            )
+
         client = get_http_client()
 
         try:
@@ -168,18 +227,27 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
                 content=body,
             )
             content_type = resp.headers.get("content-type", "application/json")
+
+            # 5xx from upstream counts as a failure; 2xx/4xx are client-driven successes
+            if resp.status_code >= 500:
+                _circuit_breaker.record_failure()
+            else:
+                _circuit_breaker.record_success()
+
             return Response(
                 content=resp.content,
                 status_code=resp.status_code,
                 media_type=content_type,
             )
         except httpx.HTTPStatusError as exc:
+            _circuit_breaker.record_failure()
             return Response(
                 content=exc.response.content,
                 status_code=exc.response.status_code,
                 media_type="application/json",
             )
         except httpx.RequestError:
+            _circuit_breaker.record_failure()
             raise HTTPException(status_code=502, detail="Backend service unavailable")
 
     # --- WebSocket endpoint ---

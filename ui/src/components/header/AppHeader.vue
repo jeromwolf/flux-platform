@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { Bell, LogIn, LogOut, ChevronDown } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { UBadge, UDropdown, UDropdownItem } from '@/components/ui'
+import ConnectionStatus from '@/components/common/ConnectionStatus.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -36,6 +37,9 @@ const roleLabel = computed(() => {
   <header class="flex h-12 shrink-0 items-center justify-between border-b border-border-subtle bg-surface-primary px-6">
     <h1 class="text-sm font-medium text-text-primary">{{ pageTitle }}</h1>
     <div class="flex items-center gap-2">
+      <!-- WebSocket connection indicator -->
+      <ConnectionStatus class="mr-1" />
+
       <template v-if="authStore.isAuthenticated">
         <button
           class="rounded-lg p-2 text-text-muted transition-colors hover:bg-navy-800 hover:text-text-primary"

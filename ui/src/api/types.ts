@@ -173,6 +173,46 @@ export interface RAGQueryResponse {
   total_chunks: number
 }
 
+/** Document upload types */
+export interface DocumentUploadResponse {
+  id: string
+  filename: string
+  size: number
+  content_type: string
+  status: string
+  chunks: number
+}
+
+export interface DocumentListResponse {
+  documents: DocumentUploadResponse[]
+  total: number
+}
+
+/** Workflow persistence types */
+export interface WorkflowResponse {
+  id: string
+  name: string
+  description: string
+  nodes: Record<string, unknown>[]
+  edges: Record<string, unknown>[]
+  viewport: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface WorkflowListResponse {
+  workflows: WorkflowResponse[]
+  total: number
+}
+
+export interface WorkflowSaveData {
+  name: string
+  description?: string
+  nodes: Record<string, unknown>[]
+  edges: Record<string, unknown>[]
+  viewport?: Record<string, unknown>
+}
+
 /** Agent types */
 export interface AgentChatResponse {
   message: string

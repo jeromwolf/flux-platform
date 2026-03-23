@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import AppShell from '@/layouts/AppShell.vue'
 import KnowledgeGraph from '@/components/graph/KnowledgeGraph.vue'
 import GraphToolbar from '@/components/graph/GraphToolbar.vue'
@@ -7,10 +7,12 @@ import NodeDetail from '@/components/graph/NodeDetail.vue'
 import ChatPanel from '@/components/chat/ChatPanel.vue'
 import type { GraphNode, GraphEdge } from '@/components/graph/KnowledgeGraph.vue'
 import { UBadge, UButton, UInput, USpinner } from '@/components/ui'
-import { Search, MessageSquare } from 'lucide-vue-next'
+import { Search, MessageSquare, Radio } from 'lucide-vue-next'
 import { schemaApi, kgApi } from '@/api/endpoints'
 import { useApi } from '@/composables/useApi'
 import type { NodeResponse, SchemaLabelInfo } from '@/api/types'
+import { useWebSocket } from '@/composables/useWebSocket'
+import { useWebSocketStore } from '@/stores/websocket'
 
 const graphRef = ref<InstanceType<typeof KnowledgeGraph> | null>(null)
 const selectedNode = ref<GraphNode | null>(null)
@@ -18,6 +20,73 @@ const currentLayout = ref<'d3-force' | 'dagre' | 'circular' | 'grid'>('d3-force'
 const searchQuery = ref('')
 const activeFilters = ref<Set<string>>(new Set())
 const chatOpen = ref(false)
+
+// ── WebSocket ─────────────────────────────────────────────────────────────────
+const wsStore = useWebSocketStore()
+const { status: wsStatus, lastMessage, connect, disconnect, joinRoom } = useWebSocket()
+
+// Badge shown when new KG data arrives via WS
+const kgUpdateBadge = ref(0)
+let kgBadgeClearTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearKgBadge() {
+  kgUpdateBadge.value = 0
+}
+
+// Sync status into store so ConnectionStatus indicator can read it
+watch(wsStatus, (s) => wsStore.setStatus(s))
+
+// Handle incoming WS messages
+watch(lastMessage, (msg) => {
+  if (!msg) return
+  wsStore.handleMessage(msg)
+
+  if (msg.type === 'kg_update') {
+    // Merge new nodes/edges from the WS payload into the graph
+    const payload = msg.payload as {
+      nodes?: Array<Record<string, unknown>>
+      relationships?: Array<Record<string, unknown>>
+    }
+
+    if (payload.nodes && payload.nodes.length > 0) {
+      const newNodes = payload.nodes.map(toGraphNode)
+      const existingIds = new Set(graphNodes.value.map((n) => n.id))
+      const added = newNodes.filter((n) => !existingIds.has(n.id))
+      if (added.length > 0) {
+        graphNodes.value = [...graphNodes.value, ...added]
+      }
+    }
+
+    if (payload.relationships && payload.relationships.length > 0) {
+      const newEdges: GraphEdge[] = payload.relationships.map((r) => ({
+        source: String(r.startNodeId ?? r.start ?? ''),
+        target: String(r.endNodeId ?? r.end ?? ''),
+        label: String(r.type ?? ''),
+        type: String(r.type ?? '').toLowerCase(),
+      }))
+      const existingKeys = new Set(
+        graphEdges.value.map((e) => `${e.source}->${e.target}:${e.label}`),
+      )
+      const addedEdges = newEdges.filter(
+        (e) => !existingKeys.has(`${e.source}->${e.target}:${e.label}`),
+      )
+      if (addedEdges.length > 0) {
+        graphEdges.value = [...graphEdges.value, ...addedEdges]
+      }
+    }
+
+    // Show update badge — auto-dismiss after 4 seconds
+    kgUpdateBadge.value++
+    if (kgBadgeClearTimer) clearTimeout(kgBadgeClearTimer)
+    kgBadgeClearTimer = setTimeout(clearKgBadge, 4000)
+  }
+})
+
+onUnmounted(() => {
+  if (kgBadgeClearTimer) clearTimeout(kgBadgeClearTimer)
+  disconnect()
+})
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Graph data — starts with sample fallback
 const graphNodes = ref<GraphNode[]>([])
@@ -198,6 +267,11 @@ onMounted(async () => {
 
   // Try to load schema labels for filter chips
   await loadSchema()
+
+  // Connect WebSocket and subscribe to KG updates room
+  connect()
+  // Join after a short tick so the onopen handler has fired first
+  setTimeout(() => joinRoom('kg'), 500)
 })
 </script>
 
@@ -212,6 +286,24 @@ onMounted(async () => {
             <div class="flex items-center gap-1.5">
               <UBadge variant="ocean" size="sm">{{ filteredNodes.length }} 노드</UBadge>
               <UBadge variant="default" size="sm">{{ filteredEdges.length }} 관계</UBadge>
+              <!-- Live KG update badge — shown briefly when WS pushes new data -->
+              <Transition
+                enter-active-class="transition-all duration-200"
+                enter-from-class="opacity-0 scale-75"
+                enter-to-class="opacity-100 scale-100"
+                leave-active-class="transition-all duration-300"
+                leave-from-class="opacity-100 scale-100"
+                leave-to-class="opacity-0 scale-75"
+              >
+                <span
+                  v-if="kgUpdateBadge > 0"
+                  class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-inset ring-emerald-500/40"
+                  @click="clearKgBadge"
+                >
+                  <Radio class="h-3 w-3 animate-pulse" />
+                  +{{ kgUpdateBadge }} 실시간 업데이트
+                </span>
+              </Transition>
             </div>
           </div>
           <div class="flex items-center gap-3">
