@@ -280,11 +280,13 @@ class CSVParser:
 
 
 class PDFParser:
-    """PDF parser stub — Y2 will use PyPDF2 or pdfplumber.
+    """PDF parser using PyMuPDF (fitz).
 
-    In Y1, ``parse`` accepts pre-extracted text directly.
-    ``parse_file`` attempts a best-effort text read and logs a
-    warning when a proper PDF library is required.
+    Falls back to basic text extraction if fitz is not available.
+    Includes text quality scoring for OCR detection.
+
+    ``parse()`` accepts pre-extracted text (string) directly.
+    ``parse_file()`` uses fitz for real PDF extraction with quality metrics.
     """
 
     @property
@@ -297,7 +299,16 @@ class PDFParser:
         doc_id: str = "",
         metadata: Optional[dict[str, Any]] = None,
     ) -> Document:
-        """Parse raw text content extracted from a PDF."""
+        """Parse raw text content extracted from a PDF.
+
+        Args:
+            content: Pre-extracted text string from a PDF.
+            doc_id: Unique identifier for this document.
+            metadata: Optional metadata dict; 'title' and 'source' are used.
+
+        Returns:
+            Document with PDF type.
+        """
         meta = metadata or {}
         return Document(
             doc_id=doc_id or "unknown",
@@ -314,26 +325,115 @@ class PDFParser:
         doc_id: str = "",
         metadata: Optional[dict[str, Any]] = None,
     ) -> Document:
-        """Stub: reads file as text. Y2 will use a PDF extraction library."""
-        try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read()
-        except Exception as exc:
-            logger.warning("PDF parsing requires PyPDF2 or pdfplumber: %s", exc)
-            content = f"[PDF file: {file_path} — requires PyPDF2 for extraction]"
+        """Extract text from a PDF file using PyMuPDF (fitz).
+
+        Performs page-level extraction, computes per-page text quality scores,
+        and sets ``needs_ocr=True`` when the overall quality is below 0.3.
+
+        Falls back to a best-effort text read when fitz is not installed.
+
+        Args:
+            file_path: Absolute path to the PDF file.
+            doc_id: Unique identifier for this document.
+            metadata: Optional metadata dict merged with extracted metadata.
+
+        Returns:
+            Document with extracted text and quality metadata.
+        """
         meta = dict(metadata or {})
         if "title" not in meta:
             meta["title"] = os.path.basename(file_path)
         if "source" not in meta:
             meta["source"] = file_path
-        return self.parse(content, doc_id=doc_id or os.path.basename(file_path), metadata=meta)
+
+        try:
+            import fitz  # PyMuPDF
+
+            doc = fitz.open(file_path)
+            pages_text: list[str] = []
+            quality_scores: list[float] = []
+            image_count = 0
+
+            for page_num in range(len(doc)):
+                page = doc[page_num]
+                text = page.get_text("text")
+                images = page.get_images()
+                image_count += len(images)
+
+                if text.strip():
+                    quality = self._calculate_quality(text)
+                    quality_scores.append(quality)
+                    pages_text.append(text.strip())
+
+            total_pages = len(doc)
+            doc.close()
+
+            full_text = "\n\n".join(pages_text)
+            overall_quality = (
+                sum(quality_scores) / len(quality_scores) if quality_scores else 0.0
+            )
+            needs_ocr = (not pages_text and image_count > 0) or overall_quality < 0.3
+
+            meta["page_count"] = total_pages
+            meta["quality_scores"] = quality_scores
+            meta["needs_ocr"] = needs_ocr
+            meta["image_count"] = image_count
+
+        except ImportError:
+            logger.debug("fitz (PyMuPDF) not installed; falling back to text read for %s", file_path)
+            try:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                    full_text = f.read()
+            except Exception as exc:
+                logger.warning("PDF text fallback read failed: %s", exc)
+                full_text = f"[PDF file: {file_path} — requires PyMuPDF for extraction]"
+        except Exception as exc:
+            logger.warning("PDF parsing with fitz failed: %s", exc)
+            full_text = f"[PDF parsing failed: {exc}]"
+
+        return self.parse(full_text, doc_id=doc_id or os.path.basename(file_path), metadata=meta)
+
+    @staticmethod
+    def _calculate_quality(text: str) -> float:
+        """Compute text quality score as the ratio of meaningful characters.
+
+        Meaningful characters are Korean syllables (AC00–D7A3), English alpha,
+        digits, and common punctuation/whitespace.
+
+        Args:
+            text: Raw text extracted from a PDF page.
+
+        Returns:
+            Float in [0, 1]; higher means better quality text.
+        """
+        if not text:
+            return 0.0
+        total = len(text)
+        if total == 0:
+            return 0.0
+        meaningful = 0
+        for ch in text:
+            if (
+                "\uac00" <= ch <= "\ud7a3"  # Korean Hangul syllables
+                or ch.isalpha()             # English and other alphabetics
+                or ch.isdigit()             # Digits
+                or ch in " .,!?;:()\n\t-"  # Common punctuation / whitespace
+            ):
+                meaningful += 1
+        return meaningful / total
 
 
 class HWPParser:
-    """HWP parser stub — Y2 will use python-hwp or olefile.
+    """HWP (Hangul Word Processor) parser.
 
-    In Y1, ``parse`` accepts pre-extracted text directly.
-    ``parse_file`` logs a warning and returns a placeholder document.
+    Uses a 3-tier fallback strategy for binary HWP files:
+
+    1. ``hwp5txt`` CLI (best quality, requires pyhwp installed)
+    2. ``olefile`` binary OLE extraction (no external CLI needed)
+    3. Error message when neither is available
+
+    ``parse()`` accepts pre-extracted text (string) directly.
+    ``parse_file()`` reads bytes and runs the fallback chain.
     """
 
     @property
@@ -346,6 +446,16 @@ class HWPParser:
         doc_id: str = "",
         metadata: Optional[dict[str, Any]] = None,
     ) -> Document:
+        """Parse pre-extracted HWP text content.
+
+        Args:
+            content: Pre-extracted text string.
+            doc_id: Unique identifier.
+            metadata: Optional metadata dict.
+
+        Returns:
+            Document with HWP type.
+        """
         meta = metadata or {}
         return Document(
             doc_id=doc_id or "unknown",
@@ -362,18 +472,173 @@ class HWPParser:
         doc_id: str = "",
         metadata: Optional[dict[str, Any]] = None,
     ) -> Document:
-        logger.warning(
-            "HWP binary extraction requires python-hwp library; "
-            "returning placeholder for %s",
-            file_path,
-        )
-        content = f"[HWP file: {file_path} — requires python-hwp for extraction]"
+        """Extract text from an HWP binary file.
+
+        Tries hwp5txt CLI first, then olefile binary extraction.
+        Returns an error message document when all methods fail.
+
+        Args:
+            file_path: Absolute path to the HWP file.
+            doc_id: Unique identifier.
+            metadata: Optional metadata dict merged with extracted metadata.
+
+        Returns:
+            Document with extracted text and extraction_method in metadata.
+        """
         meta = dict(metadata or {})
         if "title" not in meta:
             meta["title"] = os.path.basename(file_path)
         if "source" not in meta:
             meta["source"] = file_path
+
+        try:
+            with open(file_path, "rb") as f:
+                data = f.read()
+        except Exception as exc:
+            logger.warning("Could not read HWP file %s: %s", file_path, exc)
+            content = f"[HWP file read failed: {exc}]"
+            return self.parse(content, doc_id=doc_id or os.path.basename(file_path), metadata=meta)
+
+        # Tier 1: hwp5txt CLI
+        content = self._try_hwp5txt(file_path)
+        if content is not None:
+            meta["extraction_method"] = "hwp5txt"
+            return self.parse(content, doc_id=doc_id or os.path.basename(file_path), metadata=meta)
+
+        # Tier 2: olefile binary extraction
+        content = self._try_olefile(data)
+        if content is not None:
+            meta["extraction_method"] = "olefile"
+            return self.parse(content, doc_id=doc_id or os.path.basename(file_path), metadata=meta)
+
+        # Tier 3: extraction failed
+        logger.warning("All HWP extraction methods failed for %s", file_path)
+        meta["extraction_method"] = "failed"
+        content = f"[HWP extraction failed: {file_path}]"
         return self.parse(content, doc_id=doc_id or os.path.basename(file_path), metadata=meta)
+
+    @staticmethod
+    def _try_hwp5txt(file_path: str) -> Optional[str]:
+        """Extract HWP text using the hwp5txt CLI tool.
+
+        Args:
+            file_path: Path to the HWP file (must not contain shell metacharacters).
+
+        Returns:
+            Extracted text string, or None if unavailable/failed.
+        """
+        import subprocess
+        import shutil
+        import tempfile
+
+        # Shell injection protection
+        _unsafe = re.compile(r'[;&|`$(){}!<>\x00]')
+        if _unsafe.search(file_path):
+            logger.warning("Unsafe characters in HWP file path; skipping hwp5txt")
+            return None
+
+        if shutil.which("hwp5txt") is None:
+            return None
+
+        try:
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                import shutil as _shutil
+                tmp_path = os.path.join(tmp_dir, os.path.basename(file_path))
+                _shutil.copy2(file_path, tmp_path)
+                result = subprocess.run(
+                    ["hwp5txt", tmp_path],
+                    capture_output=True,
+                    text=True,
+                    cwd=tmp_dir,
+                    timeout=30,
+                )
+            if result.returncode == 0 and result.stdout.strip():
+                text = result.stdout.strip()
+                if len(text) > 10:
+                    return text
+        except Exception as exc:
+            logger.debug("hwp5txt failed: %s", exc)
+
+        return None
+
+    @staticmethod
+    def _try_olefile(data: bytes) -> Optional[str]:
+        """Extract text from HWP bytes using the olefile library.
+
+        HWP files are OLE2 compound documents. Text is stored in
+        BodyText/Section* streams as compressed binary records.
+
+        Args:
+            data: Raw bytes of the HWP file.
+
+        Returns:
+            Extracted text string, or None if olefile is unavailable/failed.
+        """
+        import struct
+        import io as _io
+
+        try:
+            import olefile
+        except ImportError:
+            logger.debug("olefile not installed; skipping OLE extraction")
+            return None
+
+        try:
+            if not olefile.isOleFile(_io.BytesIO(data)):
+                return None
+
+            ole = olefile.OleFileIO(_io.BytesIO(data))
+            text_parts: list[str] = []
+
+            for stream_name in ole.listdir():
+                stream_path = "/".join(stream_name)
+                if "bodytext" in stream_path.lower():
+                    try:
+                        raw = ole.openstream(stream_name).read()
+                        text = HWPParser._extract_text_from_ole_stream(raw, struct)
+                        if text.strip():
+                            text_parts.append(text.strip())
+                    except Exception:
+                        continue
+
+            ole.close()
+
+            result = "\n\n".join(text_parts)
+            return result if result.strip() else None
+
+        except Exception as exc:
+            logger.debug("olefile extraction failed: %s", exc)
+            return None
+
+    @staticmethod
+    def _extract_text_from_ole_stream(data: bytes, struct_mod: Any) -> str:
+        """Extract readable Unicode text from a HWP BodyText binary stream.
+
+        Iterates through 2-byte little-endian code points and collects
+        printable characters.
+
+        Args:
+            data: Raw bytes from an OLE BodyText stream.
+            struct_mod: The ``struct`` module (passed to avoid repeated imports).
+
+        Returns:
+            Reconstructed text string.
+        """
+        text_parts: list[str] = []
+        i = 0
+        while i < len(data) - 1:
+            try:
+                char_code = struct_mod.unpack_from("<H", data, i)[0]
+                if 0x20 <= char_code < 0xFFFF and char_code not in (0xFEFF, 0xFFFE):
+                    ch = chr(char_code)
+                    if ch.isprintable() or ch in ("\n", "\r", "\t"):
+                        text_parts.append(ch)
+                elif char_code in (0x0A, 0x0D, 0x02):
+                    text_parts.append("\n")
+                i += 2
+            except (struct_mod.error, ValueError):
+                i += 2
+        return "".join(text_parts)
 
 
 class ParserRegistry:

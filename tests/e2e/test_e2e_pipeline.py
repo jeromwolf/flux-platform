@@ -289,7 +289,7 @@ class TestGatewayWebSocket:
             await manager.disconnect("conn1")
             assert manager.connection_count == 0
 
-        asyncio.get_event_loop().run_until_complete(_test())
+        asyncio.new_event_loop().run_until_complete(_test())
 
     @pytest.mark.unit
     def test_ws_message_types(self):

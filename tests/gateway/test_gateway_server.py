@@ -41,6 +41,47 @@ class TestGatewayServer:
         assert callable(main)
 
 
+class TestHttpxClient:
+    """Test that the httpx AsyncClient is wired into the server."""
+
+    @pytest.mark.unit
+    def test_httpx_client_created_in_server(self):
+        """Server module exposes get_http_client after lifespan startup."""
+        from gateway.server import create_server, get_http_client
+        from gateway.config import GatewayConfig
+        import httpx
+
+        config = GatewayConfig(port=9997)
+        server = create_server(config)
+
+        # Use TestClient context manager to trigger lifespan startup/shutdown
+        from starlette.testclient import TestClient
+
+        with TestClient(server) as client:
+            http_client = get_http_client()
+            assert isinstance(http_client, httpx.AsyncClient)
+
+    @pytest.mark.unit
+    def test_server_adds_rate_limit_and_request_id_middleware(self):
+        """Server registers RateLimitMiddleware and RequestIDMiddleware."""
+        from gateway.server import create_server
+        from gateway.config import GatewayConfig
+        from gateway.middleware.rate_limit import RateLimitMiddleware
+        from gateway.middleware.request_id import RequestIDMiddleware
+
+        config = GatewayConfig(port=9996)
+        server = create_server(config)
+
+        # user_middleware 는 Middleware(cls=..., options=...) namedtuple 리스트
+        middleware_classes = [
+            m.cls if hasattr(m, "cls") else type(m)
+            for m in server.user_middleware
+        ]
+        # RateLimitMiddleware 와 RequestIDMiddleware 가 등록돼 있어야 함
+        assert RateLimitMiddleware in middleware_classes
+        assert RequestIDMiddleware in middleware_classes
+
+
 class TestKeycloakMiddleware:
     """Test Keycloak JWT middleware."""
 

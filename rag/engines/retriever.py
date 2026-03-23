@@ -103,11 +103,29 @@ class SimpleRetriever:
         query: str,
         top_k: int | None = None,
     ) -> list[RetrievedChunk]:
-        """Simple keyword-based search using term-frequency scoring.
+        """BM25 keyword-based search.
 
-        Scores each chunk by the number of query terms it contains,
-        normalised by the chunk length (TF-like measure).  The result is
-        bounded to [0, 1] by capping at 1.0.
+        Ranks chunks using the Okapi BM25 formula, which normalises term
+        frequency by document length and applies an inverse document frequency
+        weight so rare query terms score higher.
+
+        BM25 parameters:
+            k1 = 1.5  — term-frequency saturation
+            b  = 0.75 — document-length normalisation factor
+
+        Formula per chunk for each query term *t*::
+
+            IDF(t) * tf(t, d) * (k1 + 1)
+            ─────────────────────────────────────────────────────────────────
+            tf(t, d) + k1 * (1 − b + b * doc_len / avg_doc_len)
+
+        where ``IDF(t) = log((N − n(t) + 0.5) / (n(t) + 0.5) + 1)`` and
+        ``N`` is the total number of indexed chunks, ``n(t)`` is the number
+        of chunks containing term *t*.
+
+        The final per-chunk score is the sum of BM25 contributions across
+        all query terms, then normalised to [0, 1] by dividing by the
+        maximum score in the result set (or 1.0 when all scores are zero).
 
         Args:
             query: Raw query string; split on whitespace into search terms.
@@ -115,31 +133,61 @@ class SimpleRetriever:
 
         Returns:
             Up to *top_k* ``RetrievedChunk`` objects sorted by descending
-            score (zero-score chunks are excluded).
+            BM25 score (zero-score chunks are excluded).
         """
         k = top_k if top_k is not None else self._config.top_k
         terms = [t.lower() for t in query.split() if t.strip()]
         if not terms:
             return []
 
+        if not self._chunks:
+            return []
+
+        # Pre-tokenise every chunk once
+        tokenised: list[list[str]] = [c.content.lower().split() for c in self._chunks]
+        doc_lengths = [len(words) for words in tokenised]
+        n_docs = len(self._chunks)
+        avg_dl = sum(doc_lengths) / max(n_docs, 1)
+
+        # BM25 hyper-parameters
+        k1: float = 1.5
+        b: float = 0.75
+
+        # Document frequency per query term (number of docs containing the term)
+        doc_freq: dict[str, int] = {}
+        for term in set(terms):
+            doc_freq[term] = sum(1 for words in tokenised if term in words)
+
+        raw_scores: list[float] = []
+        for idx, words in enumerate(tokenised):
+            dl = doc_lengths[idx]
+            score = 0.0
+            word_count: dict[str, int] = {}
+            for w in words:
+                word_count[w] = word_count.get(w, 0) + 1
+
+            for term in terms:
+                tf = word_count.get(term, 0)
+                if tf == 0:
+                    continue
+                n_t = doc_freq.get(term, 0)
+                # IDF with smoothing
+                idf = math.log((n_docs - n_t + 0.5) / (n_t + 0.5) + 1.0)
+                # BM25 TF component
+                tf_component = tf * (k1 + 1) / (tf + k1 * (1 - b + b * dl / max(avg_dl, 1)))
+                score += idf * tf_component
+
+            raw_scores.append(score)
+
+        # Normalise to [0, 1]
+        max_score = max(raw_scores) if raw_scores else 0.0
+        normaliser = max_score if max_score > 0.0 else 1.0
+
         scored: list[tuple[float, DocumentChunk]] = []
-        for chunk in self._chunks:
-            chunk_lower = chunk.content.lower()
-            chunk_words = chunk_lower.split()
-            total_words = max(len(chunk_words), 1)
-
-            # Count how many times any query term appears
-            hit_count = sum(chunk_lower.count(term) for term in terms)
-            if hit_count == 0:
-                continue
-
-            # Normalise: hits per word, scaled by query coverage
-            tf_score = hit_count / total_words
-            # Blend with query coverage (fraction of terms found at all)
-            terms_found = sum(1 for term in terms if term in chunk_lower)
-            coverage = terms_found / len(terms)
-            score = min(tf_score * 10 * coverage, 1.0)  # scale to ~[0,1]
-            scored.append((score, chunk))
+        for idx, chunk in enumerate(self._chunks):
+            norm_score = raw_scores[idx] / normaliser
+            if norm_score > 0.0:
+                scored.append((norm_score, chunk))
 
         scored.sort(key=lambda x: x[0], reverse=True)
 

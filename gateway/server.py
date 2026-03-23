@@ -11,11 +11,14 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
+import httpx
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from gateway.app import create_gateway_app, GatewayApp
 from gateway.config import GatewayConfig
+from gateway.middleware.rate_limit import RateLimitConfig, RateLimitMiddleware
+from gateway.middleware.request_id import RequestIDMiddleware
 from gateway.ws.manager import ConnectionManager
 from gateway.ws.models import WSMessage, WSMessageType
 
@@ -25,6 +28,9 @@ logger = logging.getLogger(__name__)
 _gateway: GatewayApp | None = None
 _ws_manager = ConnectionManager()
 
+# Shared async HTTP client (created in lifespan, closed on shutdown)
+_http_client: httpx.AsyncClient | None = None
+
 
 def get_gateway() -> GatewayApp:
     global _gateway
@@ -33,15 +39,46 @@ def get_gateway() -> GatewayApp:
     return _gateway
 
 
+def get_http_client() -> httpx.AsyncClient:
+    """Return the shared :class:`httpx.AsyncClient` instance.
+
+    Raises:
+        RuntimeError: If called before the lifespan startup has completed.
+    """
+    if _http_client is None:
+        raise RuntimeError("HTTP client not initialised — call create_server() first")
+    return _http_client
+
+
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    logger.info("IMSP Gateway starting — port %s", get_gateway().config.port)
+    global _http_client
+
+    gw = get_gateway()
+    logger.info("IMSP Gateway starting — port %s", gw.config.port)
+
+    # httpx AsyncClient 초기화 — 공유 커넥션 풀
+    _http_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(
+            connect=10.0,
+            read=30.0,
+            write=30.0,
+            pool=5.0,
+        ),
+        follow_redirects=True,
+    )
+    logger.info("HTTP client initialised")
+
     yield
+
+    # 종료 시 클라이언트 닫기
+    await _http_client.aclose()
+    _http_client = None
     logger.info("IMSP Gateway shutting down")
 
 
 def create_server(config: GatewayConfig | None = None) -> FastAPI:
-    global _gateway
+    global _gateway, _http_client
     _gateway = create_gateway_app(config)
     gw = _gateway
 
@@ -52,17 +89,27 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
         lifespan=_lifespan,
     )
 
-    # CORS
+    # 1. CORS (가장 바깥쪽 — 먼저 등록)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(gw.config.cors_origins),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["X-Request-ID"],
+        expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
     )
 
-    # Keycloak JWT middleware (optional — skipped if not configured)
+    # 2. Request ID (CORS 다음)
+    app.add_middleware(RequestIDMiddleware)
+
+    # 3. Rate Limit
+    rate_config = RateLimitConfig(
+        requests_per_minute=gw.config.rate_limit_per_minute,
+        exclude_paths=["/health", "/ready", "/docs", "/openapi.json"],
+    )
+    app.add_middleware(RateLimitMiddleware, config=rate_config)
+
+    # 4. Keycloak JWT middleware (optional — skipped if not configured)
     keycloak_url = os.getenv("KEYCLOAK_URL", "")
     if keycloak_url:
         from gateway.middleware.keycloak import KeycloakMiddleware
@@ -91,7 +138,7 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
     # --- API Proxy endpoints ---
     @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
     async def proxy_api(request: Request, path: str):
-        """Proxy all /api/* requests to the core KG API backend."""
+        """Proxy all /api/* requests to the core KG API backend using httpx."""
         proxy = gw.proxy
         method = request.method
 
@@ -101,41 +148,38 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
         if query:
             target_url = f"{target_url}?{query}"
 
-        # Forward headers
-        headers = dict(request.headers)
-        headers.pop("host", None)
+        # Forward headers (drop hop-by-hop headers)
+        headers = {
+            k: v
+            for k, v in request.headers.items()
+            if k.lower() not in ("host", "content-length", "transfer-encoding")
+        }
 
-        # Forward body
+        # Forward body for mutation methods
         body = await request.body() if method in ("POST", "PUT", "PATCH") else None
 
-        import urllib.request
-        import urllib.error
-
-        req = urllib.request.Request(
-            url=target_url,
-            data=body,
-            headers=headers,
-            method=method,
-        )
+        client = get_http_client()
 
         try:
-            with urllib.request.urlopen(req, timeout=30.0) as resp:
-                resp_body = resp.read()
-                resp_headers = dict(resp.headers)
-                content_type = resp_headers.get("Content-Type", "application/json")
-                return Response(
-                    content=resp_body,
-                    status_code=resp.status,
-                    media_type=content_type,
-                )
-        except urllib.error.HTTPError as exc:
-            error_body = exc.read() if exc.fp else b""
+            resp = await client.request(
+                method=method,
+                url=target_url,
+                headers=headers,
+                content=body,
+            )
+            content_type = resp.headers.get("content-type", "application/json")
             return Response(
-                content=error_body,
-                status_code=exc.code,
+                content=resp.content,
+                status_code=resp.status_code,
+                media_type=content_type,
+            )
+        except httpx.HTTPStatusError as exc:
+            return Response(
+                content=exc.response.content,
+                status_code=exc.response.status_code,
                 media_type="application/json",
             )
-        except urllib.error.URLError:
+        except httpx.RequestError:
             raise HTTPException(status_code=502, detail="Backend service unavailable")
 
     # --- WebSocket endpoint ---
