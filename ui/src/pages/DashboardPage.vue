@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppShell from '@/layouts/AppShell.vue'
 import { USpinner, UBadge } from '@/components/ui'
 import { Activity, Database, Share2, Workflow, CheckCircle, AlertCircle } from 'lucide-vue-next'
 import { healthApi, schemaApi } from '@/api/endpoints'
 import { useApi } from '@/composables/useApi'
 import type { HealthResponse, SchemaResponse } from '@/api/types'
+
+const { t } = useI18n()
 
 // API state
 const healthData = ref<HealthResponse | null>(null)
@@ -73,7 +76,7 @@ onMounted(loadDashboardData)
   <AppShell>
     <div class="space-y-6">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-text-primary">대시보드</h2>
+        <h2 class="text-lg font-semibold text-text-primary">{{ t('dashboard.title') }}</h2>
         <div v-if="lastCheckedAt" class="flex items-center gap-1.5 text-xs text-text-muted">
           <span>마지막 확인:</span>
           <span>{{ lastCheckedAt }}</span>
@@ -99,7 +102,7 @@ onMounted(loadDashboardData)
         <!-- 총 노드 -->
         <div class="rounded-xl border border-border-subtle bg-surface-secondary p-5">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-text-secondary">총 노드</span>
+            <span class="text-sm text-text-secondary">{{ t('dashboard.totalNodes') }}</span>
             <Share2 class="h-5 w-5 text-teal-400" />
           </div>
           <div class="mt-2 flex items-end gap-2">
@@ -114,7 +117,7 @@ onMounted(loadDashboardData)
         <!-- 총 관계 유형 -->
         <div class="rounded-xl border border-border-subtle bg-surface-secondary p-5">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-text-secondary">관계 유형</span>
+            <span class="text-sm text-text-secondary">{{ t('dashboard.relationshipTypes') }}</span>
             <Database class="h-5 w-5 text-ocean-400" />
           </div>
           <div class="mt-2 flex items-end gap-2">
@@ -127,7 +130,7 @@ onMounted(loadDashboardData)
         <!-- 시스템 상태 -->
         <div class="rounded-xl border border-border-subtle bg-surface-secondary p-5">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-text-secondary">시스템 상태</span>
+            <span class="text-sm text-text-secondary">{{ t('dashboard.systemStatus') }}</span>
             <component
               :is="systemStatus().ok ? CheckCircle : AlertCircle"
               class="h-5 w-5"
@@ -155,7 +158,7 @@ onMounted(loadDashboardData)
         <!-- 활성 워크플로우 (placeholder) -->
         <div class="rounded-xl border border-border-subtle bg-surface-secondary p-5">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-text-secondary">활성 워크플로우</span>
+            <span class="text-sm text-text-secondary">{{ t('dashboard.activeWorkflows') }}</span>
             <Workflow class="h-5 w-5 text-status-warning" />
           </div>
           <p class="mt-2 text-2xl font-bold text-text-primary">0</p>
@@ -167,7 +170,7 @@ onMounted(loadDashboardData)
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <!-- 최근 활동 -->
         <div class="rounded-xl border border-border-subtle bg-surface-secondary p-5">
-          <h3 class="text-sm font-medium text-text-secondary">최근 활동</h3>
+          <h3 class="text-sm font-medium text-text-secondary">{{ t('dashboard.recentActivity') }}</h3>
           <div class="mt-4 space-y-3">
             <div
               v-if="lastCheckedAt"
@@ -209,7 +212,7 @@ onMounted(loadDashboardData)
 
         <!-- 시스템 상태 상세 -->
         <div class="rounded-xl border border-border-subtle bg-surface-secondary p-5">
-          <h3 class="text-sm font-medium text-text-secondary">시스템 상태</h3>
+          <h3 class="text-sm font-medium text-text-secondary">{{ t('dashboard.systemStatus') }}</h3>
           <div class="mt-4">
             <div v-if="isLoading && !healthData" class="flex h-32 items-center justify-center gap-2 text-text-muted">
               <USpinner size="sm" />

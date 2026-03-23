@@ -213,6 +213,15 @@ export interface WorkflowSaveData {
   viewport?: Record<string, unknown>
 }
 
+/** Gateway Metrics types */
+export interface GatewayMetrics {
+  requestsTotal: number
+  errorsTotal: number
+  activeConnections: number
+  statusCodes: Record<string, number>
+  avgDurationMs: number | null
+}
+
 /** Agent types */
 export interface AgentChatResponse {
   message: string

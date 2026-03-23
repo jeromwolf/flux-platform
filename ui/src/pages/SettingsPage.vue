@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { setLocale } from '@/i18n'
 import AppShell from '@/layouts/AppShell.vue'
 import UCard from '@/components/ui/UCard.vue'
 import UButton from '@/components/ui/UButton.vue'
@@ -14,10 +16,11 @@ import { Globe, Moon, PanelLeft, Database, Shield, Info, Loader2 } from 'lucide-
 
 const authStore = useAuthStore()
 const keycloak = getKeycloak()
+const { t } = useI18n()
 
 // --- Card 1: General settings ---
 const language = ref<'ko' | 'en'>(
-  (localStorage.getItem('imsp_language') as 'ko' | 'en') ?? 'ko',
+  (localStorage.getItem('imsp-language') as 'ko' | 'en') ?? 'ko',
 )
 const darkTheme = ref(localStorage.getItem('imsp_theme') !== 'light')
 const sidebarOpen = ref(localStorage.getItem('imsp_sidebar') !== 'closed')
@@ -25,7 +28,7 @@ const generalSaving = ref(false)
 
 function saveGeneral() {
   generalSaving.value = true
-  localStorage.setItem('imsp_language', language.value)
+  setLocale(language.value)
   localStorage.setItem('imsp_theme', darkTheme.value ? 'dark' : 'light')
   localStorage.setItem('imsp_sidebar', sidebarOpen.value ? 'open' : 'closed')
   setTimeout(() => {
@@ -96,7 +99,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
 <template>
   <AppShell>
     <div class="space-y-6">
-      <h2 class="text-lg font-semibold text-text-primary">설정</h2>
+      <h2 class="text-lg font-semibold text-text-primary">{{ t('settings.title') }}</h2>
 
       <div class="space-y-5">
         <!-- Card 1: 일반 설정 -->
@@ -104,7 +107,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
           <template #header>
             <div class="flex items-center gap-2">
               <Globe class="h-4 w-4 text-ocean-400" />
-              <span class="text-sm font-semibold text-text-primary">일반 설정</span>
+              <span class="text-sm font-semibold text-text-primary">{{ t('settings.general') }}</span>
             </div>
           </template>
 
@@ -112,7 +115,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
             <!-- Language -->
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-medium text-text-primary">언어</p>
+                <p class="text-sm font-medium text-text-primary">{{ t('settings.language') }}</p>
                 <p class="text-xs text-text-muted">플랫폼 표시 언어를 선택합니다</p>
               </div>
               <div class="flex gap-2">
@@ -123,7 +126,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
                       ? 'bg-ocean-500 text-white'
                       : 'bg-surface-tertiary text-text-secondary border border-border-default hover:bg-navy-600'
                   "
-                  @click="language = 'ko'"
+                  @click="() => { language = 'ko'; setLocale('ko') }"
                 >
                   한국어
                 </button>
@@ -134,7 +137,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
                       ? 'bg-ocean-500 text-white'
                       : 'bg-surface-tertiary text-text-secondary border border-border-default hover:bg-navy-600'
                   "
-                  @click="language = 'en'"
+                  @click="() => { language = 'en'; setLocale('en') }"
                 >
                   English
                 </button>
@@ -169,7 +172,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
           <template #footer>
             <div class="flex justify-end">
               <UButton size="sm" :loading="generalSaving" @click="saveGeneral">
-                저장
+                {{ t('common.save') }}
               </UButton>
             </div>
           </template>
@@ -180,7 +183,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
           <template #header>
             <div class="flex items-center gap-2">
               <Database class="h-4 w-4 text-ocean-400" />
-              <span class="text-sm font-semibold text-text-primary">Neo4j 연결 설정</span>
+              <span class="text-sm font-semibold text-text-primary">{{ t('settings.neo4j') }}</span>
             </div>
           </template>
 
@@ -241,7 +244,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
           <template #header>
             <div class="flex items-center gap-2">
               <Shield class="h-4 w-4 text-ocean-400" />
-              <span class="text-sm font-semibold text-text-primary">Keycloak 인증 설정</span>
+              <span class="text-sm font-semibold text-text-primary">{{ t('settings.keycloak') }}</span>
             </div>
           </template>
 
@@ -311,7 +314,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
           <template #header>
             <div class="flex items-center gap-2">
               <Info class="h-4 w-4 text-ocean-400" />
-              <span class="text-sm font-semibold text-text-primary">시스템 정보</span>
+              <span class="text-sm font-semibold text-text-primary">{{ t('settings.system') }}</span>
             </div>
           </template>
 
@@ -374,7 +377,7 @@ function roleVariant(role: string): 'ocean' | 'teal' | 'default' {
                 :loading="loadingSystemInfo"
                 @click="loadSystemInfo"
               >
-                새로고침
+                {{ t('common.refresh') }}
               </UButton>
             </div>
           </template>

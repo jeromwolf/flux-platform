@@ -1,20 +1,23 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import SidebarItem from './SidebarItem.vue'
 import { LayoutDashboard, Workflow, Share2, Database, Settings, Anchor, Activity } from 'lucide-vue-next'
 
 const route = useRoute()
 const appStore = useAppStore()
+const { t } = useI18n()
 
-const navItems = [
-  { path: '/dashboard', label: '대시보드', icon: LayoutDashboard },
-  { path: '/workflow', label: '워크플로우', icon: Workflow },
-  { path: '/knowledge-graph', label: '지식그래프', icon: Share2 },
-  { path: '/data', label: '데이터', icon: Database },
-  { path: '/monitor', label: '모니터링', icon: Activity },
-  { path: '/settings', label: '설정', icon: Settings },
-]
+const navItems = computed(() => [
+  { path: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+  { path: '/workflow', label: t('nav.workflow'), icon: Workflow },
+  { path: '/knowledge-graph', label: t('nav.knowledgeGraph'), icon: Share2 },
+  { path: '/data', label: t('nav.data'), icon: Database },
+  { path: '/monitor', label: t('nav.monitor'), icon: Activity },
+  { path: '/settings', label: t('nav.settings'), icon: Settings },
+])
 </script>
 
 <template>

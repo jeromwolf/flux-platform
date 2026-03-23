@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import AppShell from '@/layouts/AppShell.vue'
 import UCard from '@/components/ui/UCard.vue'
 import UBadge from '@/components/ui/UBadge.vue'
 import UButton from '@/components/ui/UButton.vue'
 import USpinner from '@/components/ui/USpinner.vue'
-import { healthApi } from '@/api/endpoints'
+import { healthApi, metricsApi } from '@/api/endpoints'
 import { api } from '@/api/client'
-import type { HealthResponse } from '@/api/types'
+import type { HealthResponse, GatewayMetrics } from '@/api/types'
 import {
   Activity,
+  BarChart2,
   Clock,
   AlertTriangle,
   Wifi,
@@ -52,7 +53,49 @@ const services = ref<ServiceStatus[]>([
 
 const healthEvents = ref<HealthEvent[]>([])
 
-// ── Placeholder stat cards ────────────────────────────────────────────────────
+// ── Gateway metrics state ─────────────────────────────────────────────────────
+
+const gatewayMetrics = ref<GatewayMetrics | null>(null)
+const metricsError = ref(false)
+
+const errorRate = computed(() => {
+  const m = gatewayMetrics.value
+  if (!m || m.requestsTotal === 0) return '—'
+  return ((m.errorsTotal / m.requestsTotal) * 100).toFixed(1)
+})
+
+const statusBuckets = computed(() => {
+  const m = gatewayMetrics.value
+  if (!m) return []
+  const buckets: { label: string; count: number; color: string }[] = []
+  let twoXx = 0
+  let fourXx = 0
+  let fiveXx = 0
+  for (const [code, count] of Object.entries(m.statusCodes)) {
+    const n = parseInt(code)
+    if (n >= 200 && n < 300) twoXx += count
+    else if (n >= 400 && n < 500) fourXx += count
+    else if (n >= 500) fiveXx += count
+  }
+  const total = twoXx + fourXx + fiveXx || 1
+  if (twoXx > 0 || fourXx > 0 || fiveXx > 0) {
+    buckets.push({ label: '2xx', count: twoXx, color: 'bg-status-success' })
+    buckets.push({ label: '4xx', count: fourXx, color: 'bg-status-warning' })
+    buckets.push({ label: '5xx', count: fiveXx, color: 'bg-status-error' })
+  }
+  return buckets.map((b) => ({ ...b, pct: Math.round((b.count / total) * 100) }))
+})
+
+async function fetchMetrics() {
+  try {
+    gatewayMetrics.value = await metricsApi.fetch()
+    metricsError.value = false
+  } catch {
+    metricsError.value = true
+  }
+}
+
+// ── Stat cards ────────────────────────────────────────────────────────────────
 
 const stats = ref([
   { label: 'API 요청률', value: '—', unit: 'req/s', icon: Activity, color: 'text-ocean-400' },
@@ -151,21 +194,20 @@ async function refreshAll() {
   services.value[keycloakIdx].lastChecked = now
   addEvent('Keycloak', keycloakResult.status, keycloakResult.responseTime)
 
-  // Update active connections stat from event count
-  const healthyCount = services.value.filter((s) => s.status === 'healthy').length
-  stats.value[3].value = String(healthyCount)
+  // Fetch gateway metrics and update stat cards
+  await fetchMetrics()
+  const m = gatewayMetrics.value
+  if (m) {
+    stats.value[1].value = m.avgDurationMs !== null ? String(m.avgDurationMs) : '—'
+    stats.value[2].value = errorRate.value
+    stats.value[3].value = String(m.activeConnections)
+  } else {
+    const healthyCount = services.value.filter((s) => s.status === 'healthy').length
+    stats.value[3].value = String(healthyCount)
+  }
 
   refreshing.value = false
 }
-
-// ── Resource placeholder bars ─────────────────────────────────────────────────
-
-const resources = [
-  { label: 'CPU', value: 42, color: 'bg-ocean-500' },
-  { label: 'Memory', value: 61, color: 'bg-teal-500' },
-  { label: 'Disk', value: 35, color: 'bg-status-info' },
-  { label: 'Network', value: 18, color: 'bg-status-warning' },
-]
 
 // ── Badge helpers ──────────────────────────────────────────────────────────────
 
@@ -188,6 +230,7 @@ function serviceBadgeLabel(status: ServiceStatus['status']): string {
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 
 onMounted(() => {
+  fetchMetrics()
   refreshAll()
   autoRefreshTimer = setInterval(refreshAll, 30_000)
 })
@@ -337,27 +380,91 @@ onUnmounted(() => {
 
         <!-- ── Right column (1/3) ── -->
         <div class="col-span-1 space-y-5">
-          <!-- 시스템 리소스 card -->
+          <!-- Gateway 요청 통계 card -->
           <UCard>
             <template #header>
-              <span class="text-sm font-semibold text-text-primary">시스템 리소스</span>
+              <div class="flex items-center gap-2">
+                <BarChart2 class="h-4 w-4 text-ocean-400" />
+                <span class="text-sm font-semibold text-text-primary">Gateway 요청 통계</span>
+              </div>
             </template>
 
-            <div class="space-y-4">
-              <div v-for="res in resources" :key="res.label" class="space-y-1.5">
-                <div class="flex justify-between text-xs">
-                  <span class="text-text-secondary">{{ res.label }}</span>
-                  <span class="text-text-muted">{{ res.value }}%</span>
+            <!-- Error state -->
+            <div v-if="metricsError" class="py-6 text-center text-xs text-text-muted">
+              메트릭 수집 불가 — Gateway 미실행
+            </div>
+
+            <!-- Loading state -->
+            <div v-else-if="!gatewayMetrics" class="flex items-center justify-center py-6">
+              <USpinner />
+            </div>
+
+            <!-- Metrics -->
+            <div v-else class="space-y-4">
+              <!-- Request / Error counts -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-lg bg-surface-tertiary p-3">
+                  <p class="text-xs text-text-muted">총 요청 수</p>
+                  <p class="mt-1 text-lg font-semibold text-text-primary">
+                    {{ gatewayMetrics.requestsTotal.toLocaleString() }}
+                  </p>
                 </div>
-                <div class="h-1.5 w-full rounded-full bg-navy-800">
-                  <div
-                    class="h-full rounded-full transition-all duration-500"
-                    :class="res.color"
-                    :style="{ width: `${res.value}%` }"
-                  />
+                <div class="rounded-lg bg-surface-tertiary p-3">
+                  <p class="text-xs text-text-muted">오류 수</p>
+                  <p class="mt-1 text-lg font-semibold text-status-error">
+                    {{ gatewayMetrics.errorsTotal.toLocaleString() }}
+                  </p>
                 </div>
               </div>
-              <p class="text-xs text-text-muted pt-1">* 정적 플레이스홀더 값입니다</p>
+
+              <!-- Error rate + active connections -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-lg bg-surface-tertiary p-3">
+                  <p class="text-xs text-text-muted">오류율</p>
+                  <p
+                    class="mt-1 text-lg font-semibold"
+                    :class="errorRate === '—' || parseFloat(errorRate as string) === 0
+                      ? 'text-status-success'
+                      : parseFloat(errorRate as string) < 5
+                        ? 'text-status-warning'
+                        : 'text-status-error'"
+                  >
+                    {{ errorRate }}
+                    <span class="text-xs font-normal text-text-muted">%</span>
+                  </p>
+                </div>
+                <div class="rounded-lg bg-surface-tertiary p-3">
+                  <p class="text-xs text-text-muted">활성 WS 연결</p>
+                  <p class="mt-1 text-lg font-semibold text-teal-400">
+                    {{ gatewayMetrics.activeConnections }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- HTTP status code distribution -->
+              <div v-if="statusBuckets.length > 0" class="space-y-2">
+                <p class="text-xs text-text-muted">HTTP 상태 코드 분포</p>
+                <div
+                  v-for="bucket in statusBuckets"
+                  :key="bucket.label"
+                  class="space-y-1"
+                >
+                  <div class="flex justify-between text-xs">
+                    <span class="text-text-secondary">{{ bucket.label }}</span>
+                    <span class="text-text-muted">{{ bucket.count.toLocaleString() }}</span>
+                  </div>
+                  <div class="h-1.5 w-full rounded-full bg-navy-800">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      :class="bucket.color"
+                      :style="{ width: `${bucket.pct}%` }"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-xs text-text-muted">
+                아직 HTTP 요청 기록 없음
+              </div>
             </div>
           </UCard>
 

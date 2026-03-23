@@ -641,6 +641,290 @@ class HWPParser:
         return "".join(text_parts)
 
 
+class DOCXParser:
+    """DOCX parser — extracts text from Word documents.
+
+    Uses python-docx when available; falls back to zipfile-based XML
+    extraction when the library is not installed.
+
+    ``parse()`` accepts raw bytes of the DOCX file.
+    ``parse_file()`` reads the file from disk and delegates to ``parse()``.
+    """
+
+    @property
+    def supported_type(self) -> DocumentType:
+        return DocumentType.DOCX
+
+    def parse(
+        self,
+        content: str,
+        doc_id: str = "",
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> Document:
+        """Parse DOCX content.
+
+        Args:
+            content: Either raw bytes (when called from ``parse_file``) or a
+                pre-extracted text string.  When a *bytes* object is passed it
+                is treated as DOCX binary data; otherwise it is used as-is.
+            doc_id: Unique identifier.
+            metadata: Optional metadata dict.
+
+        Returns:
+            Document with DOCX type.
+        """
+        if isinstance(content, bytes):
+            text = self._extract_text(content)
+        else:
+            text = content
+
+        meta = metadata or {}
+        return Document(
+            doc_id=doc_id or "unknown",
+            title=meta.get("title", "DOCX Document"),
+            content=text,
+            doc_type=DocumentType.DOCX,
+            source=meta.get("source", ""),
+            metadata=meta,
+        )
+
+    def parse_file(
+        self,
+        file_path: str,
+        doc_id: str = "",
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> Document:
+        """Extract text from a DOCX file on disk.
+
+        Args:
+            file_path: Absolute path to the DOCX file.
+            doc_id: Unique identifier.
+            metadata: Optional metadata dict merged with file metadata.
+
+        Returns:
+            Document with extracted text.
+        """
+        meta = dict(metadata or {})
+        if "title" not in meta:
+            meta["title"] = os.path.basename(file_path)
+        if "source" not in meta:
+            meta["source"] = file_path
+
+        try:
+            with open(file_path, "rb") as fh:
+                data = fh.read()
+        except Exception as exc:
+            logger.warning("Could not read DOCX file %s: %s", file_path, exc)
+            return self.parse(
+                f"[DOCX file read failed: {exc}]",
+                doc_id=doc_id or os.path.basename(file_path),
+                metadata=meta,
+            )
+
+        return self.parse(data, doc_id=doc_id or os.path.basename(file_path), metadata=meta)
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extract_text(data: bytes) -> str:
+        """Extract plain text from DOCX bytes.
+
+        Tries python-docx first; falls back to zipfile XML extraction.
+
+        Args:
+            data: Raw bytes of a DOCX file.
+
+        Returns:
+            Extracted text string (empty string on failure).
+        """
+        # Tier 1: python-docx
+        try:
+            import docx  # type: ignore[import]
+            from io import BytesIO
+
+            doc = docx.Document(BytesIO(data))
+            paragraphs: list[str] = [p.text for p in doc.paragraphs if p.text.strip()]
+            # Also extract text from tables
+            for table in doc.tables:
+                for row in table.rows:
+                    cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                    if cells:
+                        paragraphs.append("\t".join(cells))
+            return "\n\n".join(paragraphs)
+        except ImportError:
+            pass
+        except Exception:
+            # python-docx is installed but the file is malformed / not a real DOCX;
+            # fall through to the zipfile fallback.
+            pass
+
+        # Tier 2: zipfile XML extraction (stdlib only)
+        try:
+            import zipfile
+            from io import BytesIO
+
+            with zipfile.ZipFile(BytesIO(data)) as zf:
+                if "word/document.xml" not in zf.namelist():
+                    return ""
+                xml_content = zf.read("word/document.xml").decode("utf-8")
+                text = re.sub(r"<[^>]+>", " ", xml_content)
+                text = re.sub(r"\s+", " ", text).strip()
+                return text
+        except Exception:
+            return ""
+
+
+class PPTXParser:
+    """PPTX parser — extracts text from PowerPoint presentations.
+
+    Uses python-pptx when available; falls back to zipfile-based XML
+    extraction when the library is not installed.
+
+    ``parse()`` accepts raw bytes of the PPTX file.
+    ``parse_file()`` reads the file from disk and delegates to ``parse()``.
+    """
+
+    @property
+    def supported_type(self) -> DocumentType:
+        return DocumentType.PPTX
+
+    def parse(
+        self,
+        content: str,
+        doc_id: str = "",
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> Document:
+        """Parse PPTX content.
+
+        Args:
+            content: Either raw bytes (when called from ``parse_file``) or a
+                pre-extracted text string.
+            doc_id: Unique identifier.
+            metadata: Optional metadata dict.
+
+        Returns:
+            Document with PPTX type.
+        """
+        if isinstance(content, bytes):
+            text = self._extract_text(content)
+        else:
+            text = content
+
+        meta = metadata or {}
+        return Document(
+            doc_id=doc_id or "unknown",
+            title=meta.get("title", "PPTX Document"),
+            content=text,
+            doc_type=DocumentType.PPTX,
+            source=meta.get("source", ""),
+            metadata=meta,
+        )
+
+    def parse_file(
+        self,
+        file_path: str,
+        doc_id: str = "",
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> Document:
+        """Extract text from a PPTX file on disk.
+
+        Args:
+            file_path: Absolute path to the PPTX file.
+            doc_id: Unique identifier.
+            metadata: Optional metadata dict merged with file metadata.
+
+        Returns:
+            Document with extracted text.
+        """
+        meta = dict(metadata or {})
+        if "title" not in meta:
+            meta["title"] = os.path.basename(file_path)
+        if "source" not in meta:
+            meta["source"] = file_path
+
+        try:
+            with open(file_path, "rb") as fh:
+                data = fh.read()
+        except Exception as exc:
+            logger.warning("Could not read PPTX file %s: %s", file_path, exc)
+            return self.parse(
+                f"[PPTX file read failed: {exc}]",
+                doc_id=doc_id or os.path.basename(file_path),
+                metadata=meta,
+            )
+
+        return self.parse(data, doc_id=doc_id or os.path.basename(file_path), metadata=meta)
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extract_text(data: bytes) -> str:
+        """Extract plain text from PPTX bytes.
+
+        Tries python-pptx first; falls back to zipfile XML extraction.
+
+        Args:
+            data: Raw bytes of a PPTX file.
+
+        Returns:
+            Extracted text string (empty string on failure).
+        """
+        # Tier 1: python-pptx
+        try:
+            from pptx import Presentation  # type: ignore[import]
+            from io import BytesIO
+
+            prs = Presentation(BytesIO(data))
+            slides_text: list[str] = []
+            for i, slide in enumerate(prs.slides, 1):
+                slide_parts: list[str] = [f"[Slide {i}]"]
+                for shape in slide.shapes:
+                    if shape.has_text_frame:
+                        for paragraph in shape.text_frame.paragraphs:
+                            text = paragraph.text.strip()
+                            if text:
+                                slide_parts.append(text)
+                    if shape.has_table:
+                        for row in shape.table.rows:
+                            cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                            if cells:
+                                slide_parts.append("\t".join(cells))
+                if len(slide_parts) > 1:
+                    slides_text.append("\n".join(slide_parts))
+            return "\n\n".join(slides_text)
+        except ImportError:
+            pass
+        except Exception:
+            # python-pptx is installed but the file is malformed / not a real PPTX;
+            # fall through to the zipfile fallback.
+            pass
+
+        # Tier 2: zipfile XML extraction (stdlib only)
+        try:
+            import zipfile
+            from io import BytesIO
+
+            with zipfile.ZipFile(BytesIO(data)) as zf:
+                text_parts: list[str] = []
+                slide_files = sorted([
+                    f for f in zf.namelist()
+                    if f.startswith("ppt/slides/slide") and f.endswith(".xml")
+                ])
+                for slide_file in slide_files:
+                    xml_content = zf.read(slide_file).decode("utf-8")
+                    text = re.sub(r"<[^>]+>", " ", xml_content)
+                    text = re.sub(r"\s+", " ", text).strip()
+                    if text:
+                        text_parts.append(text)
+                return "\n\n".join(text_parts)
+        except Exception:
+            return ""
+
+
 class ParserRegistry:
     """Registry mapping DocumentType to its parser.
 
@@ -667,6 +951,8 @@ class ParserRegistry:
             CSVParser(),
             PDFParser(),
             HWPParser(),
+            DOCXParser(),
+            PPTXParser(),
         ):
             self._parsers[parser.supported_type] = parser
 
@@ -732,6 +1018,9 @@ class ParserRegistry:
             ".csv": DocumentType.CSV,
             ".pdf": DocumentType.PDF,
             ".hwp": DocumentType.HWP,
+            ".docx": DocumentType.DOCX,
+            ".doc": DocumentType.DOCX,
+            ".pptx": DocumentType.PPTX,
         }
         return mapping.get(ext, DocumentType.TXT)
 

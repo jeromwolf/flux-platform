@@ -1,4 +1,5 @@
 import { api } from './client'
+import type { GatewayMetrics } from './types'
 import type {
   HealthResponse,
   StandardResponse,
@@ -167,6 +168,50 @@ export const agentApi = {
   executeTool: (toolName: string, parameters?: Record<string, unknown>) =>
     api.post<{ tool_name: string; success: boolean; output: string }>('/v1/agent/tools/execute', { tool_name: toolName, parameters }),
   status: () => api.get<{ available: boolean; engines: string[]; tools_count: number }>('/v1/agent/status'),
+}
+
+/** Gateway Metrics — fetches Prometheus text-format from the Gateway /metrics endpoint */
+const GATEWAY_BASE_URL =
+  typeof window !== 'undefined'
+    ? (import.meta.env?.VITE_GATEWAY_BASE_URL || 'http://localhost:8080')
+    : 'http://localhost:8080'
+
+function parsePrometheusMetrics(text: string): GatewayMetrics {
+  const get = (name: string): number => {
+    const match = text.match(new RegExp(`^${name}\\s+([\\d.]+)`, 'm'))
+    return match ? parseFloat(match[1]) : 0
+  }
+
+  const statusCodes: Record<string, number> = {}
+  const statusMatches = text.matchAll(/gateway_http_status\{code="(\d+)"\}\s+(\d+)/g)
+  for (const m of statusMatches) {
+    statusCodes[m[1]] = parseInt(m[2])
+  }
+
+  // Average duration from histogram sum/count
+  const durationSum = get('gateway_request_duration_seconds_sum')
+  const durationCount = get('gateway_request_duration_seconds_count')
+  const avgDurationMs =
+    durationCount > 0 ? Math.round((durationSum / durationCount) * 1000) : null
+
+  return {
+    requestsTotal: get('gateway_requests_total'),
+    errorsTotal: get('gateway_errors_total'),
+    activeConnections: get('gateway_active_connections'),
+    statusCodes,
+    avgDurationMs,
+  }
+}
+
+export const metricsApi = {
+  fetch: async (): Promise<GatewayMetrics> => {
+    const response = await fetch(`${GATEWAY_BASE_URL}/metrics`)
+    if (!response.ok) {
+      throw new Error(`Metrics fetch failed: ${response.status}`)
+    }
+    const text = await response.text()
+    return parsePrometheusMetrics(text)
+  },
 }
 
 /** Data Sources */

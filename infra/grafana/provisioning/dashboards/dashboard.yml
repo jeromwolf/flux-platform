@@ -1,13 +1,11 @@
-# Grafana dashboard provisioning
 apiVersion: 1
-
 providers:
-  - name: "IMSP Dashboards"
+  - name: 'IMSP'
     orgId: 1
-    folder: "IMSP"
+    folder: 'IMSP'
     type: file
     disableDeletion: false
-    editable: true
+    updateIntervalSeconds: 30
     options:
       path: /var/lib/grafana/dashboards
       foldersFromFilesStructure: false

@@ -16,6 +16,8 @@ class DocumentType(str, Enum):
     HTML = "html"
     MARKDOWN = "markdown"
     CSV = "csv"
+    DOCX = "docx"
+    PPTX = "pptx"
 
 
 @dataclass(frozen=True)

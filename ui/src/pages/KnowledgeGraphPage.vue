@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppShell from '@/layouts/AppShell.vue'
 import KnowledgeGraph from '@/components/graph/KnowledgeGraph.vue'
 import GraphToolbar from '@/components/graph/GraphToolbar.vue'
@@ -13,6 +14,8 @@ import { useApi } from '@/composables/useApi'
 import type { NodeResponse, SchemaLabelInfo } from '@/api/types'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useWebSocketStore } from '@/stores/websocket'
+
+const { t } = useI18n()
 
 const graphRef = ref<InstanceType<typeof KnowledgeGraph> | null>(null)
 const selectedNode = ref<GraphNode | null>(null)
@@ -282,7 +285,7 @@ onMounted(async () => {
       <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <h2 class="text-lg font-semibold text-text-primary">지식그래프</h2>
+            <h2 class="text-lg font-semibold text-text-primary">{{ t('kg.title') }}</h2>
             <div class="flex items-center gap-1.5">
               <UBadge variant="ocean" size="sm">{{ filteredNodes.length }} 노드</UBadge>
               <UBadge variant="default" size="sm">{{ filteredEdges.length }} 관계</UBadge>
@@ -338,7 +341,7 @@ onMounted(async () => {
               @click="chatOpen = !chatOpen"
             >
               <MessageSquare class="h-4 w-4" />
-              KG 질의
+              {{ t('kg.kgQuery') }}
             </button>
           </div>
         </div>
@@ -349,7 +352,7 @@ onMounted(async () => {
             <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" />
             <UInput
               v-model="searchQuery"
-              placeholder="그래프 검색..."
+              :placeholder="t('kg.searchPlaceholder')"
               class="pl-9"
               @keydown="handleSearchKeydown"
             >
@@ -364,7 +367,7 @@ onMounted(async () => {
             :loading="searchLoading"
             @click="doSearch"
           >
-            검색
+            {{ t('kg.searchButton') }}
           </UButton>
         </div>
 
@@ -402,7 +405,7 @@ onMounted(async () => {
           >
             <div class="flex flex-col items-center gap-2">
               <USpinner size="lg" />
-              <span class="text-sm text-text-muted">그래프 검색 중...</span>
+              <span class="text-sm text-text-muted">{{ t('kg.searching') }}</span>
             </div>
           </div>
           <KnowledgeGraph

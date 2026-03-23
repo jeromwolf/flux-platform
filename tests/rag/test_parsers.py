@@ -20,11 +20,13 @@ import pytest
 from rag.documents.models import DocumentType
 from rag.documents.parsers import (
     CSVParser,
+    DOCXParser,
     DocumentParser,
     HTMLParser,
     HWPParser,
     MarkdownParser,
     PDFParser,
+    PPTXParser,
     ParserRegistry,
     TextParser,
 )
@@ -263,8 +265,8 @@ class TestParserRegistry:
         self.registry = ParserRegistry()
 
     @pytest.mark.unit
-    def test_default_registry_has_all_six_types(self) -> None:
-        """TC-DP06-a: Default registry registers all 6 DocumentType values."""
+    def test_default_registry_has_all_base_types(self) -> None:
+        """TC-DP06-a: Default registry registers all built-in DocumentType values."""
         registered = set(self.registry.supported_types)
         expected = {
             DocumentType.TXT,
@@ -273,6 +275,8 @@ class TestParserRegistry:
             DocumentType.CSV,
             DocumentType.PDF,
             DocumentType.HWP,
+            DocumentType.DOCX,
+            DocumentType.PPTX,
         }
         assert registered == expected
 
@@ -349,7 +353,7 @@ class TestParserRegistry:
         """TC-DP06-g: supported_types returns a list of registered DocumentType values."""
         types = self.registry.supported_types
         assert isinstance(types, list)
-        assert len(types) == 6
+        assert len(types) == 8
         assert DocumentType.PDF in types
 
 
@@ -364,7 +368,7 @@ class TestDocumentParserProtocol:
     @pytest.mark.unit
     @pytest.mark.parametrize(
         "parser_cls",
-        [TextParser, MarkdownParser, HTMLParser, CSVParser, PDFParser, HWPParser],
+        [TextParser, MarkdownParser, HTMLParser, CSVParser, PDFParser, HWPParser, DOCXParser, PPTXParser],
     )
     def test_all_parsers_satisfy_protocol(self, parser_cls) -> None:
         """TC-DP07-a: isinstance(parser, DocumentParser) is True for every parser."""

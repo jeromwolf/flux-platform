@@ -42,9 +42,11 @@ class TestDocumentType:
     """TC-RAG01: DocumentType enum."""
 
     def test_all_six_values(self):
-        """TC-RAG01a: All 6 expected values are present."""
+        """TC-RAG01a: All expected values are present (including DOCX and PPTX)."""
         values = {dt.name for dt in DocumentType}
-        assert values == {"PDF", "HWP", "TXT", "HTML", "MARKDOWN", "CSV"}
+        assert {"PDF", "HWP", "TXT", "HTML", "MARKDOWN", "CSV"}.issubset(values)
+        assert "DOCX" in values
+        assert "PPTX" in values
 
     def test_values_are_strings(self):
         """TC-RAG01b: Each enum member value is a str."""

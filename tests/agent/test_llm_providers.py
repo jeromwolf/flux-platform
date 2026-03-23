@@ -20,6 +20,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from agent.llm.providers import (
+    AnthropicLLMProvider,
     LLMProvider,
     OllamaLLMProvider,
     OpenAILLMProvider,
@@ -284,6 +285,178 @@ class TestOpenAILLMProviderGenerate:
 
 
 # ---------------------------------------------------------------------------
+# TC-LP-A01: AnthropicLLMProvider initialises
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestAnthropicLLMProviderInit:
+    """TC-LP-A01: AnthropicLLMProvider initialises correctly."""
+
+    def test_anthropic_provider_init_default_model(self) -> None:
+        """AnthropicLLMProvider uses claude-sonnet-4-20250514 by default."""
+        provider = AnthropicLLMProvider(api_key="sk-ant-test")
+        assert provider.model == "claude-sonnet-4-20250514"
+
+    def test_anthropic_provider_init_custom_model(self) -> None:
+        """Custom model is accepted."""
+        provider = AnthropicLLMProvider(model="claude-opus-4-20250514", api_key="sk-ant-test")
+        assert provider.model == "claude-opus-4-20250514"
+
+    def test_anthropic_provider_init_api_key_from_constructor(self) -> None:
+        """API key can be set via constructor."""
+        provider = AnthropicLLMProvider(api_key="sk-ant-abc123")
+        assert provider.api_key == "sk-ant-abc123"
+
+    @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-ant-env-key"})
+    def test_anthropic_provider_init_api_key_from_env(self) -> None:
+        """API key falls back to ANTHROPIC_API_KEY env var."""
+        provider = AnthropicLLMProvider()
+        assert provider.api_key == "sk-ant-env-key"
+
+    def test_anthropic_provider_init_satisfies_protocol(self) -> None:
+        """AnthropicLLMProvider satisfies LLMProvider protocol."""
+        provider = AnthropicLLMProvider(api_key="sk-ant-test")
+        assert isinstance(provider, LLMProvider)
+
+
+# ---------------------------------------------------------------------------
+# TC-LP-A02: AnthropicLLMProvider.generate with mock
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestAnthropicLLMProviderGenerate:
+    """TC-LP-A02: AnthropicLLMProvider.generate constructs correct HTTP requests."""
+
+    @patch("agent.llm.providers.urllib.request.urlopen")
+    def test_anthropic_provider_generate_with_mock(self, mock_urlopen: MagicMock) -> None:
+        """generate() sends correct payload and parses response correctly."""
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps({
+            "content": [{"type": "text", "text": "Hello from Anthropic!"}],
+            "role": "assistant",
+        }).encode()
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_response
+
+        provider = AnthropicLLMProvider(api_key="sk-ant-test-key")
+        result = provider.generate("Hello", system="Be helpful")
+
+        assert result == "Hello from Anthropic!"
+
+        # Verify the HTTP request structure
+        call_args = mock_urlopen.call_args
+        req = call_args[0][0]
+        assert req.full_url == "https://api.anthropic.com/v1/messages"
+        assert req.headers["X-api-key"] == "sk-ant-test-key"
+        assert req.headers["Anthropic-version"] == "2023-06-01"
+
+        body = json.loads(req.data)
+        assert body["model"] == "claude-sonnet-4-20250514"
+        assert body["max_tokens"] == 1024
+        assert body["messages"] == [{"role": "user", "content": "Hello"}]
+        assert body["system"] == "Be helpful"
+
+    @patch("agent.llm.providers.urllib.request.urlopen")
+    def test_anthropic_provider_generate_without_system(self, mock_urlopen: MagicMock) -> None:
+        """generate() omits system key when system is empty string."""
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps({
+            "content": [{"type": "text", "text": "Response"}],
+        }).encode()
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_response
+
+        provider = AnthropicLLMProvider(api_key="sk-ant-test-key")
+        result = provider.generate("No system prompt")
+
+        assert result == "Response"
+
+        body = json.loads(mock_urlopen.call_args[0][0].data)
+        assert "system" not in body
+
+
+# ---------------------------------------------------------------------------
+# TC-LP-A03: AnthropicLLMProvider error handling
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestAnthropicLLMProviderHandlesError:
+    """TC-LP-A03: AnthropicLLMProvider handles errors gracefully."""
+
+    @patch("agent.llm.providers.urllib.request.urlopen")
+    def test_anthropic_provider_handles_error(self, mock_urlopen: MagicMock) -> None:
+        """generate() returns an error string on HTTP failure instead of raising."""
+        mock_urlopen.side_effect = Exception("Network timeout")
+
+        provider = AnthropicLLMProvider(api_key="sk-ant-test-key")
+        result = provider.generate("test prompt")
+
+        assert "[AnthropicLLMProvider] Error:" in result
+        assert "Network timeout" in result
+
+    def test_anthropic_provider_handles_missing_key(self) -> None:
+        """generate() returns an error string when no API key is set."""
+        provider = AnthropicLLMProvider(api_key="")
+        result = provider.generate("test prompt")
+
+        assert "[AnthropicLLMProvider] Error:" in result
+        assert "API key not set" in result
+
+
+# ---------------------------------------------------------------------------
+# TC-LP-A04: create_llm_provider selects Anthropic when key set
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestFactorySelectsAnthropic:
+    """TC-LP-A04: Factory selects AnthropicLLMProvider when ANTHROPIC_API_KEY is set."""
+
+    @patch("agent.llm.providers.urllib.request.urlopen")
+    @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-ant-test"})
+    def test_factory_selects_anthropic_when_key_set(
+        self, mock_urlopen: MagicMock
+    ) -> None:
+        """auto mode picks Anthropic when Ollama is down and ANTHROPIC_API_KEY is set."""
+        # Ollama health check fails so factory moves to Anthropic
+        mock_urlopen.side_effect = Exception("Connection refused")
+
+        provider = create_llm_provider("auto")
+        assert isinstance(provider, AnthropicLLMProvider)
+        assert provider.api_key == "sk-ant-test"
+
+    @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-ant-explicit"})
+    def test_factory_explicit_anthropic(self) -> None:
+        """provider='anthropic' returns AnthropicLLMProvider when key is set."""
+        provider = create_llm_provider("anthropic")
+        assert isinstance(provider, AnthropicLLMProvider)
+        assert provider.api_key == "sk-ant-explicit"
+
+    @patch.dict("os.environ", {}, clear=True)
+    def test_factory_explicit_anthropic_raises_without_key(self) -> None:
+        """provider='anthropic' raises ValueError when ANTHROPIC_API_KEY is not set."""
+        with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
+            create_llm_provider("anthropic")
+
+    @patch("agent.llm.providers.urllib.request.urlopen")
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "sk-openai"}, clear=True)
+    def test_factory_anthropic_priority_over_openai(
+        self, mock_urlopen: MagicMock
+    ) -> None:
+        """Anthropic takes priority over OpenAI in auto mode when both keys absent."""
+        # Ollama fails, no ANTHROPIC key, falls to OpenAI
+        mock_urlopen.side_effect = Exception("Connection refused")
+        provider = create_llm_provider("auto")
+        # ANTHROPIC_API_KEY not set, so OpenAI is selected
+        assert isinstance(provider, OpenAILLMProvider)
+
+
+# ---------------------------------------------------------------------------
 # TC-LP08: AgentLLMBridge integration with providers
 # ---------------------------------------------------------------------------
 
@@ -363,3 +536,6 @@ class TestLLMProviderProtocol:
 
     def test_lp09c_openai_is_llm_provider(self) -> None:
         assert isinstance(OpenAILLMProvider(api_key="test"), LLMProvider)
+
+    def test_lp09d_anthropic_is_llm_provider(self) -> None:
+        assert isinstance(AnthropicLLMProvider(api_key="test"), LLMProvider)

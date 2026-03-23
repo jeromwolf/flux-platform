@@ -1,7 +1,7 @@
 """LLM provider implementations for the agent runtime.
 
-Provides concrete LLM providers (Ollama, OpenAI, Stub) that conform to
-the :class:`LLMProvider` protocol, plus a factory for auto-detection.
+Provides concrete LLM providers (Ollama, OpenAI, Anthropic, Stub) that conform
+to the :class:`LLMProvider` protocol, plus a factory for auto-detection.
 
 All HTTP calls use ``urllib.request`` (stdlib) to avoid external dependencies.
 
@@ -9,7 +9,7 @@ Usage::
 
     from agent.llm.providers import create_llm_provider
 
-    provider = create_llm_provider("auto")  # tries Ollama -> OpenAI -> Stub
+    provider = create_llm_provider("auto")  # tries Ollama -> Anthropic -> OpenAI -> Stub
     text = provider.generate("Hello, world!")
 """
 from __future__ import annotations
@@ -200,6 +200,87 @@ class OpenAILLMProvider:
 
 
 # ---------------------------------------------------------------------------
+# Anthropic provider
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class AnthropicLLMProvider:
+    """LLM provider backed by the Anthropic Messages API.
+
+    Uses ``urllib.request`` for zero external dependencies — no ``anthropic``
+    SDK required.
+
+    Args:
+        model: Anthropic model name.
+        api_key: API key (falls back to ``ANTHROPIC_API_KEY`` env var).
+        timeout: HTTP request timeout in seconds.
+    """
+
+    model: str = "claude-sonnet-4-20250514"
+    api_key: str = ""
+    timeout: int = 60
+
+    _ENDPOINT = "https://api.anthropic.com/v1/messages"
+    _API_VERSION = "2023-06-01"
+
+    def __post_init__(self) -> None:
+        if not self.api_key:
+            self.api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+
+    def generate(
+        self,
+        prompt: str,
+        system: str = "",
+        temperature: float = 0.7,
+        max_tokens: int = 1024,
+    ) -> str:
+        """Generate text using Anthropic Messages API.
+
+        Args:
+            prompt: User prompt.
+            system: System instruction.
+            temperature: Sampling temperature.
+            max_tokens: Max tokens to generate.
+
+        Returns:
+            Generated text, or an error message string on failure.
+        """
+        if not self.api_key:
+            logger.warning(
+                "Anthropic API key not set. Provide via constructor or "
+                "ANTHROPIC_API_KEY environment variable."
+            )
+            return "[AnthropicLLMProvider] Error: API key not set."
+
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+        if system:
+            payload["system"] = system
+
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            self._ENDPOINT,
+            data=data,
+            headers={
+                "x-api-key": self.api_key,
+                "anthropic-version": self._API_VERSION,
+                "content-type": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                return result["content"][0]["text"]
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.warning("AnthropicLLMProvider request failed: %s", exc)
+            return f"[AnthropicLLMProvider] Error: {exc}"
+
+
+# ---------------------------------------------------------------------------
 # Stub provider (for testing without a real LLM)
 # ---------------------------------------------------------------------------
 
@@ -245,12 +326,13 @@ def create_llm_provider(provider: str = "auto") -> LLMProvider:
 
     Resolution order for ``"auto"``:
       1. Ollama (health-check ``/api/tags``)
-      2. OpenAI (if ``OPENAI_API_KEY`` is set)
-      3. StubLLMProvider (always available)
+      2. Anthropic (if ``ANTHROPIC_API_KEY`` is set)
+      3. OpenAI (if ``OPENAI_API_KEY`` is set)
+      4. StubLLMProvider (always available)
 
     Args:
-        provider: Provider name: ``"ollama"``, ``"openai"``, ``"stub"``,
-            or ``"auto"`` (default).
+        provider: Provider name: ``"ollama"``, ``"anthropic"``, ``"openai"``,
+            ``"stub"``, or ``"auto"`` (default).
 
     Returns:
         An :class:`LLMProvider`-compatible instance.
@@ -275,6 +357,18 @@ def create_llm_provider(provider: str = "auto") -> LLMProvider:
                     f"Ollama server not reachable: {exc}"
                 ) from exc
             logger.debug("Ollama not available, trying next provider: %s", exc)
+
+    if provider in ("anthropic", "auto"):
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if api_key:
+            logger.info(
+                "Anthropic LLM provider selected (model: claude-sonnet-4-20250514)"
+            )
+            return AnthropicLLMProvider(api_key=api_key)
+        elif provider == "anthropic":
+            raise ValueError("ANTHROPIC_API_KEY environment variable not set")
+        else:
+            logger.debug("Anthropic API key not found, trying next provider")
 
     if provider in ("openai", "auto"):
         api_key = os.environ.get("OPENAI_API_KEY", "")

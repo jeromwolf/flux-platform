@@ -381,9 +381,9 @@ class TestParserRegistryWithUpdatedParsers:
         assert doc.content == "HWP text content"
 
     @pytest.mark.unit
-    def test_registry_has_six_registered_types(self) -> None:
-        """TC-PP07-c: Default registry still has all 6 document types."""
+    def test_registry_has_registered_types(self) -> None:
+        """TC-PP07-c: Default registry has all built-in document types."""
         registry = ParserRegistry()
-        assert len(registry.supported_types) == 6
+        assert len(registry.supported_types) == 8
         assert DocumentType.PDF in registry.supported_types
         assert DocumentType.HWP in registry.supported_types
