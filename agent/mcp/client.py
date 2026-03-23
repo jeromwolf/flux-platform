@@ -1,4 +1,25 @@
-"""MCP client for connecting to external MCP servers."""
+"""MCP client for connecting to external MCP servers.
+
+Supports multiple transport modes:
+- In-process (default): directly calls MCPServer.handle()
+- HTTP: JSON-RPC over HTTP POST
+- SSE: Server-Sent Events for streaming responses
+
+Example::
+
+    # In-process mode (backward compatible)
+    server = MCPServer(tool_registry)
+    client = MCPClient(server=server)
+
+    # HTTP mode via transport
+    client = MCPClient.from_url("http://localhost:8000/api/v1/mcp")
+
+    # SSE mode
+    client = MCPClient.from_url("http://localhost:8000/api/v1/mcp/stream", transport_type="sse")
+
+    tools = await client.list_tools()
+    result = await client.call_tool("kg_query", {"query": "vessels"})
+"""
 from __future__ import annotations
 
 import json
@@ -6,6 +27,14 @@ import logging
 from typing import Any
 
 from agent.mcp.protocol import MCPMethod, MCPRequest, MCPResponse
+from agent.mcp.transport import (
+    HttpTransport,
+    InProcessTransport,
+    MCPTransport,
+    SseTransport,
+    TransportConfig,
+    create_transport,
+)
 from agent.tools.models import ToolDefinition, ToolResult
 
 logger = logging.getLogger(__name__)
@@ -14,24 +43,57 @@ logger = logging.getLogger(__name__)
 class MCPClient:
     """MCP 서버에 연결하는 클라이언트.
 
-    Y1 단계에서는 in-process 모드(직접 MCPServer 참조)를 지원한다.
-    Y2 이후 HTTP 전송 레이어로 확장 예정.
-
-    Example::
-
-        server = MCPServer(tool_registry)
-        client = MCPClient(server=server)
-        tools = await client.list_tools()
-        result = await client.call_tool("kg_query", {"query": "선박 목록"})
+    Supports in-process, HTTP, and SSE transport modes.
 
     Args:
-        server: In-process MCPServer 인스턴스 (HTTP 미사용 시).
+        server: In-process MCPServer 인스턴스 (transport 미지정 시 사용).
+        transport: 명시적 transport 인스턴스. 지정 시 server 파라미터 무시.
     """
 
-    def __init__(self, server: Any | None = None) -> None:
-        # server는 MCPServer 타입이지만 순환 임포트 방지를 위해 Any로 선언
-        self._server = server
+    def __init__(
+        self,
+        server: Any | None = None,
+        transport: MCPTransport | None = None,
+    ) -> None:
         self._request_counter = 0
+
+        if transport is not None:
+            self._transport = transport
+        else:
+            self._transport = InProcessTransport(server=server)
+
+    # ------------------------------------------------------------------
+    # Factory methods
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def from_url(
+        cls,
+        url: str,
+        *,
+        transport_type: str = "http",
+        api_key: str = "",
+        timeout: float = 30.0,
+    ) -> MCPClient:
+        """Create an MCPClient connected to a remote server.
+
+        Args:
+            url: Remote MCP server URL.
+            transport_type: ``"http"`` or ``"sse"``.
+            api_key: Bearer token for authentication.
+            timeout: Request timeout in seconds.
+
+        Returns:
+            Configured MCPClient instance.
+        """
+        config = TransportConfig(
+            transport_type=transport_type,
+            url=url,
+            api_key=api_key,
+            timeout=timeout,
+        )
+        t = create_transport(config)
+        return cls(transport=t)
 
     # ------------------------------------------------------------------
     # Public interface
@@ -115,6 +177,10 @@ class MCPClient:
             return False
         return response.result.get("status") == "pong"
 
+    def close(self) -> None:
+        """Close the underlying transport connection."""
+        self._transport.close()
+
     # ------------------------------------------------------------------
     # Transport
     # ------------------------------------------------------------------
@@ -125,8 +191,6 @@ class MCPClient:
         params: dict[str, Any],
     ) -> MCPResponse:
         """요청을 서버로 전송하고 응답을 반환한다.
-
-        현재는 in-process 모드만 지원. HTTP 모드는 미구현.
 
         Args:
             method: 호출할 MCP 메서드.
@@ -144,15 +208,7 @@ class MCPClient:
             request_id=request_id,
         )
 
-        if self._server is not None:
-            # in-process 모드: 직접 handle() 호출
-            return await self._server.handle(request)
-
-        # HTTP 모드는 Y2에서 구현 예정
-        return MCPResponse(
-            error="HTTP transport not yet implemented",
-            request_id=request_id,
-        )
+        return await self._transport.send(request)
 
     def _build_json_rpc(
         self,

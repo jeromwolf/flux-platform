@@ -23,7 +23,10 @@ class RAGConfig:
         mode: Retrieval strategy (semantic, keyword, or hybrid).
         top_k: Maximum number of chunks to return per query.
         similarity_threshold: Minimum cosine similarity score to include a chunk.
-        rerank: Whether to apply a cross-encoder re-ranker after retrieval.
+        rerank: Whether to apply a re-ranker after retrieval.
+        reranker_backend: Which reranker backend to use.
+            ``"score_boost"`` (default), ``"cross_encoder"``,
+            ``"flash_rank"``, or ``"api"``.
         include_metadata: Whether to propagate chunk metadata to the result.
     """
 
@@ -31,6 +34,7 @@ class RAGConfig:
     top_k: int = 5
     similarity_threshold: float = 0.7
     rerank: bool = False
+    reranker_backend: str = "score_boost"
     include_metadata: bool = True
 
 

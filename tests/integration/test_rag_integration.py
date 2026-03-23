@@ -28,7 +28,8 @@ from rag.engines.models import (
     RetrievedChunk,
 )
 from rag.engines.retriever import SimpleRetriever
-from rag.engines.orchestrator import HybridRAGEngine, RerankerConfig
+from rag.engines.orchestrator import HybridRAGEngine
+from rag.engines.reranker import ScoreBoostReranker
 
 
 # ---------------------------------------------------------------------------
@@ -301,9 +302,13 @@ class TestRAGPipelineEndToEnd:
             ))
 
         engine = HybridRAGEngine(
-            config=RAGConfig(mode=RetrievalMode.HYBRID, top_k=3, similarity_threshold=0.0),
+            config=RAGConfig(
+                mode=RetrievalMode.HYBRID, top_k=3,
+                similarity_threshold=0.0, rerank=True,
+                reranker_backend="score_boost",
+            ),
             retriever=retriever,
-            reranker_config=RerankerConfig(enabled=True, top_k=3, strategy="score_boost"),
+            reranker=ScoreBoostReranker(boost_factor=1.1),
         )
         query_embedding = embedder.embed_query("vessel regulations")
         result = engine.query("vessel regulations", query_embedding=query_embedding)

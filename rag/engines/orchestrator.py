@@ -7,28 +7,27 @@ Usage::
 
     orchestrator = HybridRAGEngine(retriever=my_retriever)
     result = orchestrator.query("What is COLREG?", query_embedding=vec)
+
+    # With cross-encoder reranking
+    from rag.engines.reranker import CrossEncoderReranker
+    engine = HybridRAGEngine(reranker=CrossEncoderReranker())
+    result = engine.query("COLREG Rule 8?", query_embedding=vec)
 """
 from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
 from typing import Any, Optional
-
-from rag.documents.models import DocumentChunk
 from rag.engines.models import RAGConfig, RAGResult, RetrievalMode, RetrievedChunk
+from rag.engines.reranker import (
+    Reranker,
+    RerankerConfig,
+    ScoreBoostReranker,
+    create_reranker,
+)
 from rag.engines.retriever import SimpleRetriever
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class RerankerConfig:
-    """Configuration for the re-ranking stage."""
-
-    enabled: bool = False
-    top_k: int = 3  # Final top-k after re-ranking
-    strategy: str = "score_boost"  # "score_boost", "cross_encoder" (Y2)
 
 
 class HybridRAGEngine:
@@ -39,19 +38,26 @@ class HybridRAGEngine:
     - KEYWORD: Term frequency search only
     - HYBRID: Reciprocal rank fusion of both strategies
 
-    Optional re-ranking stage refines the final results.
+    Optional re-ranking stage refines the final results.  The reranker
+    can be injected via the ``reranker`` parameter or auto-created from
+    ``RAGConfig.reranker_backend``.
     """
 
     def __init__(
         self,
         config: Optional[RAGConfig] = None,
         retriever: Optional[SimpleRetriever] = None,
-        reranker_config: Optional[RerankerConfig] = None,
+        reranker: Optional[Reranker] = None,
         llm: Any = None,  # Optional LLM for answer generation
     ) -> None:
         self._config = config or RAGConfig()
         self._retriever = retriever or SimpleRetriever(self._config)
-        self._reranker = reranker_config or RerankerConfig()
+        if reranker is not None:
+            self._reranker: Reranker = reranker
+        else:
+            self._reranker = create_reranker(
+                RerankerConfig(backend=self._config.reranker_backend)
+            )
         self._llm = llm
 
     @property
@@ -96,8 +102,8 @@ class HybridRAGEngine:
             chunks = self._hybrid_retrieve(query_text, query_embedding, k)
 
         # 2. Optional re-ranking
-        if self._reranker.enabled and len(chunks) > 0:
-            chunks = self._rerank(chunks, query_text)
+        if self._config.rerank and len(chunks) > 0:
+            chunks = self._reranker.rerank(query_text, chunks, top_k=k)
 
         # 3. Truncate to final top_k
         final_chunks = chunks[:k]
@@ -166,40 +172,6 @@ class HybridRAGEngine:
             )
             for cid in sorted_ids[:top_k]
         ]
-
-    def _rerank(self, chunks: list[RetrievedChunk], query: str) -> list[RetrievedChunk]:
-        """Re-rank retrieved chunks.
-
-        Y1: Simple score_boost based on query term overlap.
-        Y2: Cross-encoder re-ranking.
-        """
-        if self._reranker.strategy == "score_boost":
-            return self._score_boost_rerank(chunks, query)
-        return chunks  # Unknown strategy = passthrough
-
-    @staticmethod
-    def _score_boost_rerank(chunks: list[RetrievedChunk], query: str) -> list[RetrievedChunk]:
-        """Boost scores based on query term presence in chunk content."""
-        terms = [t.lower() for t in query.split() if len(t) > 2]
-        if not terms:
-            return chunks
-
-        boosted: list[RetrievedChunk] = []
-        for rc in chunks:
-            content_lower = rc.chunk.content.lower()
-            matches = sum(1 for t in terms if t in content_lower)
-            boost = 1.0 + (matches / len(terms)) * 0.3  # up to 30% boost
-            new_score = min(rc.score * boost, 1.0)
-            boosted.append(
-                RetrievedChunk(
-                    chunk=rc.chunk,
-                    score=round(new_score, 6),
-                    retrieval_mode=rc.retrieval_mode,
-                )
-            )
-
-        boosted.sort(key=lambda x: x.score, reverse=True)
-        return boosted
 
     def _generate_answer(self, query: str, chunks: list[RetrievedChunk]) -> str:
         """Generate answer using LLM if available, otherwise return context summary."""

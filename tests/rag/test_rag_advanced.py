@@ -31,7 +31,8 @@ from rag.embeddings.providers import (
     StubEmbeddingProvider,
 )
 from rag.engines.models import RAGConfig, RetrievalMode, RetrievedChunk
-from rag.engines.orchestrator import HybridRAGEngine, RerankerConfig
+from rag.engines.orchestrator import HybridRAGEngine
+from rag.engines.reranker import ScoreBoostReranker
 from rag.engines.retriever import SimpleRetriever
 from rag.documents.pipeline import DocumentPipeline
 
@@ -392,7 +393,7 @@ class TestReciprocalRankFusion:
 
 @pytest.mark.unit
 class TestReranking:
-    """TC-HE05: HybridRAGEngine._score_boost_rerank method."""
+    """TC-HE05: ScoreBoostReranker (Protocol-based replacement for inline rerank)."""
 
     def _make_rc(
         self,
@@ -410,23 +411,23 @@ class TestReranking:
         )
         return RetrievedChunk(chunk=chunk, score=score, retrieval_mode=mode)
 
-    def test_score_boost_boosts_chunks_matching_query_terms(self) -> None:
-        """TC-HE05a: score_boost_rerank boosts chunks that contain query terms."""
-        query = "COLREG maritime vessel"
-        rc_match = self._make_rc("c1", "COLREG defines maritime vessel rules", 0.5)
-        rc_nomatch = self._make_rc("c2", "unrelated subject matter here", 0.5)
+    def test_score_boost_boosts_higher_scored_chunks(self) -> None:
+        """TC-HE05a: ScoreBoostReranker boosts higher-scored chunks more."""
+        reranker = ScoreBoostReranker(boost_factor=1.1)
+        rc_high = self._make_rc("c1", "COLREG defines maritime vessel rules", 0.8)
+        rc_low = self._make_rc("c2", "unrelated subject matter here", 0.3)
 
-        reranked = HybridRAGEngine._score_boost_rerank([rc_match, rc_nomatch], query)
+        reranked = reranker.rerank("COLREG maritime vessel", [rc_high, rc_low], top_k=10)
 
-        # c1 contains query terms, so it should have a higher score than c2
+        # c1 has higher original score so it should still rank first
         scores = {rc.chunk.chunk_id: rc.score for rc in reranked}
         assert scores["c1"] >= scores["c2"]
 
     def test_boosted_scores_capped_at_1_0(self) -> None:
         """TC-HE05b: Boosted scores do not exceed 1.0."""
-        query = "vessel navigation maritime"
+        reranker = ScoreBoostReranker(boost_factor=1.5)
         rc = self._make_rc("c1", "vessel navigation maritime rules", 0.99)
-        reranked = HybridRAGEngine._score_boost_rerank([rc], query)
+        reranked = reranker.rerank("vessel navigation maritime", [rc], top_k=10)
         assert all(rc.score <= 1.0 for rc in reranked)
 
 
