@@ -304,7 +304,7 @@ class LineageRecorder:
                         "entityType": node.entity_type,
                         "entityId": node.entity_id,
                         "createdAt": node.created_at.isoformat() if node.created_at else None,
-                        "metadata": node.metadata or {},
+                        "metadata": str(node.metadata) if node.metadata else "",
                     },
                 )
                 count += 1
@@ -321,7 +321,7 @@ class LineageRecorder:
                         "timestamp": edge.timestamp.isoformat() if edge.timestamp else None,
                         "agent": edge.agent or "system",
                         "activity": edge.activity or "",
-                        "metadata": edge.metadata or {},
+                        "metadata": str(edge.metadata) if edge.metadata else "",
                     },
                 )
                 count += 1

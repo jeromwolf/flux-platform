@@ -33,7 +33,10 @@ router = APIRouter(tags=["graph"])
 
 def _extract_node(record: Any, key: str) -> dict[str, Any] | None:
     """Extract a node from a record into a serializable dict."""
-    node = record.get(key) if isinstance(record, dict) else None
+    try:
+        node = record[key] if hasattr(record, "__getitem__") else None
+    except (KeyError, IndexError, TypeError):
+        node = None
     if node is None:
         return None
 
@@ -55,7 +58,10 @@ def _extract_node(record: Any, key: str) -> dict[str, Any] | None:
 
 def _extract_relationship(record: Any, key: str) -> dict[str, Any] | None:
     """Extract a relationship from a record into a serializable dict."""
-    rel = record.get(key) if isinstance(record, dict) else None
+    try:
+        rel = record[key] if hasattr(record, "__getitem__") else None
+    except (KeyError, IndexError, TypeError):
+        rel = None
     if rel is None:
         return None
 
