@@ -2,7 +2,7 @@
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import SidebarItem from './SidebarItem.vue'
-import { LayoutDashboard, Workflow, Share2, Database, Settings, Anchor } from 'lucide-vue-next'
+import { LayoutDashboard, Workflow, Share2, Database, Settings, Anchor, Activity } from 'lucide-vue-next'
 
 const route = useRoute()
 const appStore = useAppStore()
@@ -12,6 +12,7 @@ const navItems = [
   { path: '/workflow', label: '워크플로우', icon: Workflow },
   { path: '/knowledge-graph', label: '지식그래프', icon: Share2 },
   { path: '/data', label: '데이터', icon: Database },
+  { path: '/monitor', label: '모니터링', icon: Activity },
   { path: '/settings', label: '설정', icon: Settings },
 ]
 </script>

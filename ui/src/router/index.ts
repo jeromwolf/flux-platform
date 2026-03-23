@@ -33,6 +33,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '데이터', icon: 'Database', requiresAuth: true },
   },
   {
+    path: '/monitor',
+    name: 'Monitor',
+    component: () => import('@/pages/MonitorPage.vue'),
+    meta: { title: '모니터링', icon: 'Activity', requiresAuth: true, requiredRole: 'admin' },
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/pages/SettingsPage.vue'),

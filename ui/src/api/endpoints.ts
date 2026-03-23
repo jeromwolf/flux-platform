@@ -11,6 +11,8 @@ import type {
   NodeListResponse,
   NLQueryResponse,
   CypherResponse,
+  RAGQueryResponse,
+  AgentChatResponse,
 } from './types'
 
 /** Health */
@@ -88,6 +90,23 @@ export const workflowApi = {
 
   delete: (id: string) =>
     api.delete<void>(`/v1/workflows/${id}`),
+}
+
+/** RAG */
+export const ragApi = {
+  query: (query: string, mode?: string, topK?: number) =>
+    api.post<RAGQueryResponse>('/v1/rag/query', { query, mode: mode ?? 'hybrid', top_k: topK ?? 5 }),
+  status: () => api.get<{ available: boolean; engine: string }>('/v1/rag/status'),
+}
+
+/** Agent */
+export const agentApi = {
+  chat: (message: string, mode?: string) =>
+    api.post<AgentChatResponse>('/v1/agent/chat', { message, mode: mode ?? 'react' }),
+  listTools: () => api.get<{ tools: Array<{ name: string; description: string }> }>('/v1/agent/tools'),
+  executeTool: (toolName: string, parameters?: Record<string, unknown>) =>
+    api.post<{ tool_name: string; success: boolean; output: string }>('/v1/agent/tools/execute', { tool_name: toolName, parameters }),
+  status: () => api.get<{ available: boolean; engines: string[]; tools_count: number }>('/v1/agent/status'),
 }
 
 /** Data Sources */

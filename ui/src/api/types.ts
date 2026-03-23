@@ -163,3 +163,21 @@ export interface CypherResponse {
   rowCount: number
   executionTimeMs: number
 }
+
+/** RAG types */
+export interface RAGQueryResponse {
+  query: string
+  answer: string
+  chunks: Array<{ content: string; doc_id: string; score: number }>
+  mode: string
+  total_chunks: number
+}
+
+/** Agent types */
+export interface AgentChatResponse {
+  message: string
+  answer: string
+  steps: Array<{ thought: string; action: string; observation: string }>
+  tools_used: string[]
+  mode: string
+}
