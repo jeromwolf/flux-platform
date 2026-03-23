@@ -1,19 +1,38 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AppShell from '@/layouts/AppShell.vue'
 import KnowledgeGraph from '@/components/graph/KnowledgeGraph.vue'
 import GraphToolbar from '@/components/graph/GraphToolbar.vue'
 import NodeDetail from '@/components/graph/NodeDetail.vue'
+import ChatPanel from '@/components/chat/ChatPanel.vue'
 import type { GraphNode, GraphEdge } from '@/components/graph/KnowledgeGraph.vue'
-import { Search } from 'lucide-vue-next'
-import { UBadge } from '@/components/ui'
+import { UBadge, UButton, UInput, USpinner } from '@/components/ui'
+import { Search, MessageSquare } from 'lucide-vue-next'
+import { schemaApi, kgApi } from '@/api/endpoints'
+import { useApi } from '@/composables/useApi'
+import type { NodeResponse, SchemaLabelInfo } from '@/api/types'
 
 const graphRef = ref<InstanceType<typeof KnowledgeGraph> | null>(null)
 const selectedNode = ref<GraphNode | null>(null)
 const currentLayout = ref<'d3-force' | 'dagre' | 'circular' | 'grid'>('d3-force')
 const searchQuery = ref('')
+const activeFilters = ref<Set<string>>(new Set())
+const chatOpen = ref(false)
 
-// Sample data for demonstration
+// Graph data — starts with sample fallback
+const graphNodes = ref<GraphNode[]>([])
+const graphEdges = ref<GraphEdge[]>([])
+
+// Schema labels for filter chips
+const schemaLabels = ref<SchemaLabelInfo[]>([])
+
+// API composables
+const { loading: schemaLoading, execute: fetchSchema } = useApi(() => schemaApi.get())
+const { loading: searchLoading, execute: fetchSearch } = useApi(() =>
+  kgApi.search(searchQuery.value, 200),
+)
+
+// Sample fallback data
 const sampleNodes: GraphNode[] = [
   {
     id: '1',
@@ -79,11 +98,86 @@ const sampleEdges: GraphEdge[] = [
   { source: '9', target: '1', label: 'TESTS', type: 'research' },
 ]
 
-// Stats
-const nodeTypeCount = sampleNodes.reduce<Record<string, number>>((acc, n) => {
-  acc[n.type] = (acc[n.type] ?? 0) + 1
-  return acc
-}, {})
+function toGraphNode(node: NodeResponse | Record<string, unknown>): GraphNode {
+  const n = node as NodeResponse & Record<string, unknown>
+  return {
+    id: String(n.id ?? n.elementId ?? ''),
+    label: String(n.displayName ?? (n.properties as Record<string, unknown>)?.name ?? (n.labels as string[])?.[0] ?? 'Unknown'),
+    type: String(n.primaryLabel ?? (n.labels as string[])?.[0] ?? 'Unknown'),
+    properties: (n.properties as Record<string, unknown>) ?? {},
+  }
+}
+
+// Node type counts for legend
+const nodeTypeCount = computed(() =>
+  graphNodes.value.reduce<Record<string, number>>((acc, n) => {
+    acc[n.type] = (acc[n.type] ?? 0) + 1
+    return acc
+  }, {}),
+)
+
+// Displayed nodes filtered by active label filters
+const filteredNodes = computed(() => {
+  if (activeFilters.value.size === 0) return graphNodes.value
+  return graphNodes.value.filter((n) => activeFilters.value.has(n.type))
+})
+
+const filteredEdges = computed(() => {
+  if (activeFilters.value.size === 0) return graphEdges.value
+  const nodeIds = new Set(filteredNodes.value.map((n) => n.id))
+  return graphEdges.value.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
+})
+
+async function loadSchema() {
+  try {
+    const result = await fetchSchema()
+    if (result) {
+      schemaLabels.value = result.labels ?? []
+    }
+  } catch {
+    // Schema unavailable — silent fallback
+  }
+}
+
+async function doSearch() {
+  if (!searchQuery.value.trim()) return
+
+  try {
+    const result = await fetchSearch()
+    if (result && result.data) {
+      const kg = result.data
+      const nodes = (kg.nodes ?? []).map(toGraphNode)
+      const edges: GraphEdge[] = (kg.relationships ?? []).map(
+        (r: Record<string, unknown>) => ({
+          source: String(r.startNodeId ?? r.start ?? ''),
+          target: String(r.endNodeId ?? r.end ?? ''),
+          label: String(r.type ?? ''),
+          type: String(r.type ?? '').toLowerCase(),
+        }),
+      )
+      graphNodes.value = nodes
+      graphEdges.value = edges
+    }
+  } catch {
+    // Search unavailable — keep current data
+  }
+}
+
+function handleSearchKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter') {
+    doSearch()
+  }
+}
+
+function toggleFilter(label: string) {
+  if (activeFilters.value.has(label)) {
+    activeFilters.value.delete(label)
+  } else {
+    activeFilters.value.add(label)
+  }
+  // Trigger reactivity on Set
+  activeFilters.value = new Set(activeFilters.value)
+}
 
 function onNodeClick(node: GraphNode) {
   selectedNode.value = node
@@ -92,66 +186,149 @@ function onNodeClick(node: GraphNode) {
 function onLayoutChange(layout: string) {
   currentLayout.value = layout as 'd3-force' | 'dagre' | 'circular' | 'grid'
 }
+
+function onQueryResult(results: unknown[]) {
+  console.log('KG 질의 결과:', results)
+}
+
+onMounted(async () => {
+  // Load sample data as default
+  graphNodes.value = sampleNodes
+  graphEdges.value = sampleEdges
+
+  // Try to load schema labels for filter chips
+  await loadSchema()
+})
 </script>
 
 <template>
   <AppShell>
     <div class="flex h-[calc(100vh-96px)] flex-col gap-4">
-      <!-- Toolbar -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <h2 class="text-lg font-semibold text-text-primary">지식그래프</h2>
-          <div class="flex items-center gap-1.5">
-            <UBadge variant="ocean" size="sm">{{ sampleNodes.length }} 노드</UBadge>
-            <UBadge variant="default" size="sm">{{ sampleEdges.length }} 관계</UBadge>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <!-- Node type legend -->
-          <div class="hidden items-center gap-2 lg:flex">
-            <div
-              v-for="(count, type) in nodeTypeCount"
-              :key="String(type)"
-              class="flex items-center gap-1"
-            >
-              <span class="text-xs text-text-muted">{{ String(type) }}</span>
-              <span class="text-xs font-medium text-text-secondary">{{ count }}</span>
+      <!-- Header row: title + counts + search + toolbar -->
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <h2 class="text-lg font-semibold text-text-primary">지식그래프</h2>
+            <div class="flex items-center gap-1.5">
+              <UBadge variant="ocean" size="sm">{{ filteredNodes.length }} 노드</UBadge>
+              <UBadge variant="default" size="sm">{{ filteredEdges.length }} 관계</UBadge>
             </div>
           </div>
+          <div class="flex items-center gap-3">
+            <!-- Node type legend -->
+            <div class="hidden items-center gap-2 lg:flex">
+              <div
+                v-for="(count, type) in nodeTypeCount"
+                :key="String(type)"
+                class="flex items-center gap-1"
+              >
+                <span class="text-xs text-text-muted">{{ String(type) }}</span>
+                <span class="text-xs font-medium text-text-secondary">{{ count }}</span>
+              </div>
+            </div>
 
-          <!-- Search -->
-          <div class="relative">
-            <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="노드 검색..."
-              class="w-48 rounded-lg border border-border-default bg-surface-secondary py-1.5 pl-9 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:border-ocean-500 focus:outline-none"
+            <GraphToolbar
+              :current-layout="currentLayout"
+              @zoom-in="graphRef?.zoomIn()"
+              @zoom-out="graphRef?.zoomOut()"
+              @fit-view="graphRef?.fitView()"
+              @layout-change="onLayoutChange"
             />
-          </div>
 
-          <GraphToolbar
-            :current-layout="currentLayout"
-            @zoom-in="graphRef?.zoomIn()"
-            @zoom-out="graphRef?.zoomOut()"
-            @fit-view="graphRef?.fitView()"
-            @layout-change="onLayoutChange"
-          />
+            <!-- Chat toggle -->
+            <button
+              class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors"
+              :class="
+                chatOpen
+                  ? 'bg-ocean-500 text-white'
+                  : 'border border-border-default bg-surface-secondary text-text-secondary hover:bg-navy-700 hover:text-text-primary'
+              "
+              @click="chatOpen = !chatOpen"
+            >
+              <MessageSquare class="h-4 w-4" />
+              KG 질의
+            </button>
+          </div>
+        </div>
+
+        <!-- Search bar -->
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1 max-w-md">
+            <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <UInput
+              v-model="searchQuery"
+              placeholder="그래프 검색..."
+              class="pl-9"
+              @keydown="handleSearchKeydown"
+            >
+              <template #prefix>
+                <span />
+              </template>
+            </UInput>
+          </div>
+          <UButton
+            variant="primary"
+            size="sm"
+            :loading="searchLoading"
+            @click="doSearch"
+          >
+            검색
+          </UButton>
+        </div>
+
+        <!-- Schema label filter chips -->
+        <div v-if="schemaLabels.length > 0 || schemaLoading" class="flex flex-wrap items-center gap-1.5">
+          <USpinner v-if="schemaLoading" size="sm" />
+          <button
+            v-for="labelInfo in schemaLabels"
+            :key="labelInfo.label"
+            class="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors duration-150 cursor-pointer"
+            :class="
+              activeFilters.has(labelInfo.label)
+                ? 'border-ocean-500 bg-ocean-500/20 text-ocean-300'
+                : 'border-border-subtle bg-navy-800 text-text-muted hover:border-border-default hover:text-text-secondary'
+            "
+            @click="toggleFilter(labelInfo.label)"
+          >
+            <span
+              class="h-1.5 w-1.5 rounded-full"
+              :style="{ backgroundColor: labelInfo.color || '#64748b' }"
+            />
+            {{ labelInfo.label }}
+            <span class="text-text-muted">({{ labelInfo.count }})</span>
+          </button>
         </div>
       </div>
 
       <!-- Graph area -->
-      <div class="flex flex-1 gap-3 overflow-hidden">
-        <div class="flex-1 overflow-hidden rounded-xl border border-border-subtle bg-navy-950">
+      <div class="relative flex flex-1 gap-3 overflow-hidden">
+        <div class="relative flex-1 overflow-hidden rounded-xl border border-border-subtle bg-navy-950">
+          <!-- Search loading overlay -->
+          <div
+            v-if="searchLoading"
+            class="absolute inset-0 z-10 flex items-center justify-center bg-navy-950/60"
+          >
+            <div class="flex flex-col items-center gap-2">
+              <USpinner size="lg" />
+              <span class="text-sm text-text-muted">그래프 검색 중...</span>
+            </div>
+          </div>
           <KnowledgeGraph
             ref="graphRef"
-            :nodes="sampleNodes"
-            :edges="sampleEdges"
+            :nodes="filteredNodes"
+            :edges="filteredEdges"
             :layout="currentLayout"
             @node-click="onNodeClick"
           />
         </div>
         <NodeDetail :node="selectedNode" @close="selectedNode = null" />
+
+        <!-- Chat panel slides in from right -->
+        <ChatPanel
+          :open="chatOpen"
+          @close="chatOpen = false"
+          @query-result="onQueryResult"
+        />
       </div>
     </div>
   </AppShell>

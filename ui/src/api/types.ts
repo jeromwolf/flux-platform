@@ -104,3 +104,62 @@ export interface DataSource {
   last_sync?: string
   created_at: string
 }
+
+/** Schema types */
+export interface SchemaLabelInfo {
+  label: string
+  group: string
+  color: string
+  count: number
+}
+
+export interface SchemaResponse {
+  labels: SchemaLabelInfo[]
+  relationshipTypes: string[]
+  entityGroups: Record<string, unknown>
+  totalLabels: number
+  totalRelationshipTypes: number
+}
+
+/** Node CRUD types */
+export interface NodeResponse {
+  id: string
+  labels: string[]
+  primaryLabel: string
+  group: string
+  color: string
+  properties: Record<string, unknown>
+  displayName: string
+}
+
+export interface NodeListResponse {
+  nodes: NodeResponse[]
+  total: number
+  limit: number
+  offset: number
+}
+
+/** NL Query types */
+export interface NLQueryRequest {
+  text: string
+  execute?: boolean
+  limit?: number
+}
+
+export interface NLQueryResponse {
+  input_text: string
+  generated_cypher: string | null
+  parameters: Record<string, unknown>
+  results: Record<string, unknown>[] | null
+  confidence: number
+  parse_details: Record<string, unknown>
+  error: string | null
+}
+
+/** Cypher types */
+export interface CypherResponse {
+  results: Record<string, unknown>[]
+  columns: string[]
+  rowCount: number
+  executionTimeMs: number
+}

@@ -22,7 +22,7 @@ const emit = defineEmits<{
   nodeSelect: [node: Node | null]
 }>()
 
-const { onConnect, addEdges, onNodeClick, onPaneClick, fitView } = useVueFlow()
+const { onConnect, addEdges, addNodes, onNodeClick, onPaneClick, fitView, project } = useVueFlow()
 
 const nodes = ref<Node[]>(props.initialNodes ?? [
   {
@@ -75,11 +75,54 @@ function handleSave() {
   emit('save', nodes.value as Node[], edges.value as Edge[])
 }
 
+function onDragOver(event: DragEvent) {
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+function onDrop(event: DragEvent) {
+  event.preventDefault()
+
+  const raw = event.dataTransfer?.getData('application/vueflow')
+  if (!raw) return
+
+  let item: { type: string; label: string; description?: string } | null = null
+  try {
+    item = JSON.parse(raw)
+  } catch {
+    return
+  }
+  if (!item) return
+
+  // Convert screen coordinates to flow coordinates
+  const position = project({ x: event.clientX, y: event.clientY })
+
+  const newNode: Node = {
+    id: Date.now().toString(),
+    type: 'custom',
+    position,
+    data: {
+      label: item.label,
+      type: item.type,
+      icon: item.type,
+      description: item.description ?? '',
+    },
+  }
+
+  addNodes([newNode])
+}
+
 defineExpose({ handleSave })
 </script>
 
 <template>
-  <div class="h-full w-full">
+  <div
+    class="h-full w-full"
+    @dragover="onDragOver"
+    @drop="onDrop"
+  >
     <VueFlow
       v-model:nodes="nodes"
       v-model:edges="edges"
