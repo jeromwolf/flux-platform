@@ -98,14 +98,14 @@ def run_setup(skip_rbac: bool = False, verify_only: bool = False) -> None:
 
     # Step 2: Sample data
     _step(2, total_steps, "Loading maritime sample data")
-    from kg.schema.load_sample_data import load_sample_data
+    from maritime.schema.load_sample_data import load_sample_data
 
     load_sample_data()
 
     # Step 3: RBAC
     if not skip_rbac:
         _step(3, total_steps, "Loading RBAC seed data")
-        from kg.rbac.load_rbac_data import load_rbac_data
+        from maritime.rbac.load_rbac_data import load_rbac_data
 
         load_rbac_data()
 

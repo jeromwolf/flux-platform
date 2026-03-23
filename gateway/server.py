@@ -230,6 +230,34 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
                     await _ws_manager.send_personal(connection_id, pong)
                     continue
 
+                # Handle agent query — forward to agent chat API and return response
+                if msg.type == WSMessageType.AGENT_QUERY:
+                    try:
+                        client = get_http_client()
+                        agent_resp = await client.post(
+                            f"{gw.config.api_base_url}/api/v1/agent/chat",
+                            json={
+                                "message": msg.payload.get("text", ""),
+                                "mode": msg.payload.get("mode", "react"),
+                            },
+                        )
+                        result = agent_resp.json()
+                        response_msg = WSMessage(
+                            type=WSMessageType.AGENT_RESPONSE,
+                            payload=result,
+                            room=msg.room,
+                            sender="system",
+                        )
+                        await _ws_manager.send_personal(connection_id, response_msg)
+                    except Exception as exc:
+                        error_msg = WSMessage(
+                            type=WSMessageType.ERROR,
+                            payload={"error": str(exc)},
+                            sender="system",
+                        )
+                        await _ws_manager.send_personal(connection_id, error_msg)
+                    continue
+
                 # Route to room or broadcast
                 if msg.room:
                     _ws_manager.join_room(connection_id, msg.room)

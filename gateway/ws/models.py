@@ -19,6 +19,8 @@ class WSMessageType(str, Enum):
     ERROR = "error"
     PING = "ping"
     PONG = "pong"
+    AGENT_QUERY = "agent_query"
+    AGENT_RESPONSE = "agent_response"
 
 
 @dataclass(frozen=True)

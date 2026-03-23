@@ -10,6 +10,23 @@ export interface ChatMessage {
   content: string
   cypher?: string
   timestamp: Date
+  steps?: AgentStep[]
+  tools_used?: string[]
+}
+
+interface AgentStep {
+  thought?: string
+  action?: string
+  observation?: string
+}
+
+interface AgentChatResponse {
+  message?: string
+  answer?: string
+  steps?: AgentStep[]
+  tools_used?: string[]
+  mode?: string
+  error?: string
 }
 
 interface QueryResponse {
@@ -19,6 +36,8 @@ interface QueryResponse {
   error?: string
   message?: string
 }
+
+type ChatMode = 'react' | 'pipeline'
 
 const props = defineProps<{
   open: boolean
@@ -41,6 +60,18 @@ const messages = ref<ChatMessage[]>([
 const inputText = ref('')
 const isThinking = ref(false)
 const messagesEl = ref<HTMLElement | null>(null)
+const chatMode = ref<ChatMode>('react')
+
+// Track which message steps panels are expanded
+const expandedSteps = ref<Set<string>>(new Set())
+
+function toggleSteps(msgId: string) {
+  if (expandedSteps.value.has(msgId)) {
+    expandedSteps.value.delete(msgId)
+  } else {
+    expandedSteps.value.add(msgId)
+  }
+}
 
 async function scrollToBottom() {
   await nextTick()
@@ -67,36 +98,78 @@ async function sendMessage() {
   isThinking.value = true
 
   try {
-    const response = await api.post<QueryResponse>('/v1/query', {
-      text,
-      execute: true,
-      limit: 50,
-    })
+    // Primary: Agent chat endpoint
+    let agentResponse: AgentChatResponse | null = null
+    let usedFallback = false
 
-    if (response.error) {
-      messages.value.push({
-        id: `err-${Date.now()}`,
-        role: 'assistant',
-        content: `오류: ${response.error}`,
-        timestamp: new Date(),
+    try {
+      agentResponse = await api.post<AgentChatResponse>('/v1/agent/chat', {
+        message: text,
+        mode: chatMode.value,
       })
-    } else {
-      const resultCount = response.result_count ?? response.results?.length ?? 0
-      const content = response.message
-        ?? (resultCount > 0
-          ? `${resultCount}개의 결과를 찾았습니다.`
-          : '결과가 없습니다.')
+    } catch (agentErr: unknown) {
+      // Fall back to NL query endpoint on 503 Service Unavailable
+      const status = (agentErr as { status?: number })?.status
+      if (status === 503) {
+        usedFallback = true
+      } else {
+        throw agentErr
+      }
+    }
 
-      messages.value.push({
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content,
-        cypher: response.generated_cypher,
-        timestamp: new Date(),
+    if (usedFallback) {
+      // Fallback: legacy NL query endpoint
+      const response = await api.post<QueryResponse>('/v1/query', {
+        text,
+        execute: true,
+        limit: 50,
       })
 
-      if (response.results && response.results.length > 0) {
-        emit('queryResult', response.results)
+      if (response.error) {
+        messages.value.push({
+          id: `err-${Date.now()}`,
+          role: 'assistant',
+          content: `오류: ${response.error}`,
+          timestamp: new Date(),
+        })
+      } else {
+        const resultCount = response.result_count ?? response.results?.length ?? 0
+        const content = response.message
+          ?? (resultCount > 0
+            ? `${resultCount}개의 결과를 찾았습니다.`
+            : '결과가 없습니다.')
+
+        messages.value.push({
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content,
+          cypher: response.generated_cypher,
+          timestamp: new Date(),
+        })
+
+        if (response.results && response.results.length > 0) {
+          emit('queryResult', response.results)
+        }
+      }
+    } else if (agentResponse) {
+      if (agentResponse.error) {
+        messages.value.push({
+          id: `err-${Date.now()}`,
+          role: 'assistant',
+          content: `오류: ${agentResponse.error}`,
+          timestamp: new Date(),
+        })
+      } else {
+        const content = agentResponse.answer ?? agentResponse.message ?? '응답이 없습니다.'
+
+        messages.value.push({
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content,
+          steps: agentResponse.steps,
+          tools_used: agentResponse.tools_used,
+          timestamp: new Date(),
+        })
       }
     }
   } catch (err) {
@@ -136,6 +209,27 @@ function onKeydown(event: KeyboardEvent) {
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-border-subtle px-4 py-3">
         <h3 class="text-sm font-semibold text-text-primary">KG 질의</h3>
+        <!-- Mode toggle -->
+        <div class="flex items-center gap-1 rounded-lg border border-border-subtle bg-navy-800 p-0.5">
+          <button
+            class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+            :class="chatMode === 'react'
+              ? 'bg-ocean-600 text-white'
+              : 'text-text-muted hover:text-text-primary'"
+            @click="chatMode = 'react'"
+          >
+            ReAct
+          </button>
+          <button
+            class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+            :class="chatMode === 'pipeline'
+              ? 'bg-ocean-600 text-white'
+              : 'text-text-muted hover:text-text-primary'"
+            @click="chatMode = 'pipeline'"
+          >
+            Pipeline
+          </button>
+        </div>
         <button
           class="rounded-md p-1 text-text-muted transition-colors hover:bg-navy-700 hover:text-text-primary"
           aria-label="닫기"
@@ -150,11 +244,62 @@ function onKeydown(event: KeyboardEvent) {
         ref="messagesEl"
         class="flex flex-1 flex-col gap-3 overflow-y-auto bg-navy-900 px-4 py-3"
       >
-        <ChatMessageVue
-          v-for="msg in messages"
-          :key="msg.id"
-          :message="msg"
-        />
+        <template v-for="msg in messages" :key="msg.id">
+          <ChatMessageVue :message="msg" />
+
+          <!-- Agent enrichments (only for assistant messages with agent data) -->
+          <template v-if="msg.role === 'assistant'">
+            <!-- Tool badges -->
+            <div
+              v-if="msg.tools_used && msg.tools_used.length > 0"
+              class="flex flex-wrap gap-1 pl-2"
+            >
+              <span
+                v-for="tool in msg.tools_used"
+                :key="tool"
+                class="inline-flex items-center rounded-full bg-ocean-900 px-2 py-0.5 text-[11px] font-medium text-ocean-300 ring-1 ring-inset ring-ocean-700"
+              >
+                {{ tool }}
+              </span>
+            </div>
+
+            <!-- Collapsible reasoning steps -->
+            <div
+              v-if="msg.steps && msg.steps.length > 0"
+              class="ml-2 rounded-lg border border-border-subtle bg-navy-800"
+            >
+              <button
+                class="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs text-text-muted transition-colors hover:text-text-primary"
+                @click="toggleSteps(msg.id)"
+              >
+                <span
+                  class="inline-block transition-transform duration-150"
+                  :class="expandedSteps.has(msg.id) ? 'rotate-90' : ''"
+                >▶</span>
+                <span>추론 과정 ({{ msg.steps.length }}단계)</span>
+              </button>
+
+              <div v-if="expandedSteps.has(msg.id)" class="space-y-2 px-3 pb-3">
+                <div
+                  v-for="(step, idx) in msg.steps"
+                  :key="idx"
+                  class="rounded-md bg-navy-900 p-2 text-xs"
+                >
+                  <p v-if="step.thought" class="italic text-text-muted">
+                    {{ step.thought }}
+                  </p>
+                  <pre
+                    v-if="step.action"
+                    class="mt-1 overflow-x-auto rounded bg-navy-950 px-2 py-1 font-mono text-ocean-300"
+                  >{{ step.action }}</pre>
+                  <p v-if="step.observation" class="mt-1 text-text-muted">
+                    {{ step.observation }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
 
         <!-- Thinking indicator -->
         <div v-if="isThinking" class="flex items-start gap-2">

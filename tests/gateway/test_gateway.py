@@ -56,8 +56,11 @@ class TestWSMessageType:
 
     @pytest.mark.unit
     def test_all_seven_values_exist(self) -> None:
-        """TC-WS01-a: All 7 expected values are present."""
-        expected = {"CHAT", "NOTIFICATION", "KG_UPDATE", "SYSTEM", "ERROR", "PING", "PONG"}
+        """TC-WS01-a: All base values (7 original + 2 agent) are present."""
+        expected = {
+            "CHAT", "NOTIFICATION", "KG_UPDATE", "SYSTEM", "ERROR", "PING", "PONG",
+            "AGENT_QUERY", "AGENT_RESPONSE",
+        }
         actual = {member.name for member in WSMessageType}
         assert actual == expected
 
