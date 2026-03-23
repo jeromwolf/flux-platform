@@ -76,7 +76,7 @@ class ReActEngine:
         """Engine is ready if it is in IDLE state."""
         return self._state == AgentState.IDLE
 
-    def execute(self, query: str, **kwargs: object) -> ExecutionResult:
+    def execute(self, query: str, session_id: str = "default", **kwargs: object) -> ExecutionResult:
         """Execute the ReAct loop for a query.
 
         Steps:
@@ -86,6 +86,8 @@ class ReActEngine:
 
         Args:
             query: The user query to process.
+            session_id: Conversation session identifier (used when memory
+                provider supports sessions, e.g. FileMemoryProvider).
             **kwargs: Additional execution parameters (unused in V1).
 
         Returns:
@@ -104,8 +106,8 @@ class ReActEngine:
         total_tokens = 0
 
         try:
-            # Add query to memory
-            self._memory.add(MemoryType.USER, query)
+            # Add query to memory (support both BufferMemory and session-aware providers)
+            self._add_to_memory(MemoryType.USER, query, session_id)
 
             for step_num in range(1, self._config.max_steps + 1):
                 # Check timeout
@@ -154,7 +156,7 @@ class ReActEngine:
                         content=parsed["content"],
                     )
                     steps.append(final_step)
-                    self._memory.add(MemoryType.ASSISTANT, parsed["content"])
+                    self._add_to_memory(MemoryType.ASSISTANT, parsed["content"], session_id)
                     self._state = AgentState.COMPLETED
                     return ExecutionResult(
                         answer=parsed["content"],
@@ -202,7 +204,7 @@ class ReActEngine:
                         duration_ms=tool_duration,
                     )
                     steps.append(obs_step)
-                    self._memory.add(MemoryType.TOOL, f"[{tool_name}] {obs_content}")
+                    self._add_to_memory(MemoryType.TOOL, f"[{tool_name}] {obs_content}", session_id)
 
                     if self._config.verbose:
                         logger.info(
@@ -257,6 +259,32 @@ class ReActEngine:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _add_to_memory(self, role: MemoryType, content: str, session_id: str = "default") -> None:
+        """Add a message to memory, supporting both BufferMemory and session-aware providers.
+
+        Args:
+            role: The memory type / role for this entry.
+            content: Text content to store.
+            session_id: Session identifier (forwarded to providers that support sessions).
+        """
+        # Check if the provider uses the session-aware FileMemoryProvider / RedisMemoryProvider
+        # API: add(entry: MemoryEntry, session_id: str) vs BufferMemory API: add(role, content).
+        add_fn = self._memory.add
+        import inspect
+
+        sig = inspect.signature(add_fn)
+        params = list(sig.parameters.keys())
+
+        if params and params[0] == "entry":
+            # Session-aware provider (FileMemoryProvider / RedisMemoryProvider)
+            from agent.memory.models import MemoryEntry
+
+            entry = MemoryEntry(role=role, content=content)
+            add_fn(entry, session_id=session_id)
+        else:
+            # BufferMemory: add(role, content)
+            add_fn(role, content)
 
     def _generate(self, prompt: str) -> Any:
         """Call LLM provider if available.

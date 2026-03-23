@@ -196,3 +196,86 @@ class TestPrometheusHasZipkinTarget:
         """TC-KM05b: prometheus.yml targets zipkin on port 9411."""
         content = _read(PROMETHEUS_DIR / "prometheus.yml")
         assert "zipkin:9411" in content, "zipkin:9411 target not found in prometheus.yml"
+
+
+# ===========================================================================
+# TC-NP: NetworkPolicy tests
+# ===========================================================================
+
+
+@pytest.mark.unit
+class TestNetworkPolicies:
+    """Validate network-policies.yaml manifest structure."""
+
+    def test_network_policy_default_deny_exists(self) -> None:
+        """TC-NP01: default-deny-ingress NetworkPolicy exists."""
+        path = K8S_BASE / "network-policies.yaml"
+        assert path.exists(), f"File missing: {path}"
+        content = _read(path)
+        assert "name: default-deny-ingress" in content, "default-deny-ingress policy not found"
+        assert "kind: NetworkPolicy" in content, "kind: NetworkPolicy not found"
+
+    def test_network_policy_gateway_ingress(self) -> None:
+        """TC-NP02: allow-gateway-ingress NetworkPolicy allows port 8080."""
+        content = _read(K8S_BASE / "network-policies.yaml")
+        assert "name: allow-gateway-ingress" in content, "allow-gateway-ingress policy not found"
+        assert "app: gateway" in content, "gateway pod selector not found"
+        assert "port: 8080" in content, "port 8080 not found in gateway ingress policy"
+
+    def test_network_policy_count(self) -> None:
+        """TC-NP03: network-policies.yaml contains exactly 8 NetworkPolicy resources."""
+        content = _read(K8S_BASE / "network-policies.yaml")
+        count = content.count("kind: NetworkPolicy")
+        assert count == 8, f"Expected 8 NetworkPolicy resources, found {count}"
+
+    def test_kustomization_has_network_policies(self) -> None:
+        """TC-NP04: kustomization.yaml lists network-policies.yaml."""
+        content = _read(K8S_BASE / "kustomization.yaml")
+        assert "network-policies.yaml" in content, (
+            "network-policies.yaml not in kustomization resources"
+        )
+
+
+# ===========================================================================
+# TC-BK: Neo4j Backup CronJob tests
+# ===========================================================================
+
+
+@pytest.mark.unit
+class TestNeo4jBackupCronJob:
+    """Validate neo4j-backup-cronjob.yaml manifest structure."""
+
+    def test_neo4j_backup_cronjob_schedule(self) -> None:
+        """TC-BK01: neo4j-backup-cronjob.yaml has correct daily schedule."""
+        path = K8S_BASE / "neo4j-backup-cronjob.yaml"
+        assert path.exists(), f"File missing: {path}"
+        content = _read(path)
+        assert "kind: CronJob" in content, "kind: CronJob not found"
+        assert "name: neo4j-backup" in content, "name: neo4j-backup not found"
+        assert '0 2 * * *' in content, "Daily 2 AM schedule not found"
+
+    def test_neo4j_backup_pvc_exists(self) -> None:
+        """TC-BK02: neo4j-backup-cronjob.yaml contains PersistentVolumeClaim."""
+        content = _read(K8S_BASE / "neo4j-backup-cronjob.yaml")
+        assert "kind: PersistentVolumeClaim" in content, "PersistentVolumeClaim not found"
+        assert "name: neo4j-backup-pvc" in content, "neo4j-backup-pvc not found"
+        assert "storage: 10Gi" in content, "10Gi storage request not found"
+
+    def test_neo4j_backup_uses_imsp_secrets(self) -> None:
+        """TC-BK03: backup job reads credentials from imsp-secrets."""
+        content = _read(K8S_BASE / "neo4j-backup-cronjob.yaml")
+        assert "imsp-secrets" in content, "imsp-secrets secretKeyRef not found"
+        assert "neo4j-user" in content, "neo4j-user key not found"
+        assert "neo4j-password" in content, "neo4j-password key not found"
+
+    def test_neo4j_backup_concurrency_forbid(self) -> None:
+        """TC-BK04: concurrencyPolicy is Forbid to prevent overlapping backups."""
+        content = _read(K8S_BASE / "neo4j-backup-cronjob.yaml")
+        assert "concurrencyPolicy: Forbid" in content, "concurrencyPolicy: Forbid not found"
+
+    def test_kustomization_has_neo4j_backup_cronjob(self) -> None:
+        """TC-BK05: kustomization.yaml lists neo4j-backup-cronjob.yaml."""
+        content = _read(K8S_BASE / "kustomization.yaml")
+        assert "neo4j-backup-cronjob.yaml" in content, (
+            "neo4j-backup-cronjob.yaml not in kustomization resources"
+        )

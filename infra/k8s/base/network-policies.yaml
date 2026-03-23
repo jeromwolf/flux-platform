@@ -1,0 +1,146 @@
+# Default deny all ingress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: imsp
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Allow ingress to gateway from any (external traffic entry point)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-ingress
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: gateway
+  ingress:
+    - ports:
+        - port: 8080
+  policyTypes:
+    - Ingress
+---
+# Allow gateway → api
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-api
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: gateway
+      ports:
+        - port: 8000
+  policyTypes:
+    - Ingress
+---
+# Allow api → neo4j
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-neo4j
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: neo4j
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api
+      ports:
+        - port: 7687
+        - port: 7474
+  policyTypes:
+    - Ingress
+---
+# Allow gateway → keycloak
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-keycloak
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: keycloak
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: gateway
+      ports:
+        - port: 8180
+  policyTypes:
+    - Ingress
+---
+# Allow keycloak → keycloak-db
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-keycloak-to-db
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: keycloak-db
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: keycloak
+      ports:
+        - port: 5432
+  policyTypes:
+    - Ingress
+---
+# Allow prometheus → all (metrics scraping)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape
+  namespace: imsp
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: prometheus
+  policyTypes:
+    - Ingress
+---
+# Allow gateway → zipkin
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-tracing-to-zipkin
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: zipkin
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: gateway
+        - podSelector:
+            matchLabels:
+              app: api
+      ports:
+        - port: 9411
+  policyTypes:
+    - Ingress

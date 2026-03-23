@@ -1,0 +1,82 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: neo4j-backup
+  namespace: imsp
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: neo4j-backup
+              image: neo4j:5.26.0
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+                  BACKUP_DIR="/backups/neo4j-${TIMESTAMP}"
+                  mkdir -p "${BACKUP_DIR}"
+
+                  # Use neo4j-admin for consistent backup
+                  neo4j-admin database dump neo4j \
+                    --to-path="${BACKUP_DIR}" \
+                    --overwrite-destination=true \
+                    2>&1 || {
+                      echo "Backup failed, trying cypher-shell export..."
+                      cypher-shell -u "${NEO4J_USER}" -p "${NEO4J_PASSWORD}" \
+                        -a "bolt://${NEO4J_HOST}:7687" \
+                        "CALL apoc.export.json.all('${BACKUP_DIR}/export.json', {})" \
+                        2>&1 || echo "Export also failed"
+                    }
+
+                  # Cleanup backups older than 7 days
+                  find /backups -maxdepth 1 -type d -name "neo4j-*" -mtime +7 -exec rm -rf {} \;
+
+                  echo "Backup completed: ${BACKUP_DIR}"
+                  ls -la "${BACKUP_DIR}/"
+              env:
+                - name: NEO4J_HOST
+                  value: neo4j
+                - name: NEO4J_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: imsp-secrets
+                      key: neo4j-user
+                - name: NEO4J_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: imsp-secrets
+                      key: neo4j-password
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backups
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: neo4j-backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: neo4j-backup-pvc
+  namespace: imsp
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

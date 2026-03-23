@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppSidebar from '@/components/sidebar/AppSidebar.vue'
 import AppHeader from '@/components/header/AppHeader.vue'
+import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
@@ -15,7 +16,9 @@ const appStore = useAppStore()
     >
       <AppHeader />
       <main class="flex-1 overflow-auto p-6">
-        <slot />
+        <ErrorBoundary>
+          <slot />
+        </ErrorBoundary>
       </main>
     </div>
   </div>

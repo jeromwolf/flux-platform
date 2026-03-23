@@ -19,6 +19,8 @@ from fastapi.responses import PlainTextResponse
 
 from gateway.app import create_gateway_app, GatewayApp
 from gateway.config import GatewayConfig
+from gateway.middleware.access_log import AccessLogMiddleware
+from gateway.middleware.cache import ResponseCache
 from gateway.middleware.circuit_breaker import CircuitBreaker
 from gateway.middleware.metrics import gateway_metrics
 from gateway.middleware.rate_limit import RateLimitConfig, RateLimitMiddleware
@@ -38,6 +40,9 @@ _http_client: httpx.AsyncClient | None = None
 
 # Circuit breaker for upstream API proxy
 _circuit_breaker = CircuitBreaker()
+
+# Response cache for GET requests
+_response_cache = ResponseCache(ttl=60.0, max_entries=256)
 
 
 def get_gateway() -> GatewayApp:
@@ -97,7 +102,16 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
         lifespan=_lifespan,
     )
 
-    # 1. CORS (가장 바깥쪽 — 먼저 등록)
+    # Middleware registration order note:
+    # Starlette applies add_middleware in LIFO order — last added = outermost (executes first).
+    # To make AccessLogMiddleware innermost (executes last on request path, sees all prior state),
+    # it must be registered FIRST before CORS, RequestID, Tracing, etc.
+
+    # 0. Structured JSON access logging — registered first so it runs innermost,
+    #    after RequestID and Tracing have set request.state.request_id / trace_id.
+    app.add_middleware(AccessLogMiddleware)
+
+    # 1. CORS (가장 바깥쪽 — 나중에 등록, LIFO 이므로 최외곽에 위치)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(gw.config.cors_origins),
@@ -107,7 +121,7 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
         expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
     )
 
-    # 2. Request ID (CORS 다음)
+    # 2. Request ID
     app.add_middleware(RequestIDMiddleware)
 
     # 3. Distributed Tracing (W3C Traceparent + Zipkin export)
@@ -132,7 +146,7 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
             public_paths=["/health", "/ready", "/metrics", "/docs", "/openapi.json", "/ws"],
         )
 
-    # 6. Metrics request-tracking middleware
+    # 7. Metrics request-tracking middleware
     @app.middleware("http")
     async def _metrics_middleware(request: Request, call_next):
         start = time.monotonic()
@@ -185,18 +199,38 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
         )
         return PlainTextResponse(content=payload, media_type="text/plain; version=0.0.4")
 
+    # Paths that must never be cached (infra probes)
+    _CACHE_SKIP_PATHS = ("/health", "/ready", "/metrics")
+
     # --- API Proxy endpoints ---
     @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
     async def proxy_api(request: Request, path: str):
         """Proxy all /api/* requests to the core KG API backend using httpx."""
         proxy = gw.proxy
         method = request.method
+        req_path = request.url.path
+        query = str(request.query_params)
+
+        # POST/PUT/DELETE/PATCH invalidate the cache so stale reads are evicted
+        if method in ("POST", "PUT", "DELETE", "PATCH"):
+            _response_cache.invalidate()
 
         # Build target URL
         target_url = f"{proxy.base_url}/api/{path}"
-        query = str(request.query_params)
         if query:
             target_url = f"{target_url}?{query}"
+
+        # Serve from cache for GET requests (skip infra probe paths)
+        skip_cache = any(skip in req_path for skip in _CACHE_SKIP_PATHS)
+        if method == "GET" and not skip_cache:
+            cached = _response_cache.get(req_path, query)
+            if cached is not None:
+                return Response(
+                    content=cached.body,
+                    status_code=cached.status_code,
+                    media_type=cached.headers.get("content-type", "application/json"),
+                    headers={**cached.headers, "X-Cache": "HIT"},
+                )
 
         # Forward headers (drop hop-by-hop headers)
         headers = {
@@ -234,10 +268,26 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
             else:
                 _circuit_breaker.record_success()
 
+            # Store successful GET responses in cache
+            if method == "GET" and not skip_cache:
+                _response_cache.put(
+                    path=req_path,
+                    query=query,
+                    body=resp.content,
+                    status_code=resp.status_code,
+                    headers={"content-type": content_type},
+                )
+
+            cache_header = "MISS" if method == "GET" and not skip_cache else None
+            extra_headers: dict[str, str] = {}
+            if cache_header:
+                extra_headers["X-Cache"] = cache_header
+
             return Response(
                 content=resp.content,
                 status_code=resp.status_code,
                 media_type=content_type,
+                headers=extra_headers if extra_headers else None,
             )
         except httpx.HTTPStatusError as exc:
             _circuit_breaker.record_failure()

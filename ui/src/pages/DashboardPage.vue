@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/layouts/AppShell.vue'
 import { USpinner, UBadge } from '@/components/ui'
+import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import { Activity, Database, Share2, Workflow, CheckCircle, AlertCircle } from 'lucide-vue-next'
 import { healthApi, schemaApi } from '@/api/endpoints'
 import { useApi } from '@/composables/useApi'
@@ -83,11 +84,10 @@ onMounted(loadDashboardData)
         </div>
       </div>
 
-      <!-- Loading state -->
-      <div v-if="isLoading" class="flex items-center gap-3 text-text-muted">
-        <USpinner size="sm" />
-        <span class="text-sm">데이터 로드 중...</span>
-      </div>
+      <!-- Initial page skeleton (first load only — no data yet) -->
+      <template v-if="isLoading && !healthData && !schemaData">
+        <PageSkeleton />
+      </template>
 
       <!-- Error state -->
       <div
@@ -97,7 +97,8 @@ onMounted(loadDashboardData)
         {{ loadError }}
       </div>
 
-      <!-- Stats Grid -->
+      <!-- Stats Grid + Panels (shown once we have at least one data source or initial load done) -->
+      <template v-else>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <!-- 총 노드 -->
         <div class="rounded-xl border border-border-subtle bg-surface-secondary p-5">
@@ -259,6 +260,7 @@ onMounted(loadDashboardData)
           </div>
         </div>
       </div>
+      </template>
     </div>
   </AppShell>
 </template>

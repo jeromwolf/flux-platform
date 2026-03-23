@@ -19,6 +19,8 @@ resources:
   - ingress.yaml
   - cert-manager-issuer.yaml
   - zipkin-deployment.yaml
+  - network-policies.yaml
+  - neo4j-backup-cronjob.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: imsp-platform
