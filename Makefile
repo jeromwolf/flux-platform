@@ -41,7 +41,8 @@ test-unit:
 	PYTHONPATH=.:core:domains python -m pytest tests/ -m unit -v --tb=short
 
 test-integration:
-	PYTHONPATH=.:core:domains python -m pytest tests/ -m integration -v --tb=short
+	NEO4J_TEST_URI=bolt://localhost:7687 NEO4J_TEST_USER=neo4j NEO4J_TEST_PASSWORD=testpassword \
+	PYTHONPATH=.:core:domains python -m pytest tests/integration/ -m integration -v --tb=short
 
 test-coverage:
 	PYTHONPATH=.:core:domains python -m pytest tests/ -m unit --cov=core --cov=domains --cov-report=term-missing --tb=short
