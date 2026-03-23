@@ -125,11 +125,16 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         app.add_middleware(RateLimitMiddleware)
 
     # Import and include routers
+    from kg.api.routes.algorithms import router as algorithms_router
+    from kg.api.routes.cypher import router as cypher_router
+    from kg.api.routes.embeddings import router as embeddings_router
     from kg.api.routes.etl import router as etl_router
     from kg.api.routes.graph import router as graph_router
     from kg.api.routes.health import router as health_router
     from kg.api.routes.lineage import router as lineage_router
+    from kg.api.routes.nodes import router as nodes_router
     from kg.api.routes.query import router as query_router
+    from kg.api.routes.relationships import router as relationships_router
     from kg.api.routes.schema import router as schema_router
 
     _auth_deps = [Depends(get_current_api_key)]
@@ -140,6 +145,11 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     app.include_router(query_router, prefix="/api/v1", dependencies=_auth_deps)
     app.include_router(lineage_router, prefix="/api/v1", dependencies=_auth_deps)
     app.include_router(etl_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(nodes_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(relationships_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(cypher_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(embeddings_router, prefix="/api/v1", dependencies=_auth_deps)
+    app.include_router(algorithms_router, prefix="/api/v1", dependencies=_auth_deps)
 
     return app
 

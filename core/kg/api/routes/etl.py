@@ -1,7 +1,8 @@
 """ETL pipeline trigger endpoints.
 
 Provides REST API routes for triggering, monitoring, and managing
-ETL pipeline executions.
+ETL pipeline executions.  Run history is persisted to a SQLite store
+(see :class:`~kg.etl.state.ETLStateStore`).
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from pydantic import BaseModel, Field
 from kg.api.deps import get_async_neo4j_session
 from kg.etl.models import ETLMode, PipelineConfig
 from kg.etl.pipeline import ETLPipeline
+from kg.etl.state import ETLRunRecord, ETLStateStore
 
 logger = logging.getLogger(__name__)
 
@@ -85,11 +87,26 @@ class PipelineInfo(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# In-memory state (PoC only)
+# State (SQLite-backed via ETLStateStore, with in-memory fallback for PoC)
 # ---------------------------------------------------------------------------
 
-# 모듈 레벨 실행 이력 (인메모리, PoC)
+# 모듈 레벨 실행 이력 (인메모리, PoC) — kept for backward-compatibility with tests
 _run_history: dict[str, ETLStatusResponse] = {}
+
+# SQLite-backed persistent store
+_state_store: ETLStateStore | None = None
+
+
+def _get_state_store() -> ETLStateStore:
+    """Return the module-level ETLStateStore singleton, creating it on demand.
+
+    Returns:
+        The active :class:`~kg.etl.state.ETLStateStore` instance.
+    """
+    global _state_store  # noqa: PLW0603
+    if _state_store is None:
+        _state_store = ETLStateStore()
+    return _state_store
 
 # 파이프라인 레지스트리
 _PIPELINE_REGISTRY = {
@@ -159,7 +176,10 @@ def _create_run_record(
     pipeline_name: str,
     status: str,
 ) -> ETLStatusResponse:
-    """Create a new run record in the history.
+    """Create a new run record in the history (in-memory + SQLite).
+
+    Saves the record to the in-memory dict for fast access and also
+    persists it to the SQLite store for durability across restarts.
 
     Args:
         run_id: Unique run identifier (UUID).
@@ -169,13 +189,30 @@ def _create_run_record(
     Returns:
         ETLStatusResponse record.
     """
+    import time
+
+    started_at_iso = datetime.now(timezone.utc).isoformat()
     record = ETLStatusResponse(
         run_id=run_id,
         pipeline_name=pipeline_name,
         status=status,
-        started_at=datetime.now(timezone.utc).isoformat(),
+        started_at=started_at_iso,
     )
     _run_history[run_id] = record
+
+    # Persist to SQLite (best-effort — do not let DB errors break the API)
+    try:
+        _get_state_store().save_run(
+            ETLRunRecord(
+                run_id=run_id,
+                pipeline_name=pipeline_name,
+                status=status,
+                started_at=time.time(),
+            )
+        )
+    except Exception:  # noqa: BLE001
+        logger.warning("Failed to persist ETL run %s to SQLite store", run_id)
+
     return record
 
 
@@ -225,7 +262,7 @@ async def trigger_etl(
         # For PoC, we run with empty records (actual crawler integration later)
         result = pipeline.run([], session=session)
 
-        # Update record with results
+        # Update in-memory record with results
         record.status = "COMPLETED"
         record.records_processed = result.records_processed
         record.records_failed = result.records_failed
@@ -233,6 +270,16 @@ async def trigger_etl(
         record.duration_seconds = result.duration_seconds
         record.completed_at = datetime.now(timezone.utc).isoformat()
         record.errors = result.errors
+
+        # Persist completion to SQLite (best-effort)
+        try:
+            _get_state_store().update_status(
+                run_id,
+                "COMPLETED",
+                record_count=result.records_processed,
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("Failed to update SQLite state for run %s", run_id)
 
         logger.info(
             "ETL run %s for pipeline %s completed: processed=%d, failed=%d",
@@ -252,6 +299,13 @@ async def trigger_etl(
         record.status = "FAILED"
         record.errors = [str(exc)]
         record.completed_at = datetime.now(timezone.utc).isoformat()
+
+        # Persist failure to SQLite (best-effort)
+        try:
+            _get_state_store().update_status(run_id, "FAILED", error=str(exc))
+        except Exception:  # noqa: BLE001
+            logger.warning("Failed to update SQLite state for failed run %s", run_id)
+
         logger.exception("ETL run %s failed", run_id)
         return ETLTriggerResponse(
             run_id=run_id,

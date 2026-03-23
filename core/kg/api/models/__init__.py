@@ -152,23 +152,188 @@ class LineageTimelineResponse(BaseModel):
     meta: dict[str, Any] = Field(default_factory=dict)
 
 
-__all__ = [
-    "EdgeResponse",
-    "ErrorResponse",
-    "GraphResponse",
-    "HealthResponse",
-    "LineageEdgeInfo",
-    "LineageNodeInfo",
-    "LineageNodesResponse",
-    "LineageResponse",
-    "LineageTimelineResponse",
-    "NLQueryRequest",
-    "NLQueryResponse",
-    "NodeResponse",
-    "PaginatedResponse",
-    "PaginationInfo",
-    "ResponseMeta",
-    "SchemaLabelInfo",
-    "SchemaResponse",
-    "StandardResponse",
-]
+# ---------------------------------------------------------------------------
+# Node CRUD models
+# ---------------------------------------------------------------------------
+
+
+class CreateNodeRequest(BaseModel):
+    """Request body for creating a new node."""
+
+    labels: list[str] = Field(..., min_length=1, description="One or more node labels (PascalCase)")
+    properties: dict[str, Any] = Field(default_factory=dict, description="Initial node properties")
+
+
+class UpdateNodeRequest(BaseModel):
+    """Request body for updating node properties (merge semantics)."""
+
+    properties: dict[str, Any] = Field(..., description="Properties to merge onto the node")
+
+
+class NodeListResponse(BaseModel):
+    """Paginated list of nodes."""
+
+    nodes: list[NodeResponse] = Field(default_factory=list)
+    total: int = 0
+    limit: int = 50
+    offset: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Relationship CRUD models
+# ---------------------------------------------------------------------------
+
+
+class CreateRelationshipRequest(BaseModel):
+    """Request body for creating a new relationship."""
+
+    sourceId: str = Field(..., description="Element ID of the source node")
+    targetId: str = Field(..., description="Element ID of the target node")
+    type: str = Field(  # noqa: A003
+        ...,
+        pattern=r"^[A-Z][A-Z_0-9]*$",
+        description="Relationship type in SCREAMING_SNAKE_CASE",
+    )
+    properties: dict[str, Any] = Field(default_factory=dict)
+
+
+class UpdateRelationshipRequest(BaseModel):
+    """Request body for updating relationship properties (merge semantics)."""
+
+    properties: dict[str, Any] = Field(..., description="Properties to merge onto the relationship")
+
+
+class RelationshipDetailResponse(BaseModel):
+    """Relationship together with its source and target nodes."""
+
+    relationship: EdgeResponse
+    sourceNode: NodeResponse
+    targetNode: NodeResponse
+
+
+class RelationshipListResponse(BaseModel):
+    """Paginated list of relationships."""
+
+    relationships: list[EdgeResponse] = Field(default_factory=list)
+    total: int = 0
+    limit: int = 50
+    offset: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Cypher execution models
+# ---------------------------------------------------------------------------
+
+
+class CypherRequest(BaseModel):
+    """Request body for raw Cypher query endpoints."""
+
+    cypher: str = Field(..., min_length=1, description="Cypher query string")
+    parameters: dict[str, Any] = Field(default_factory=dict)
+
+
+class CypherResponse(BaseModel):
+    """Response from the raw Cypher execution endpoint."""
+
+    results: list[dict[str, Any]] = Field(default_factory=list)
+    columns: list[str] = Field(default_factory=list)
+    rowCount: int = 0
+    executionTimeMs: float = 0.0
+
+
+class CypherValidationResponse(BaseModel):
+    """Response from the Cypher validation endpoint."""
+
+    valid: bool
+    errors: list[str] = Field(default_factory=list)
+    queryType: str = "read"
+
+
+class CypherExplainResponse(BaseModel):
+    """Response from the Cypher explain endpoint."""
+
+    plan: dict[str, Any] = Field(default_factory=dict)
+    estimatedRows: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Embedding search models
+# ---------------------------------------------------------------------------
+
+
+class EmbeddingSearchRequest(BaseModel):
+    """Request body for vector similarity search."""
+
+    label: str
+    property: str = "embedding"
+    queryVector: list[float]
+    topK: int = Field(default=10, ge=1, le=100)
+
+
+class HybridSearchRequest(BaseModel):
+    """Request body for hybrid vector + full-text search."""
+
+    label: str
+    property: str = "embedding"
+    queryVector: list[float]
+    textQuery: str
+    topK: int = Field(default=10, ge=1, le=100)
+
+
+class CreateIndexRequest(BaseModel):
+    """Request body for creating a Neo4j vector index."""
+
+    label: str
+    property: str = "embedding"
+    dimensions: int = Field(default=768, ge=1)
+    similarity: str = Field(default="cosine", pattern="^(cosine|euclidean|dot_product)$")
+
+
+class EmbeddingSearchResponse(BaseModel):
+    """Response from vector or hybrid search endpoints."""
+
+    results: list[dict[str, Any]] = Field(default_factory=list)
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# Algorithm models
+# ---------------------------------------------------------------------------
+
+
+class AlgorithmRequest(BaseModel):
+    """Base request body for graph algorithm endpoints."""
+
+    label: str = "Vessel"
+    relationshipType: str = "DOCKED_AT"
+
+
+class PageRankRequest(AlgorithmRequest):
+    """Request body for the PageRank endpoint."""
+
+    iterations: int = Field(default=20, ge=1, le=100)
+    dampingFactor: float = Field(default=0.85, ge=0.0, le=1.0)
+
+
+class ShortestPathRequest(BaseModel):
+    """Request body for the shortest-path (Dijkstra) endpoint."""
+
+    sourceId: str
+    targetId: str
+    relationshipType: str = "ROUTE_TO"
+    weightProperty: str = "distance"
+
+
+class SimilarityRequest(AlgorithmRequest):
+    """Request body for the node similarity endpoint."""
+
+    topK: int = Field(default=10, ge=1, le=100)
+
+
+class AlgorithmResponse(BaseModel):
+    """Response from graph algorithm execution endpoints."""
+
+    algorithm: str
+    results: list[dict[str, Any]] = Field(default_factory=list)
+    cypher: str = ""
+    meta: dict[str, Any] = Field(default_factory=dict)
