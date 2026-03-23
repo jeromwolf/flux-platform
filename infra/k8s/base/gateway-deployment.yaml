@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imsp-gateway
+  namespace: imsp
+  labels:
+    app: imsp-gateway
+    component: gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: imsp-gateway
+  template:
+    metadata:
+      labels:
+        app: imsp-gateway
+        component: gateway
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: gateway
+          image: imsp/gateway:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: API_BASE_URL
+              value: "http://imsp-api:8000"
+            - name: KEYCLOAK_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: imsp-config
+                  key: KEYCLOAK_URL
+            - name: KEYCLOAK_REALM
+              valueFrom:
+                configMapKeyRef:
+                  name: imsp-config
+                  key: KEYCLOAK_REALM
+            - name: KEYCLOAK_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: imsp-config
+                  key: KEYCLOAK_CLIENT_ID
+            - name: ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: imsp-config
+                  key: ENV
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: imsp-config
+                  key: LOG_LEVEL
+            - name: GATEWAY_PORT
+              value: "8080"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10

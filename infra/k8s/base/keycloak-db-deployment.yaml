@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imsp-keycloak-db
+  namespace: imsp
+  labels:
+    app: imsp-keycloak-db
+    component: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: imsp-keycloak-db
+  template:
+    metadata:
+      labels:
+        app: imsp-keycloak-db
+        component: auth
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:14.4
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "keycloak"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: imsp-secrets
+                  key: KC_DB_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: imsp-secrets
+                  key: KC_DB_PASSWORD
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: keycloak-db-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: keycloak-db-data
+          persistentVolumeClaim:
+            claimName: keycloak-db-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: keycloak-db-pvc
+  namespace: imsp
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: imsp-keycloak-db
+  namespace: imsp
+spec:
+  type: ClusterIP
+  selector:
+    app: imsp-keycloak-db
+  ports:
+    - port: 5432
+      targetPort: 5432

@@ -11,3 +11,4 @@ patches:
   - path: neo4j-patch.yaml
   - path: configmap-patch.yaml
   - path: ingress-patch.yaml
+  - path: gateway-patch.yaml

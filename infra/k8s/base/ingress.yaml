@@ -17,17 +17,17 @@ spec:
     - host: api.imsp.local
       http:
         paths:
-          - path: /api
+          - path: /auth
             pathType: Prefix
             backend:
               service:
-                name: api
+                name: imsp-keycloak
                 port:
-                  number: 8000
-          - path: /metrics
+                  number: 8180
+          - path: /
             pathType: Prefix
             backend:
               service:
-                name: api
+                name: imsp-gateway
                 port:
-                  number: 8000
+                  number: 8080

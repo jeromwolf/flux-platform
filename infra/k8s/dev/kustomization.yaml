@@ -10,3 +10,4 @@ patches:
   - path: api-patch.yaml
   - path: neo4j-patch.yaml
   - path: configmap-patch.yaml
+  - path: gateway-patch.yaml

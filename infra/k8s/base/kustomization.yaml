@@ -11,6 +11,11 @@ resources:
   - api-service.yaml
   - neo4j-statefulset.yaml
   - neo4j-service.yaml
+  - gateway-deployment.yaml
+  - gateway-service.yaml
+  - keycloak-deployment.yaml
+  - keycloak-service.yaml
+  - keycloak-db-deployment.yaml
   - ingress.yaml
 
 commonLabels:

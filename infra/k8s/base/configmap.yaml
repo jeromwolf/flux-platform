@@ -13,5 +13,6 @@ data:
   LOG_FORMAT: "json"
   LOG_LEVEL: "INFO"
   CORS_ALLOWED_ORIGINS: "http://localhost:3000"
+  KEYCLOAK_URL: "http://imsp-keycloak:8180"
   KEYCLOAK_REALM: "imsp"
   KEYCLOAK_CLIENT_ID: "imsp-api"
