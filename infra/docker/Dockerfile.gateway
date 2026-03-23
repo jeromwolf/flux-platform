@@ -1,0 +1,38 @@
+# ──── Build stage ────────────────────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+WORKDIR /install
+
+# Install only gateway + shared dependencies
+COPY pyproject.toml /app/pyproject.toml
+COPY gateway/ /app/gateway/
+COPY core/ /app/core/
+COPY domains/ /app/domains/
+
+WORKDIR /app
+RUN pip install --no-cache-dir --prefix=/install \
+    fastapi~=0.109.0 \
+    uvicorn[standard]~=0.34.0 \
+    httpx~=0.27.0 \
+    pydantic>=2.0,<3.0 \
+    PyJWT>=2.0.0,<3.0 \
+    cryptography>=41.0
+
+# ──── Runtime stage ──────────────────────────────────────────────────────────
+FROM python:3.11-slim
+
+RUN useradd --create-home --uid 1000 imsp
+USER imsp
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+COPY gateway/ /app/gateway/
+COPY core/ /app/core/
+COPY domains/ /app/domains/
+
+ENV PYTHONPATH=/app:/app/core:/app/domains \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 8080
+
+CMD ["uvicorn", "gateway.server:app", "--host", "0.0.0.0", "--port", "8080"]

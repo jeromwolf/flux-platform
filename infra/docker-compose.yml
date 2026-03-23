@@ -54,13 +54,94 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-}
       LOG_FORMAT: ${LOG_FORMAT:-json}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5180,http://localhost:8080}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 15s
+
+  # ===========================================================================
+  # Keycloak DB - PostgreSQL for Keycloak
+  # ===========================================================================
+  keycloak-db:
+    image: postgres:14.4
+    container_name: imsp-keycloak-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: ${KC_DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${KC_DB_PASSWORD:-postgres}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KC_DB_USERNAME:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # Keycloak - Identity & Access Management
+  # ===========================================================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: imsp-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: ${KC_DB_USERNAME:-postgres}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:-postgres}
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+    ports:
+      - "8180:8080"
+    volumes:
+      - ../keycloak/realm-imsp.json:/opt/keycloak/data/import/realm-imsp.json:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ===========================================================================
+  # API Gateway - Unified entry point (auth, rate-limit, routing)
+  # ===========================================================================
+  gateway:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.gateway
+    container_name: imsp-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    environment:
+      API_BASE_URL: http://api:8000
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-imsp}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-imsp-api}
+      GATEWAY_PORT: "8080"
+      ENV: ${ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5180}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # ===========================================================================
   # Activepieces - Workflow Automation Engine
@@ -70,7 +151,7 @@ services:
     container_name: maritime-activepieces
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "8081:80"
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,7 +162,7 @@ services:
       AP_ENGINE_EXECUTABLE_PATH: dist/packages/engine/main.js
       AP_EXECUTION_MODE: UNSANDBOXED
       # Frontend URL (change for production)
-      AP_FRONTEND_URL: ${AP_FRONTEND_URL:-http://localhost:8080}
+      AP_FRONTEND_URL: ${AP_FRONTEND_URL:-http://localhost:8081}
       # Security keys (generate with: openssl rand -hex 16/32)
       AP_ENCRYPTION_KEY: ${AP_ENCRYPTION_KEY:?Set AP_ENCRYPTION_KEY in .env}
       AP_JWT_SECRET: ${AP_JWT_SECRET:?Set AP_JWT_SECRET in .env}
@@ -193,6 +274,8 @@ volumes:
   neo4j_plugins:
     driver: local
   neo4j_import:
+    driver: local
+  keycloak_db_data:
     driver: local
   activepieces_cache:
     driver: local
