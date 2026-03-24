@@ -164,3 +164,72 @@ class TestPipelineOutputFields:
         assert output.generated_query is not None
         assert output.generated_query.query
         assert output.error is None
+
+
+# ---------------------------------------------------------------------------
+# CRISPE LLM Pipeline Integration
+# ---------------------------------------------------------------------------
+
+
+class _MockLLMProvider:
+    """Mock LLM provider for pipeline integration testing."""
+
+    def __init__(self, response: str = "MATCH (v:Vessel) RETURN v") -> None:
+        self._response = response
+
+    def generate(self, prompt: str, **kwargs: object) -> object:
+        class _Resp:
+            def __init__(self, text: str) -> None:
+                self.text = text
+        return _Resp(self._response)
+
+    def is_available(self) -> bool:
+        return True
+
+
+@pytest.mark.unit
+class TestPipelineCRISPE:
+    """Test TextToCypherPipeline with CRISPE LLM generation path."""
+
+    def test_llm_path_generates_cypher(self) -> None:
+        """Pipeline with LLM generator uses CRISPE path instead of rules."""
+        from kg.crispe import LLMCypherGenerator, get_default_maritime_schema
+
+        llm = _MockLLMProvider("MATCH (v:Vessel)-[:DOCKED_AT]->(p:Port) RETURN v, p")
+        schema = get_default_maritime_schema()
+        gen = LLMCypherGenerator(llm_provider=llm)
+        pipe = TextToCypherPipeline(llm_generator=gen, schema_context=schema)
+
+        output = pipe.process("부산항 선박")
+        assert output.success is True
+        assert output.generated_query is not None
+        assert "DOCKED_AT" in output.generated_query.query
+
+    def test_llm_path_fallback_to_rules_without_generator(self) -> None:
+        """Without LLM generator, pipeline uses rule-based path."""
+        pipe = TextToCypherPipeline()
+        output = pipe.process("부산항 선박")
+        assert output.success is True
+        assert output.generated_query is not None
+        assert "MATCH" in output.generated_query.query
+
+    def test_llm_path_still_validates(self) -> None:
+        """LLM-generated Cypher still goes through validation if validator is set."""
+        from kg.crispe import LLMCypherGenerator, get_default_maritime_schema
+
+        llm = _MockLLMProvider("MATCH (v:Vessel) RETURN v")
+        schema = get_default_maritime_schema()
+        gen = LLMCypherGenerator(llm_provider=llm)
+
+        try:
+            from kg.cypher_validator import CypherValidator
+            validator = CypherValidator()
+        except Exception:
+            pytest.skip("CypherValidator not available")
+
+        pipe = TextToCypherPipeline(
+            llm_generator=gen, schema_context=schema, validator=validator,
+        )
+        output = pipe.process("선박 목록")
+        assert output.success is True
+        assert output.validation_score is not None

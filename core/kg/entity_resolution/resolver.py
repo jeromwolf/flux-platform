@@ -15,22 +15,26 @@ Design principles:
 
 from __future__ import annotations
 
-from kg.entity_resolution.fuzzy_matcher import EmbeddingMatcher, FuzzyMatcher
+from kg.entity_resolution.fuzzy_matcher import EmbeddingMatcher, FuzzyMatcher, HybridMatcher
 from kg.entity_resolution.models import ERCandidate, ERResult, MatchMethod
 
 
 class EntityResolver:
-    """3-tier entity resolution pipeline.
+    """4-tier entity resolution pipeline.
 
     Tiers:
     1. **Exact** -- normalized string equality (always on).
-    2. **Fuzzy** -- SequenceMatcher + Jaro-Winkler (always on).
-    3. **Embedding** -- vector cosine similarity (off by default, future).
+    2. **Hybrid** -- weighted Levenshtein + Cosine (off by default, MAKG 기반).
+    3. **Fuzzy** -- SequenceMatcher + Jaro-Winkler (always on).
+    4. **Embedding** -- vector cosine similarity (off by default, future).
 
     Args:
         fuzzy_threshold: Minimum fuzzy similarity to consider a merge.
         embedding_threshold: Minimum embedding similarity (future use).
         use_embedding: Enable embedding-based matching (not yet implemented).
+        use_hybrid: Enable MAKG-inspired hybrid matching (Levenshtein + Cosine).
+        hybrid_levenshtein_weight: Weight for Levenshtein component (default: 0.6).
+        hybrid_cosine_weight: Weight for Cosine component (default: 0.4).
     """
 
     def __init__(
@@ -38,14 +42,29 @@ class EntityResolver:
         fuzzy_threshold: float = 0.8,
         embedding_threshold: float = 0.85,
         use_embedding: bool = False,
+        use_hybrid: bool = False,
+        hybrid_levenshtein_weight: float = 0.6,
+        hybrid_cosine_weight: float = 0.4,
     ) -> None:
         self.fuzzy_threshold = fuzzy_threshold
         self.embedding_threshold = embedding_threshold
         self.use_embedding = use_embedding
+        self.use_hybrid = use_hybrid
+        self.hybrid_levenshtein_weight = hybrid_levenshtein_weight
+        self.hybrid_cosine_weight = hybrid_cosine_weight
         self._matcher = FuzzyMatcher(default_threshold=fuzzy_threshold)
         self._embedding_matcher = (
             EmbeddingMatcher(default_threshold=embedding_threshold)
             if use_embedding
+            else None
+        )
+        self._hybrid_matcher = (
+            HybridMatcher(
+                levenshtein_weight=hybrid_levenshtein_weight,
+                cosine_weight=hybrid_cosine_weight,
+                default_threshold=fuzzy_threshold,
+            )
+            if use_hybrid
             else None
         )
 
@@ -76,10 +95,33 @@ class EntityResolver:
                 context={"normalized_a": na, "normalized_b": nb},
             )
 
-        # Tier 2: FUZZY
+        # Tier 2: HYBRID (if enabled) — MAKG 기반 가중 조합 (Levenshtein + Cosine)
+        if self.use_hybrid and self._hybrid_matcher is not None:
+            hybrid_score = self._hybrid_matcher.similarity(a, b)
+            if hybrid_score >= self.fuzzy_threshold:
+                lev_score = self._hybrid_matcher._fuzzy.levenshtein_similarity(a, b)
+                cos_score = self._hybrid_matcher._embedding.similarity(a, b)
+                return ERCandidate(
+                    entity_a=a,
+                    entity_b=b,
+                    similarity=hybrid_score,
+                    method=MatchMethod.HYBRID,
+                    context={
+                        "normalized_a": na,
+                        "normalized_b": nb,
+                        "levenshtein_score": lev_score,
+                        "cosine_score": cos_score,
+                        "weights": {
+                            "levenshtein": self.hybrid_levenshtein_weight,
+                            "cosine": self.hybrid_cosine_weight,
+                        },
+                    },
+                )
+
+        # Tier 3: FUZZY
         fuzzy_score = self._matcher.similarity(a, b)
 
-        # Tier 3: EMBEDDING (if enabled)
+        # Tier 4: EMBEDDING (if enabled)
         if self.use_embedding and self._embedding_matcher is not None:
             embedding_score = self._embedding_matcher.similarity(a, b)
 
@@ -149,7 +191,8 @@ class EntityResolver:
                 candidate = self.resolve_pair(entities[i], entities[j])
                 all_candidates[(i, j)] = candidate
 
-                # Merge threshold 결정: embedding이면 embedding_threshold, 아니면 fuzzy_threshold
+                # Merge threshold 결정: embedding이면 embedding_threshold,
+                # HYBRID/FUZZY이면 fuzzy_threshold
                 threshold = (
                     self.embedding_threshold
                     if candidate.method == MatchMethod.EMBEDDING

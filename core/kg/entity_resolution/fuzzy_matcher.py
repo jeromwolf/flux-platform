@@ -11,13 +11,17 @@ Handles:
 
 Also provides:
 - EmbeddingMatcher: Pure Python n-gram embedding with cosine similarity
+- HybridMatcher: MAKG 논문 기반 가중 조합 (Levenshtein + Cosine)
 """
 
 from __future__ import annotations
 
+import logging
 import math
 import re
 from difflib import SequenceMatcher
+
+logger = logging.getLogger(__name__)
 
 from kg.entity_resolution.models import ERCandidate, MatchMethod
 
@@ -110,6 +114,57 @@ class FuzzyMatcher:
         jw = self._jaro_winkler(na, nb)
 
         return max(seq_ratio, jw)
+
+    def levenshtein_similarity(self, a: str, b: str) -> float:
+        """Compute normalized Levenshtein similarity between two entity names.
+
+        Wagner-Fischer 동적 프로그래밍 알고리즘을 사용하며,
+        롤링 배열로 O(min(m,n)) 공간을 사용합니다.
+
+        Args:
+            a: First entity name.
+            b: Second entity name.
+
+        Returns:
+            Normalized similarity score in [0.0, 1.0]:
+            ``1.0 - edit_distance / max(len(na), len(nb))``.
+            Returns 1.0 if both strings are empty.
+        """
+        na = self.normalize(a)
+        nb = self.normalize(b)
+
+        if na == nb:
+            return 1.0
+        if not na or not nb:
+            return 0.0
+
+        # Wagner-Fischer DP (롤링 배열, O(min(m,n)) 공간)
+        len_a, len_b = len(na), len(nb)
+
+        # 짧은 문자열을 행(row)으로 사용하여 공간 최적화
+        if len_a < len_b:
+            na, nb = nb, na
+            len_a, len_b = len_b, len_a
+
+        # 이전 행 초기화 (삭제 비용)
+        prev = list(range(len_b + 1))
+        curr = [0] * (len_b + 1)
+
+        for i in range(1, len_a + 1):
+            curr[0] = i
+            for j in range(1, len_b + 1):
+                if na[i - 1] == nb[j - 1]:
+                    curr[j] = prev[j - 1]  # 문자 일치: 비용 없음
+                else:
+                    curr[j] = 1 + min(
+                        prev[j],      # 삭제 (deletion)
+                        curr[j - 1],  # 삽입 (insertion)
+                        prev[j - 1],  # 대체 (substitution)
+                    )
+            prev, curr = curr, prev  # 행 교환
+
+        edit_distance = prev[len_b]
+        return 1.0 - edit_distance / max(len_a, len_b)
 
     def find_matches(
         self,
@@ -395,3 +450,147 @@ class EmbeddingMatcher:
             return 0.0
 
         return dot_product / (mag_a * mag_b)
+
+
+class HybridMatcher:
+    """MAKG 논문 기반 가중 조합 매처.
+
+    Levenshtein(문자열 편집 거리) + Cosine(n-gram 의미 유사도)를
+    가중 평균하여 최종 유사도를 계산합니다.
+
+    Reference: Liu & Cheng (2024), "MAKG: A Maritime Accident Knowledge Graph"
+    - Entity alignment: sim = α × levenshtein_sim + β × cosine_sim
+    - Default weights: α=0.6, β=0.4
+
+    Args:
+        levenshtein_weight: Weight for Levenshtein similarity (default: 0.6).
+        cosine_weight: Weight for cosine similarity (default: 0.4).
+        default_threshold: Minimum hybrid similarity to consider a match.
+        ngram_size: Character n-gram size for cosine component (default: 3).
+    """
+
+    def __init__(
+        self,
+        levenshtein_weight: float = 0.6,
+        cosine_weight: float = 0.4,
+        default_threshold: float = 0.8,
+        ngram_size: int = 3,
+    ) -> None:
+        # 가중치 합 검증 (weight sum validation)
+        if abs(levenshtein_weight + cosine_weight - 1.0) > 1e-6:
+            raise ValueError(
+                f"levenshtein_weight + cosine_weight must equal 1.0, "
+                f"got {levenshtein_weight} + {cosine_weight} = "
+                f"{levenshtein_weight + cosine_weight}"
+            )
+        self.levenshtein_weight = levenshtein_weight
+        self.cosine_weight = cosine_weight
+        self.default_threshold = default_threshold
+        self.ngram_size = ngram_size
+
+        # 내부 매처 인스턴스 생성
+        self._fuzzy = FuzzyMatcher(default_threshold=default_threshold)
+        self._embedding = EmbeddingMatcher(
+            default_threshold=default_threshold, n=ngram_size
+        )
+
+    def similarity(self, a: str, b: str) -> float:
+        """Compute hybrid similarity: α × levenshtein + β × cosine.
+
+        Args:
+            a: First entity name.
+            b: Second entity name.
+
+        Returns:
+            Weighted similarity score in [0.0, 1.0].
+        """
+        lev_score = self._fuzzy.levenshtein_similarity(a, b)
+        cos_score = self._embedding.similarity(a, b)
+
+        hybrid = self.levenshtein_weight * lev_score + self.cosine_weight * cos_score
+
+        logger.debug(
+            "HybridMatcher: '%s' vs '%s' → lev=%.4f, cos=%.4f, hybrid=%.4f",
+            a,
+            b,
+            lev_score,
+            cos_score,
+            hybrid,
+        )
+
+        return hybrid
+
+    def find_matches(
+        self,
+        entity: str,
+        candidates: list[str],
+        threshold: float | None = None,
+    ) -> list[ERCandidate]:
+        """Find all candidate matches above the hybrid similarity threshold.
+
+        Args:
+            entity: The entity name to match against.
+            candidates: Pool of candidate entity names.
+            threshold: Minimum similarity score. Falls back to
+                ``self.default_threshold`` when ``None``.
+
+        Returns:
+            List of :class:`ERCandidate` objects (method=HYBRID) sorted by
+            descending similarity, containing only matches >= *threshold*.
+        """
+        if threshold is None:
+            threshold = self.default_threshold
+
+        results: list[ERCandidate] = []
+        for candidate in candidates:
+            na = FuzzyMatcher.normalize(entity)
+            nc = FuzzyMatcher.normalize(candidate)
+
+            # EXACT 단락 (short-circuit)
+            if na == nc:
+                results.append(
+                    ERCandidate(
+                        entity_a=entity,
+                        entity_b=candidate,
+                        similarity=1.0,
+                        method=MatchMethod.EXACT,
+                        context={"normalized_a": na, "normalized_b": nc},
+                    )
+                )
+                continue
+
+            lev_score = self._fuzzy.levenshtein_similarity(entity, candidate)
+            cos_score = self._embedding.similarity(entity, candidate)
+            hybrid = self.levenshtein_weight * lev_score + self.cosine_weight * cos_score
+
+            logger.debug(
+                "HybridMatcher.find_matches: '%s' vs '%s' → lev=%.4f, cos=%.4f, hybrid=%.4f",
+                entity,
+                candidate,
+                lev_score,
+                cos_score,
+                hybrid,
+            )
+
+            if hybrid >= threshold:
+                results.append(
+                    ERCandidate(
+                        entity_a=entity,
+                        entity_b=candidate,
+                        similarity=hybrid,
+                        method=MatchMethod.HYBRID,
+                        context={
+                            "normalized_a": na,
+                            "normalized_b": nc,
+                            "levenshtein_score": lev_score,
+                            "cosine_score": cos_score,
+                            "weights": {
+                                "levenshtein": self.levenshtein_weight,
+                                "cosine": self.cosine_weight,
+                            },
+                        },
+                    )
+                )
+
+        results.sort(key=lambda c: c.similarity, reverse=True)
+        return results

@@ -71,6 +71,13 @@ except ImportError:  # pragma: no cover
     HallucinationDetector = None  # type: ignore[assignment,misc]
     DetectionResult = None  # type: ignore[assignment,misc]
 
+# Optional CRISPE LLM generator import
+try:
+    from kg.crispe import LLMCypherGenerator, SchemaContext
+except ImportError:  # pragma: no cover
+    LLMCypherGenerator = None  # type: ignore[assignment,misc]
+    SchemaContext = None  # type: ignore[assignment,misc]
+
 
 @dataclass
 class PipelineOutput:
@@ -125,6 +132,11 @@ class TextToCypherPipeline:
         corrector: Optional CypherCorrector for Stage 4 correction.
         hallucination_detector: Optional HallucinationDetector for
             validating generated answers against the KG (Stage 5).
+        llm_generator: Optional LLMCypherGenerator for CRISPE-based
+            LLM Cypher generation. When provided, uses the LLM path
+            instead of rule-based generation for the Cypher step.
+        schema_context: Optional SchemaContext for LLM generation.
+            Required when llm_generator is provided.
     """
 
     def __init__(
@@ -133,6 +145,8 @@ class TextToCypherPipeline:
         validator: Any | None = None,
         corrector: Any | None = None,
         hallucination_detector: Any | None = None,
+        llm_generator: Any | None = None,
+        schema_context: Any | None = None,
     ) -> None:
         self._parser = NLParser()
         self._generator = QueryGenerator()
@@ -140,6 +154,8 @@ class TextToCypherPipeline:
         self._validator = validator
         self._corrector = corrector
         self._hallucination_detector = hallucination_detector
+        self._llm_generator = llm_generator
+        self._schema_context = schema_context
 
     # ------------------------------------------------------------------
     # Public API
@@ -185,9 +201,14 @@ class TextToCypherPipeline:
                 error="No entities could be extracted from the input text",
             )
 
-        # Step 3: Generate Cypher
+        # Step 3: Generate Cypher (LLM or rule-based)
         try:
-            generated = self._generator.generate_cypher(parse_result.query)
+            if self._llm_generator is not None and self._schema_context is not None:
+                # CRISPE LLM-based generation
+                generated = self._llm_generator.generate(text, self._schema_context)
+            else:
+                # Rule-based generation
+                generated = self._generator.generate_cypher(parse_result.query)
         except Exception as exc:
             logger.exception("Cypher generation failed for: %s", text)
             return PipelineOutput(

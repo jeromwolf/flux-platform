@@ -50,12 +50,13 @@ class TestMatchMethod:
     """Tests for MatchMethod enumeration."""
 
     def test_all_values_present(self) -> None:
-        """MatchMethod should define EXACT, FUZZY, EMBEDDING, LLM."""
+        """MatchMethod should define EXACT, FUZZY, EMBEDDING, LLM, HYBRID."""
         assert set(MatchMethod) == {
             MatchMethod.EXACT,
             MatchMethod.FUZZY,
             MatchMethod.EMBEDDING,
             MatchMethod.LLM,
+            MatchMethod.HYBRID,
         }
 
     def test_string_serialization(self) -> None:
@@ -436,8 +437,9 @@ class TestModuleExports:
         assert "MatchMethod" in exports
         assert "FuzzyMatcher" in exports
         assert "EmbeddingMatcher" in exports
+        assert "HybridMatcher" in exports
         assert "EntityResolver" in exports
-        assert len(exports) == 6
+        assert len(exports) == 7
 
     def test_direct_imports_match_package_imports(self) -> None:
         """Direct and package-level imports should be the same classes."""

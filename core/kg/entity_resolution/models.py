@@ -27,6 +27,7 @@ class MatchMethod(str, Enum):
     FUZZY = "FUZZY"
     EMBEDDING = "EMBEDDING"
     LLM = "LLM"
+    HYBRID = "HYBRID"  # 가중 조합 (Levenshtein + Cosine)
 
 
 @dataclass
