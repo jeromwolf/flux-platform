@@ -3,12 +3,89 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from typing import Any
 
 from agent.mcp.protocol import MCPMethod, MCPRequest, MCPResponse
 from agent.tools.registry import ToolRegistry
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Schema cache (module-level, shared across all MCPServer instances)
+# ---------------------------------------------------------------------------
+
+_schema_cache: dict[str, Any] = {}
+_schema_cache_ts: float = 0.0
+_SCHEMA_CACHE_TTL: float = 300.0  # 5 minutes
+
+
+def _query_neo4j_schema() -> dict[str, Any] | None:
+    """Query live Neo4j schema. Returns None on failure.
+
+    결과는 모듈 수준 캐시에 TTL 300초(5분)로 저장된다.
+    Neo4j 연결 실패 시 None을 반환하여 호출자가 stub 데이터로 폴백할 수 있도록 한다.
+
+    Returns:
+        스키마 URI → 데이터 딕셔너리, 또는 실패 시 None.
+    """
+    global _schema_cache, _schema_cache_ts
+
+    now = time.time()
+    if _schema_cache and (now - _schema_cache_ts) < _SCHEMA_CACHE_TTL:
+        return _schema_cache
+
+    try:
+        from kg.config import get_config, get_driver
+
+        driver = get_driver()
+        cfg = get_config()
+        db: str = cfg.neo4j.database
+
+        with driver.session(database=db) as session:
+            # Node labels
+            labels_result = session.run(
+                "CALL db.labels() YIELD label RETURN collect(label) AS labels"
+            )
+            labels: list[str] = labels_result.single()["labels"]
+
+            # Relationship types
+            rels_result = session.run(
+                "CALL db.relationshipTypes() YIELD relationshipType"
+                " RETURN collect(relationshipType) AS types"
+            )
+            rel_types: list[str] = rels_result.single()["types"]
+
+            # Property keys (full catalog)
+            props_result = session.run(
+                "CALL db.propertyKeys() YIELD propertyKey"
+                " RETURN collect(propertyKey) AS keys"
+            )
+            prop_keys: list[str] = props_result.single()["keys"]
+
+        _schema_cache = {
+            "kg://schema/node-labels": {"labels": sorted(labels)},
+            "kg://schema/relationship-types": {"types": sorted(rel_types)},
+            "kg://schema/property-keys": {"keys": sorted(prop_keys)},
+        }
+        _schema_cache_ts = now
+        logger.info(
+            "MCP schema cache refreshed: %d labels, %d rel types, %d prop keys",
+            len(labels),
+            len(rel_types),
+            len(prop_keys),
+        )
+        return _schema_cache
+    except Exception as exc:
+        logger.debug("Neo4j schema query failed (%s), using stub data", exc)
+        return None
+
+
+def reset_schema_cache() -> None:
+    """Reset the schema cache (for testing)."""
+    global _schema_cache, _schema_cache_ts
+    _schema_cache = {}
+    _schema_cache_ts = 0.0
 
 
 class MCPServer:
@@ -40,6 +117,12 @@ class MCPServer:
                 "uri": "kg://schema/relationship-types",
                 "name": "KG Relationship Types",
                 "description": "Available relationship types in the knowledge graph",
+                "mimeType": "application/json",
+            },
+            {
+                "uri": "kg://schema/property-keys",
+                "name": "KG Property Keys",
+                "description": "Property keys used in the knowledge graph",
                 "mimeType": "application/json",
             },
             {
@@ -180,11 +263,13 @@ class MCPServer:
     async def _handle_resources_read(self, params: dict[str, Any]) -> dict[str, Any]:
         """resources/read: 특정 리소스를 읽어 반환.
 
-        Y1 단계에서는 정적 stub 데이터를 반환한다.
+        Neo4j에서 라이브 스키마를 조회한 뒤 URI에 맞는 리소스를 반환한다.
+        Neo4j를 사용할 수 없을 경우 정적 stub 데이터로 폴백한다.
+        알 수 없는 URI는 error 키를 포함한 contents를 반환한다.
         """
         uri = params.get("uri", "")
 
-        # stub 응답 (Y2에서 실제 Neo4j 스키마 조회로 교체 예정)
+        # stub 데이터 (Neo4j 폴백 + maritime 온톨로지 등 정적 리소스)
         stub_contents: dict[str, Any] = {
             "kg://schema/node-labels": {
                 "labels": ["Vessel", "Port", "Route", "Cargo", "Document"]
@@ -200,15 +285,25 @@ class MCPServer:
             },
         }
 
-        if uri not in stub_contents:
-            raise ValueError(f"Resource not found: {uri}")
+        # 라이브 Neo4j 스키마 조회 (실패 시 None)
+        live_schema = _query_neo4j_schema()
+
+        # stub를 기본으로, 라이브 데이터로 덮어쓴다
+        schema_data: dict[str, Any] = {**stub_contents}
+        if live_schema:
+            schema_data.update(live_schema)
+
+        if uri in schema_data:
+            content = schema_data[uri]
+        else:
+            content = {"error": f"Resource not found: {uri}"}
 
         return {
             "contents": [
                 {
                     "uri": uri,
                     "mimeType": "application/json",
-                    "text": json.dumps(stub_contents[uri], ensure_ascii=False),
+                    "text": json.dumps(content, ensure_ascii=False),
                 }
             ]
         }

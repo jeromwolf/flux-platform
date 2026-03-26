@@ -55,16 +55,24 @@ def _is_dangerous(cypher: str) -> tuple[bool, str]:
 # Neo4j helper: run a Cypher query using the sync driver
 # ---------------------------------------------------------------------------
 
+_MAX_CYPHER_RESULTS = 1000
+_CYPHER_TIMEOUT_SECONDS = 30  # neo4j driver uses seconds, not milliseconds
 
-def _run_cypher(cypher: str, parameters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """Execute a Cypher query via the Neo4j sync driver.
+
+def _run_cypher(
+    cypher: str,
+    parameters: dict[str, Any] | None = None,
+    max_results: int = _MAX_CYPHER_RESULTS,
+) -> list[dict[str, Any]]:
+    """Execute a Cypher query via the Neo4j sync driver with guardrails.
 
     Args:
         cypher: Cypher query string.
         parameters: Optional query parameters.
+        max_results: Maximum number of results to return (default 1000).
 
     Returns:
-        List of record dicts.
+        List of record dicts, truncated to max_results.
 
     Raises:
         RuntimeError: If the driver is unavailable or query fails.
@@ -73,8 +81,19 @@ def _run_cypher(cypher: str, parameters: dict[str, Any] | None = None) -> list[d
 
     driver = get_driver()
     cfg = get_config()
+
+    # Add LIMIT if not already present and query doesn't have aggregation
+    query = cypher.strip()
+    query_upper = query.upper()
+    if (
+        "LIMIT" not in query_upper
+        and "COUNT(" not in query_upper
+        and "COLLECT(" not in query_upper
+    ):
+        query = query.rstrip(";") + f" LIMIT {max_results}"
+
     with driver.session(database=cfg.neo4j.database) as session:
-        result = session.run(cypher, parameters or {})
+        result = session.run(query, parameters or {})
         rows: list[dict[str, Any]] = []
         for record in result:
             row: dict[str, Any] = {}
@@ -97,7 +116,53 @@ def _run_cypher(cypher: str, parameters: dict[str, Any] | None = None) -> list[d
                 else:
                     row[key] = val
             rows.append(row)
-        return rows
+
+    return rows[:max_results]  # Double-guard
+
+
+# ---------------------------------------------------------------------------
+# Singleton caching for expensive objects
+# ---------------------------------------------------------------------------
+
+_pipeline_instance: Any = None
+_rag_engine_instance: Any = None
+
+
+def _get_pipeline() -> Any | None:
+    """Get or create TextToCypherPipeline singleton."""
+    global _pipeline_instance
+    if _pipeline_instance is not None:
+        return _pipeline_instance
+    try:
+        from core.kg.pipeline import TextToCypherPipeline
+
+        _pipeline_instance = TextToCypherPipeline()
+        return _pipeline_instance
+    except Exception as exc:
+        logger.debug("TextToCypherPipeline unavailable: %s", exc)
+        return None
+
+
+def _get_rag_engine() -> Any | None:
+    """Get or create HybridRAGEngine singleton."""
+    global _rag_engine_instance
+    if _rag_engine_instance is not None:
+        return _rag_engine_instance
+    try:
+        from rag.engines.orchestrator import HybridRAGEngine
+
+        _rag_engine_instance = HybridRAGEngine()
+        return _rag_engine_instance
+    except Exception as exc:
+        logger.debug("HybridRAGEngine unavailable: %s", exc)
+        return None
+
+
+def reset_tool_singletons() -> None:
+    """Reset cached singletons (for testing)."""
+    global _pipeline_instance, _rag_engine_instance
+    _pipeline_instance = None
+    _rag_engine_instance = None
 
 
 # ---------------------------------------------------------------------------
@@ -240,11 +305,12 @@ def _handle_kg_query(query: str, language: str = "ko") -> str:
     Returns:
         JSON 직렬화된 쿼리 결과 문자열.
     """
-    # Strategy 1: TextToCypherPipeline
+    # Strategy 1: TextToCypherPipeline (singleton)
     try:
-        from core.kg.pipeline import TextToCypherPipeline
+        pipeline = _get_pipeline()
+        if pipeline is None:
+            raise ImportError("TextToCypherPipeline not available")
 
-        pipeline = TextToCypherPipeline()
         output = pipeline.process(query)
         result: dict[str, Any] = {
             "query": query,
@@ -277,7 +343,7 @@ def _handle_kg_query(query: str, language: str = "ko") -> str:
 
     # Strategy 2: Direct Cypher via Neo4j driver
     try:
-        cypher = f"MATCH (n) WHERE n.name CONTAINS $query RETURN n LIMIT 10"
+        cypher = "MATCH (n) WHERE n.name CONTAINS $query RETURN n LIMIT 10"
         rows = _run_cypher(cypher, {"query": query})
         result = {
             "query": query,
@@ -297,6 +363,7 @@ def _handle_kg_query(query: str, language: str = "ko") -> str:
         "cypher": f"MATCH (n) WHERE n.name CONTAINS '{query}' RETURN n LIMIT 10",
         "results": [],
         "stub": True,
+        "fallback_reason": "neo4j_unavailable",
     }
     return json.dumps(stub_result, ensure_ascii=False)
 
@@ -322,11 +389,30 @@ def _handle_kg_schema(label: str = "") -> str:
             "RETURN collect(relationshipType) AS types"
         )
 
-        node_labels = labels_rows[0]["labels"] if labels_rows else []
-        rel_types = rel_rows[0]["types"] if rel_rows else []
+        node_labels: list[str] = labels_rows[0]["labels"] if labels_rows else []
+        rel_types: list[str] = rel_rows[0]["types"] if rel_rows else []
+
+        # Build a set of valid labels from the database (for injection defence)
+        valid_labels: set[str] = set(node_labels)
 
         if label:
-            # Query properties for a specific label
+            # Validate requested label comes from db.labels() result
+            if label not in valid_labels:
+                result: dict[str, Any] = {
+                    "error": f"Unknown label: {label}",
+                    "stub": False,
+                }
+                return json.dumps(result, ensure_ascii=False)
+
+            # Extra safety: skip labels that are not valid Python identifiers
+            if not label.replace(" ", "_").replace("-", "_").isidentifier():
+                result = {
+                    "error": f"Invalid label format: {label}",
+                    "stub": False,
+                }
+                return json.dumps(result, ensure_ascii=False)
+
+            # Query properties for a specific label (safe: label verified from db)
             prop_rows = _run_cypher(
                 "MATCH (n:`" + label + "`) "
                 "WITH keys(n) AS ks UNWIND ks AS k "
@@ -334,16 +420,34 @@ def _handle_kg_schema(label: str = "") -> str:
                 "LIMIT 1"
             )
             properties = prop_rows[0]["properties"] if prop_rows else []
-            result: dict[str, Any] = {
+            result = {
                 "label": label,
                 "properties": properties,
                 "stub": False,
             }
             return json.dumps(result, ensure_ascii=False)
 
+        # Get sample properties for each label (limit to prevent excessive queries)
+        properties_map: dict[str, list[str]] = {}
+        for lbl in node_labels[:20]:
+            # Extra safety: skip non-identifier labels
+            if not lbl.replace(" ", "_").replace("-", "_").isidentifier():
+                continue
+            try:
+                prop_rows = _run_cypher(
+                    f"MATCH (n:`{lbl}`) RETURN keys(n) AS props LIMIT 1"
+                )
+                if prop_rows and prop_rows[0].get("props"):
+                    properties_map[lbl] = prop_rows[0]["props"]
+                else:
+                    properties_map[lbl] = []
+            except Exception:
+                properties_map[lbl] = []
+
         result = {
             "node_labels": node_labels,
             "relationship_types": rel_types,
+            "properties": properties_map,
             "stub": False,
         }
         return json.dumps(result, ensure_ascii=False)
@@ -366,17 +470,27 @@ def _handle_kg_schema(label: str = "") -> str:
             "Route": ["routeId", "distance", "estimatedDays", "riskLevel"],
         },
         "stub": True,
+        "fallback_reason": "neo4j_unavailable",
     }
 
     if label:
         props = full_schema["properties"].get(label)
         if props is None:
             return json.dumps(
-                {"error": f"Unknown label: {label}", "stub": True},
+                {
+                    "error": f"Unknown label: {label}",
+                    "stub": True,
+                    "fallback_reason": "neo4j_unavailable",
+                },
                 ensure_ascii=False,
             )
         return json.dumps(
-            {"label": label, "properties": props, "stub": True},
+            {
+                "label": label,
+                "properties": props,
+                "stub": True,
+                "fallback_reason": "neo4j_unavailable",
+            },
             ensure_ascii=False,
         )
 
@@ -432,6 +546,7 @@ def _handle_cypher_execute(
         "rows": [],
         "summary": {"counters": {}, "query_type": "r"},
         "stub": True,
+        "fallback_reason": "neo4j_unavailable",
     }
     return json.dumps(stub_result, ensure_ascii=False)
 
@@ -538,6 +653,7 @@ def _handle_vessel_search(query: str, search_type: str = "name") -> str:
         "count": len(vessels),
         "vessels": vessels,
         "stub": True,
+        "fallback_reason": "neo4j_unavailable",
     }
     return json.dumps(result, ensure_ascii=False)
 
@@ -620,9 +736,10 @@ def _handle_port_info(port_name: str) -> str:
             "found": False,
             "message": f"항구를 찾을 수 없습니다: {port_name}",
             "stub": True,
+            "fallback_reason": "neo4j_unavailable",
         }
     else:
-        result = {**matched, "stub": True}
+        result = {**matched, "stub": True, "fallback_reason": "neo4j_unavailable"}
 
     return json.dumps(result, ensure_ascii=False)
 
@@ -683,6 +800,7 @@ def _handle_route_query(origin: str, destination: str) -> str:
             }
         ],
         "stub": True,
+        "fallback_reason": "neo4j_unavailable",
     }
     return json.dumps(result, ensure_ascii=False)
 
@@ -699,11 +817,12 @@ def _handle_document_search(query: str, top_k: int = 5) -> str:
     Returns:
         JSON 직렬화된 검색 결과 문자열.
     """
-    # Try real RAG engine
+    # Try real RAG engine (singleton)
     try:
-        from rag.engines.orchestrator import HybridRAGEngine
+        engine = _get_rag_engine()
+        if engine is None:
+            raise ImportError("HybridRAGEngine not available")
 
-        engine = HybridRAGEngine()
         rag_result = engine.query(query, top_k=top_k)
 
         documents = []
@@ -735,6 +854,7 @@ def _handle_document_search(query: str, top_k: int = 5) -> str:
         "top_k": top_k,
         "documents": [],
         "stub": True,
+        "fallback_reason": "import_error",
     }
     return json.dumps(stub_result, ensure_ascii=False)
 
