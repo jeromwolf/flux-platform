@@ -56,7 +56,7 @@ class VectorStoreConfig:
     """Configuration for a vector store backend.
 
     Attributes:
-        backend: Storage backend identifier — ``"memory"`` or ``"chromadb"``.
+        backend: Storage backend identifier — ``"memory"``, ``"chromadb"``, or ``"qdrant"``.
         collection_name: Name of the ChromaDB collection (ignored for memory).
         persist_directory: Filesystem path for ChromaDB persistent storage.
         distance_metric: Similarity metric — ``"cosine"``, ``"l2"``, or ``"ip"``.
@@ -365,10 +365,18 @@ def create_vector_store(config: VectorStoreConfig | None = None) -> VectorStore:
             :class:`VectorStoreConfig` (in-memory).
 
     Returns:
-        A :class:`ChromaVectorStore` when ``config.backend == "chromadb"``,
+        A :class:`QdrantVectorStore` when ``config.backend == "qdrant"``,
+        a :class:`ChromaVectorStore` when ``config.backend == "chromadb"``,
         otherwise an :class:`InMemoryVectorStore`.
     """
     cfg = config or VectorStoreConfig()
+    if cfg.backend == "qdrant":
+        from rag.engines.qdrant_store import QdrantConfig, QdrantVectorStore
+        qdrant_cfg = QdrantConfig(
+            collection_name=cfg.collection_name,
+            distance=cfg.distance_metric,
+        )
+        return QdrantVectorStore(qdrant_cfg)
     if cfg.backend == "chromadb":
         return ChromaVectorStore(cfg)
     return InMemoryVectorStore()

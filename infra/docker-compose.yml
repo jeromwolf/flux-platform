@@ -66,6 +66,9 @@ services:
       POSTGRES_PASSWORD: ${AP_POSTGRES_PASSWORD:-postgres}
       POSTGRES_DATABASE: imsp
       REDIS_URL: redis://redis:6379/1
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_COLLECTION: imsp_documents
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
       interval: 30s
@@ -251,6 +254,27 @@ services:
       retries: 5
 
   # ===========================================================================
+  # Qdrant - Vector Database
+  # ===========================================================================
+  qdrant:
+    image: qdrant/qdrant:v1.12.1
+    container_name: imsp-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: "6334"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:6333/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================================================
   # Prometheus - Metrics Collection
   # ===========================================================================
   prometheus:
@@ -312,6 +336,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  qdrant_data:
     driver: local
   prometheus_data:
     driver: local

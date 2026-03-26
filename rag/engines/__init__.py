@@ -19,6 +19,7 @@ from rag.engines.vector_store import (
     InMemoryVectorStore,
     ChromaVectorStore,
 )
+from rag.engines.qdrant_store import QdrantConfig, QdrantPool, QdrantVectorStore
 from rag.engines.lightrag import (
     LightRAGEngine,
     RegexEntityExtractor,
@@ -45,6 +46,7 @@ __all__ = [
     # Vector stores
     "VectorStore", "VectorStoreConfig", "VectorSearchResult",
     "create_vector_store", "InMemoryVectorStore", "ChromaVectorStore",
+    "QdrantConfig", "QdrantPool", "QdrantVectorStore",
     # LightRAG
     "LightRAGEngine", "RegexEntityExtractor", "EntityExtractor",
     "ExtractedEntity", "ExtractedRelationship", "EntityExtractionResult",
