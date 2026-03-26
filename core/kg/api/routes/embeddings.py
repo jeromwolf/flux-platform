@@ -136,7 +136,8 @@ async def hybrid_search(
 
     # Derive index names from label + property (convention)
     vector_index = f"{body.label.lower()}_{body.property}_index"
-    fulltext_index = f"{body.label.lower()}_fulltext_index"
+    from kg.fulltext import get_fulltext_index
+    fulltext_index = get_fulltext_index(body.label) or f"{body.label.lower()}_search"
 
     cypher, params = _embedding_manager.generate_hybrid_search_cypher(
         vector_index=vector_index,

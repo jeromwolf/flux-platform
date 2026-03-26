@@ -188,19 +188,41 @@ async def search(
     """Search nodes by name, title, or description.
 
     Args:
-        q: Search term (uses ``CONTAINS`` matching).
+        q: Search term (uses fulltext index search with relevance scoring).
         limit: Maximum number of center nodes (1--100).
     """
-    cypher = """
-    MATCH (n)
-    WHERE n.name CONTAINS $query
-       OR n.title CONTAINS $query
-       OR n.nameEn CONTAINS $query
-       OR n.description CONTAINS $query
-    WITH n LIMIT $limit
-    OPTIONAL MATCH (n)-[r]-(m)
-    RETURN n, r, m
-    """
+    from kg.fulltext import FULLTEXT_INDEX_MAP
+
+    # Build UNION ALL across all fulltext indexes for cross-label search
+    branches = []
+    for idx_name in FULLTEXT_INDEX_MAP.values():
+        branches.append(
+            f"CALL db.index.fulltext.queryNodes('{idx_name}', $query) "
+            f"YIELD node, score "
+            f"RETURN node, score LIMIT $limit"
+        )
+
+    if branches:
+        union_cypher = " UNION ALL ".join(branches)
+        # Wrap: get top nodes by score, then expand neighbors
+        cypher = (
+            f"CALL {{ {union_cypher} }} "
+            f"WITH node AS n, score ORDER BY score DESC LIMIT $limit "
+            f"OPTIONAL MATCH (n)-[r]-(m) "
+            f"RETURN n, r, m"
+        )
+    else:
+        # Fallback to CONTAINS if no fulltext indexes registered
+        cypher = (
+            "MATCH (n) "
+            "WHERE n.name CONTAINS $query "
+            "   OR n.title CONTAINS $query "
+            "   OR n.nameEn CONTAINS $query "
+            "   OR n.description CONTAINS $query "
+            "WITH n LIMIT $limit "
+            "OPTIONAL MATCH (n)-[r]-(m) "
+            "RETURN n, r, m"
+        )
 
     result = await session.run(cypher, {"query": q, "limit": limit})
     records = [record async for record in result]

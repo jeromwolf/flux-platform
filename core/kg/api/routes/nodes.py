@@ -238,6 +238,10 @@ async def list_nodes(
         label_clause = f":{label}"
 
     if q is not None:
+        # TODO(optimization): when label is provided and has a fulltext index
+        # (see kg.fulltext.get_fulltext_index), replace CONTAINS with a
+        # CALL db.index.fulltext.queryNodes(...) prefix for scored results.
+        # Requires restructuring count_cypher + list_cypher to CALL-based queries.
         conditions.append(
             "(n.name CONTAINS $q OR n.title CONTAINS $q OR n.nameEn CONTAINS $q)"
         )
