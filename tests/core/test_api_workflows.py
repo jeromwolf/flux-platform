@@ -1,7 +1,7 @@
 """Unit tests for Workflow CRUD REST API endpoints.
 
 All tests are marked ``@pytest.mark.unit`` and require no live external
-services.  The in-memory ``_workflows`` dict is cleared between test
+services.  The in-memory workflow repository is cleared between test
 functions via the ``clean_wf`` autouse fixture so tests are isolated.
 """
 from __future__ import annotations
@@ -12,7 +12,6 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-import kg.api.routes.workflows as wf_module
 from kg.api.app import create_app
 from kg.api.deps import get_async_neo4j_session
 from kg.config import AppConfig, Neo4jConfig, reset
@@ -38,13 +37,20 @@ def client() -> TestClient:
 
     app.dependency_overrides[get_async_neo4j_session] = _fake_session
 
+    # Pre-populate app.state with in-memory repos (lifespan not triggered by TestClient)
+    from kg.db.memory_workflow_repo import InMemoryWorkflowRepository
+    from kg.db.memory_document_repo import InMemoryDocumentRepository
+
+    app.state.workflow_repo = InMemoryWorkflowRepository()
+    app.state.document_repo = InMemoryDocumentRepository()
+
     return TestClient(app, headers={"X-API-Key": "test-key"})
 
 
 @pytest.fixture(autouse=True)
-def clean_wf() -> None:
+def clean_wf(client: TestClient) -> None:
     """Clear the in-memory workflow store before each test."""
-    wf_module._workflows.clear()
+    client.app.state.workflow_repo.clear()
 
 
 # ---------------------------------------------------------------------------

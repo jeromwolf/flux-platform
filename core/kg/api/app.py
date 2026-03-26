@@ -37,12 +37,45 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         setup_json_logging(level=os.environ.get("LOG_LEVEL", "INFO"))
 
     logger.info("Maritime KG API starting up")
+
+    # PostgreSQL repositories (graceful fallback to in-memory)
+    try:
+        from kg.db.connection import get_pg_pool
+        pool = await get_pg_pool()
+        if pool is not None:
+            from kg.db.pg_workflow_repo import PgWorkflowRepository
+            from kg.db.pg_document_repo import PgDocumentRepository
+            app.state.workflow_repo = PgWorkflowRepository(pool)
+            app.state.document_repo = PgDocumentRepository(pool)
+            logger.info("Using PostgreSQL repositories")
+        else:
+            raise ImportError("No pool")
+    except Exception:
+        from kg.db.memory_workflow_repo import InMemoryWorkflowRepository
+        from kg.db.memory_document_repo import InMemoryDocumentRepository
+        app.state.workflow_repo = InMemoryWorkflowRepository()
+        app.state.document_repo = InMemoryDocumentRepository()
+        logger.info("Using in-memory repositories (PostgreSQL unavailable)")
+
     yield
     logger.info("Maritime KG API shutting down -- closing Neo4j drivers")
     close_driver()
     from kg.config import close_async_driver
 
     await close_async_driver()
+
+    try:
+        from kg.db.connection import close_pg_pool
+        await close_pg_pool()
+    except Exception:
+        pass
+
+    try:
+        from kg.db.redis_client import close_redis_client
+
+        close_redis_client()
+    except Exception:
+        pass
 
 
 def create_app(config: AppConfig | None = None) -> FastAPI:
@@ -117,12 +150,23 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
 
     register_error_handlers(app)
 
-    # Rate limiting (production only)
+    # Rate limiting (production only) — prefer Redis backend when available
     cfg = config if config is not None else get_config()
     if cfg.env != "development":
-        from kg.api.middleware.rate_limit import RateLimitMiddleware
+        from kg.api.middleware.rate_limit import RateLimitMiddleware, RedisRateLimitBackend
 
-        app.add_middleware(RateLimitMiddleware)
+        redis_backend = None
+        try:
+            from kg.db.redis_client import get_redis_client
+
+            client = get_redis_client()
+            if client is not None:
+                redis_backend = RedisRateLimitBackend(redis_client=client)
+                logger.info("Rate limiting: Redis backend")
+        except Exception:
+            pass
+
+        app.add_middleware(RateLimitMiddleware, backend=redis_backend)
 
     # Import and include routers
     from kg.api.routes.agent import router as agent_router

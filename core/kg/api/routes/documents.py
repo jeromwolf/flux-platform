@@ -5,8 +5,11 @@ import hashlib
 import logging
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
+
+from kg.api.deps import get_document_repo
+from kg.db.protocols import DocumentRepository
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -26,20 +29,18 @@ class DocumentListResponse(BaseModel):
     total: int = 0
 
 
-# In-memory store (Y2: migrate to PostgreSQL/MinIO)
-_documents: list[dict[str, Any]] = []
-
-
 @router.post("/upload", response_model=DocumentUploadResponse, status_code=201)
 async def upload_document(
     file: UploadFile = File(...),  # noqa: B008
     description: str = Form(""),  # noqa: B008
+    repo: DocumentRepository = Depends(get_document_repo),
 ) -> DocumentUploadResponse:
     """Upload a document for RAG ingestion.
 
     Args:
         file: Multipart file upload.
         description: Optional text description for the document.
+        repo: Injected document repository.
 
     Returns:
         DocumentUploadResponse with metadata and ingestion status.
@@ -52,16 +53,9 @@ async def upload_document(
         raise HTTPException(status_code=413, detail="File too large (max 50MB)")
 
     doc_id = hashlib.sha256(content).hexdigest()[:16]
-
-    doc_meta: dict[str, Any] = {
-        "id": doc_id,
-        "filename": file.filename or "unknown",
-        "size": len(content),
-        "content_type": file.content_type or "application/octet-stream",
-        "description": description,
-        "status": "uploaded",
-        "chunks": 0,
-    }
+    size = len(content)
+    chunk_count = 0
+    status = "uploaded"
 
     # Try RAG ingestion (best-effort; failures do not abort the upload)
     try:
@@ -86,38 +80,53 @@ async def upload_document(
             doc_id=doc_id,
             title=file.filename or "unknown",
         )
-        doc_meta["chunks"] = result.chunks_created
-        doc_meta["status"] = "ingested"
+        chunk_count = result.chunks_created
+        status = "ingested"
     except Exception as exc:  # noqa: BLE001
         logger.warning("RAG ingestion skipped: %s", exc)
 
-    _documents.append(doc_meta)
-    return DocumentUploadResponse(**doc_meta)
+    doc = await repo.create(
+        doc_id=doc_id,
+        filename=file.filename or "unknown",
+        size=size,
+        content_type=file.content_type or "application/octet-stream",
+        description=description,
+        status=status,
+        chunks=chunk_count,
+    )
+    return DocumentUploadResponse(**doc)
 
 
 @router.get("/", response_model=DocumentListResponse)
-async def list_documents(limit: int = 50, offset: int = 0) -> DocumentListResponse:
+async def list_documents(
+    limit: int = 50,
+    offset: int = 0,
+    repo: DocumentRepository = Depends(get_document_repo),
+) -> DocumentListResponse:
     """List uploaded documents with simple offset pagination.
 
     Args:
         limit: Maximum number of documents to return.
         offset: Number of documents to skip.
+        repo: Injected document repository.
 
     Returns:
         DocumentListResponse with document list and total count.
     """
-    return DocumentListResponse(
-        documents=_documents[offset : offset + limit],
-        total=len(_documents),
-    )
+    docs, total = await repo.list(limit=limit, offset=offset)
+    return DocumentListResponse(documents=docs, total=total)
 
 
 @router.delete("/{doc_id}")
-async def delete_document(doc_id: str) -> dict[str, str]:
+async def delete_document(
+    doc_id: str,
+    repo: DocumentRepository = Depends(get_document_repo),
+) -> dict[str, str]:
     """Delete a document by its ID.
 
     Args:
         doc_id: SHA-256 prefix ID of the document to delete.
+        repo: Injected document repository.
 
     Returns:
         Dict with ``deleted`` key containing the removed doc_id.
@@ -125,9 +134,7 @@ async def delete_document(doc_id: str) -> dict[str, str]:
     Raises:
         HTTPException: 404 if no document with that ID exists.
     """
-    global _documents  # noqa: PLW0603
-    before = len(_documents)
-    _documents = [d for d in _documents if d["id"] != doc_id]
-    if len(_documents) == before:
+    deleted = await repo.delete(doc_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail=f"Document {doc_id} not found")
     return {"deleted": doc_id}

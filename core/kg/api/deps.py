@@ -9,6 +9,8 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
 
+from starlette.requests import Request
+
 from kg.config import AppConfig, get_config, get_driver
 
 
@@ -64,3 +66,13 @@ def get_app_config() -> AppConfig:
         The active :class:`~kg.config.AppConfig` singleton.
     """
     return get_config()
+
+
+def get_workflow_repo(request: Request):
+    """Get the workflow repository from app state."""
+    return request.app.state.workflow_repo
+
+
+def get_document_repo(request: Request):
+    """Get the document repository from app state."""
+    return request.app.state.document_repo

@@ -1,7 +1,7 @@
 """Configuration management for the Maritime KG platform.
 
 Provides:
-- Neo4jConfig / AppConfig frozen dataclasses
+- Neo4jConfig / PostgresConfig / RedisConfig / AppConfig frozen dataclasses
 - get_config() / set_config() for singleton management
 - get_driver() / close_driver() for Neo4j connection pool
 - Backward-compatible module-level attribute access via __getattr__
@@ -33,6 +33,27 @@ class Neo4jConfig:
 
 
 @dataclass(frozen=True)
+class PostgresConfig:
+    """PostgreSQL connection configuration."""
+
+    host: str = "localhost"
+    port: int = 5432
+    user: str = "postgres"
+    password: str = ""
+    database: str = "imsp"
+    min_pool_size: int = 2
+    max_pool_size: int = 10
+    command_timeout: float = 30.0
+
+
+@dataclass(frozen=True)
+class RedisConfig:
+    """Redis connection configuration."""
+
+    url: str = "redis://localhost:6379/1"  # DB 1 (DB 0 = Activepieces)
+
+
+@dataclass(frozen=True)
 class AppConfig:
     """Application-level configuration."""
 
@@ -40,6 +61,8 @@ class AppConfig:
     env: str = "development"
     log_level: str = "INFO"
     neo4j: Neo4jConfig = field(default_factory=Neo4jConfig)
+    postgres: PostgresConfig = field(default_factory=PostgresConfig)
+    redis: RedisConfig = field(default_factory=RedisConfig)
 
     @classmethod
     def from_env(cls, env_file: Path | None = None) -> AppConfig:
@@ -65,11 +88,23 @@ class AppConfig:
             password=os.getenv("NEO4J_PASSWORD", Neo4jConfig.password),
             database=os.getenv("NEO4J_DATABASE", Neo4jConfig.database),
         )
+        postgres = PostgresConfig(
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=int(os.getenv("POSTGRES_PORT", "5432")),
+            user=os.getenv("POSTGRES_USER", "postgres"),
+            password=os.getenv("POSTGRES_PASSWORD", ""),
+            database=os.getenv("POSTGRES_DATABASE", "imsp"),
+        )
+        redis = RedisConfig(
+            url=os.getenv("REDIS_URL", "redis://localhost:6379/1"),
+        )
         return cls(
             project_name=os.getenv("PROJECT_NAME", cls.project_name),
             env=os.getenv("ENV", cls.env),
             log_level=os.getenv("LOG_LEVEL", cls.log_level),
             neo4j=neo4j,
+            postgres=postgres,
+            redis=redis,
         )
 
 
