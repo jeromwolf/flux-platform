@@ -19,6 +19,7 @@ from kg.etl.models import (
     RecordEnvelope,
 )
 from kg.etl.pipeline import ETLPipeline
+from kg.etl.raw_store import LocalFileStore, NullRawStore, RawStore, make_raw_key
 from kg.etl.transforms import (
     ChainTransform,
     DateTimeNormalizer,
@@ -61,4 +62,9 @@ __all__ = [
     "Neo4jBatchLoader",
     # Pipeline
     "ETLPipeline",
+    # Raw Store
+    "RawStore",
+    "NullRawStore",
+    "LocalFileStore",
+    "make_raw_key",
 ]

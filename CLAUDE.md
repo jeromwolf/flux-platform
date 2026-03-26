@@ -228,5 +228,5 @@ NEO4J_DATABASE=neo4j
 4. `agent/`, `rag/`는 아직 비어있음 (flux-agent-builder, flux-rag에서 이식 예정)
 5. Suredata Lab과 역할 분담: 우리가 전체 개발, 납품은 KG 파트만
 6. JWT → Keycloak 전환 예정, 현재 코드는 JWT 기반
-7. ETL → ELT 전환 예정, 현재 코드는 ETL 기반
+7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
 8. Activepieces → VueFlow + Argo Workflow 전환 예정

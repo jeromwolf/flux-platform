@@ -49,6 +49,8 @@ class ETLRunRecord:
         record_count: Number of records processed. 0 until completed.
         error: Error message string if status is "failed".
         metadata: Arbitrary extra data stored as JSON.
+        current_phase: Currently executing ELT phase name (e.g., "extract", "load_raw").
+        phases_completed: Ordered tuple of phase names completed so far.
     """
 
     run_id: str
@@ -59,6 +61,9 @@ class ETLRunRecord:
     record_count: int = 0
     error: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+    # ELT phase tracking
+    current_phase: str = ""
+    phases_completed: tuple[str, ...] = ()  # tuple for frozen compat
 
 
 class ETLStateStore:
@@ -130,6 +135,18 @@ class ETLStateStore:
         with self._connect() as conn:
             conn.execute(self._CREATE_TABLE_SQL)
             conn.commit()
+            # Schema migration: add ELT phase tracking columns if absent
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT current_phase FROM etl_runs LIMIT 0")
+            except sqlite3.OperationalError:
+                cursor.execute(
+                    "ALTER TABLE etl_runs ADD COLUMN current_phase TEXT NOT NULL DEFAULT ''"
+                )
+                cursor.execute(
+                    "ALTER TABLE etl_runs ADD COLUMN phases_json TEXT NOT NULL DEFAULT '[]'"
+                )
+                conn.commit()
 
     @staticmethod
     def _row_to_record(row: sqlite3.Row) -> ETLRunRecord:
@@ -147,6 +164,20 @@ class ETLStateStore:
         except (json.JSONDecodeError, TypeError):
             metadata = {}
 
+        # Backward compat: rows without ELT phase columns return empty defaults
+        try:
+            current_phase: str = row["current_phase"] or ""
+        except IndexError:
+            current_phase = ""
+
+        phases_completed: tuple[str, ...] = ()
+        try:
+            raw_phases = row["phases_json"]
+            if raw_phases:
+                phases_completed = tuple(json.loads(raw_phases))
+        except (IndexError, json.JSONDecodeError, TypeError):
+            phases_completed = ()
+
         return ETLRunRecord(
             run_id=row["run_id"],
             pipeline_name=row["pipeline_name"],
@@ -156,6 +187,8 @@ class ETLStateStore:
             record_count=int(row["record_count"]),
             error=row["error"] or "",
             metadata=metadata,
+            current_phase=current_phase,
+            phases_completed=phases_completed,
         )
 
     # ------------------------------------------------------------------
@@ -176,8 +209,8 @@ class ETLStateStore:
                 """
                 INSERT OR REPLACE INTO etl_runs
                     (run_id, pipeline_name, status, started_at, completed_at,
-                     record_count, error, metadata_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                     record_count, error, metadata_json, current_phase, phases_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record.run_id,
@@ -187,7 +220,9 @@ class ETLStateStore:
                     record.completed_at,
                     record.record_count,
                     record.error,
-                    json.dumps(record.metadata),
+                    json.dumps(record.metadata, default=str),
+                    record.current_phase,
+                    json.dumps(list(record.phases_completed)),
                 ),
             )
             conn.commit()
@@ -250,6 +285,8 @@ class ETLStateStore:
         - ``completed_at`` (float): completion Unix timestamp
         - ``record_count`` (int): number of processed records
         - ``error`` (str): error message
+        - ``current_phase`` (str): currently executing ELT phase name
+        - ``phases_completed`` (tuple[str, ...]): ordered phases completed so far
 
         If the run does not exist this method is a no-op.
 
@@ -270,6 +307,12 @@ class ETLStateStore:
         if "error" in kwargs:
             set_clauses.append("error = ?")
             values.append(str(kwargs["error"]))
+        if "current_phase" in kwargs:
+            set_clauses.append("current_phase = ?")
+            values.append(str(kwargs["current_phase"]))
+        if "phases_completed" in kwargs:
+            set_clauses.append("phases_json = ?")
+            values.append(json.dumps(list(kwargs["phases_completed"])))
 
         values.append(run_id)
 

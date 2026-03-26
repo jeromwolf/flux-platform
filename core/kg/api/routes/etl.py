@@ -60,6 +60,7 @@ class ETLStatusResponse(BaseModel):
     started_at: Optional[str] = None  # noqa: UP045
     completed_at: Optional[str] = None  # noqa: UP045
     errors: list[str] = Field(default_factory=list)
+    phases_completed: list[str] = Field(default_factory=list)  # ELT phase tracking
 
 
 class ETLHistoryResponse(BaseModel):
@@ -84,6 +85,7 @@ class PipelineInfo(BaseModel):
     description: str
     schedule: str
     entity_type: str
+    supports_elt: bool = False  # ELT mode support flag
 
 
 # ---------------------------------------------------------------------------
@@ -259,6 +261,23 @@ async def trigger_etl(
     try:
         # Build and execute pipeline (synchronous PoC version)
         pipeline = _build_pipeline(body.pipeline_name, mode)
+
+        # ELT mode: attach a raw store so raw records are persisted before transform
+        if body.mode == "elt":
+            from kg.etl.raw_store import LocalFileStore
+            pipeline._raw_store = LocalFileStore()
+            # Rebuild config with raw_store_enabled so Phase 2 (LOAD_RAW) runs
+            pipeline._config = PipelineConfig(
+                name=pipeline._config.name,
+                batch_size=pipeline._config.batch_size,
+                max_retries=pipeline._config.max_retries,
+                retry_delay=pipeline._config.retry_delay,
+                dlq_enabled=pipeline._config.dlq_enabled,
+                validate=pipeline._config.validate,
+                transform_mode=pipeline._config.transform_mode,
+                raw_store_enabled=True,
+            )
+
         # For PoC, we run with empty records (actual crawler integration later)
         result = pipeline.run([], session=session)
 
@@ -270,6 +289,7 @@ async def trigger_etl(
         record.duration_seconds = result.duration_seconds
         record.completed_at = datetime.now(timezone.utc).isoformat()
         record.errors = result.errors
+        record.phases_completed = list(result.phases_completed)
 
         # Persist completion to SQLite (best-effort)
         try:
@@ -277,6 +297,7 @@ async def trigger_etl(
                 run_id,
                 "COMPLETED",
                 record_count=result.records_processed,
+                phases_completed=result.phases_completed,
             )
         except Exception:  # noqa: BLE001
             logger.warning("Failed to update SQLite state for run %s", run_id)
@@ -375,6 +396,16 @@ async def get_status(
             status_code=404,
             detail=f"Run {run_id} not found",
         )
+
+    # Enrich phases_completed from SQLite if not already set on the in-memory record
+    if not record.phases_completed:
+        try:
+            state_run = _get_state_store().get_run(run_id)
+            if state_run and state_run.phases_completed:
+                record.phases_completed = list(state_run.phases_completed)
+        except Exception:  # noqa: BLE001
+            pass
+
     return record
 
 
@@ -417,7 +448,133 @@ async def list_pipelines() -> list[PipelineInfo]:
             description=info["description"],
             schedule=info["schedule"],
             entity_type=info["entity_type"],
+            supports_elt=True,  # All pipelines now support ELT mode
         )
         for name, info in _PIPELINE_REGISTRY.items()
     ]
     return pipelines
+
+
+@router.post("/etl/reprocess/{run_id}", response_model=ETLTriggerResponse)
+async def reprocess_from_raw(
+    run_id: str = Path(..., description="Original run ID whose raw data to reprocess"),  # noqa: B008
+    session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+) -> ETLTriggerResponse:
+    """Re-process a previous run from stored raw data.
+
+    Reads raw records from the local store and re-applies
+    validation, transformation, and KG loading.
+
+    Args:
+        run_id: Identifier of the original ETL run whose raw records to reprocess.
+        session: Async Neo4j session injected via FastAPI dependency.
+
+    Returns:
+        ETLTriggerResponse with a new run ID and completion status.
+
+    Raises:
+        HTTPException: 404 if the original run or its pipeline cannot be found.
+    """
+    from kg.etl.raw_store import LocalFileStore
+
+    # ------------------------------------------------------------------
+    # Resolve pipeline name from original run
+    # ------------------------------------------------------------------
+    pipeline_name: str | None = None
+
+    # Try SQLite store first
+    try:
+        original_run = _get_state_store().get_run(run_id)
+        if original_run is not None:
+            pipeline_name = original_run.pipeline_name
+    except Exception:  # noqa: BLE001
+        pass
+
+    # Fall back to in-memory history
+    if pipeline_name is None:
+        mem_record = _run_history.get(run_id)
+        if mem_record is not None:
+            pipeline_name = mem_record.pipeline_name
+
+    if pipeline_name is None:
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+
+    if pipeline_name not in _PIPELINE_REGISTRY:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Pipeline '{pipeline_name}' from run {run_id} not in registry",
+        )
+
+    # ------------------------------------------------------------------
+    # Create new run record
+    # ------------------------------------------------------------------
+    new_run_id = f"reprocess-{str(uuid.uuid4())[:8]}"
+    record = _create_run_record(new_run_id, pipeline_name, "RUNNING")
+
+    # ------------------------------------------------------------------
+    # Build pipeline with LocalFileStore for reading previously stored raw data
+    # ------------------------------------------------------------------
+    raw_store = LocalFileStore()
+    config = PipelineConfig(
+        name=pipeline_name,
+        raw_store_enabled=False,  # don't re-store; we're reading existing raw data
+        transform_mode="eager",
+    )
+    pipeline = ETLPipeline(config=config, raw_store=raw_store)
+
+    try:
+        result = pipeline.reprocess(source=pipeline_name, session=session)
+
+        status_value = result.status.value if hasattr(result, "status") and hasattr(result.status, "value") else "COMPLETED"
+
+        record.status = status_value
+        record.records_processed = result.records_processed
+        record.records_failed = result.records_failed
+        record.records_skipped = result.records_skipped
+        record.duration_seconds = result.duration_seconds
+        record.completed_at = datetime.now(timezone.utc).isoformat()
+        record.errors = result.errors
+        record.phases_completed = list(result.phases_completed)
+
+        # Persist to SQLite (best-effort)
+        try:
+            _get_state_store().update_status(
+                new_run_id,
+                status_value,
+                record_count=result.records_processed,
+                phases_completed=result.phases_completed,
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("Failed to update SQLite state for reprocess run %s", new_run_id)
+
+        logger.info(
+            "Reprocess run %s for pipeline %s completed: processed=%d, phases=%s",
+            new_run_id,
+            pipeline_name,
+            result.records_processed,
+            result.phases_completed,
+        )
+
+        return ETLTriggerResponse(
+            run_id=new_run_id,
+            pipeline_name=pipeline_name,
+            status=status_value,
+            message=f"Reprocessed from raw data of run {run_id}",
+        )
+    except Exception as exc:
+        record.status = "FAILED"
+        record.errors = [str(exc)]
+        record.completed_at = datetime.now(timezone.utc).isoformat()
+
+        try:
+            _get_state_store().update_status(new_run_id, "FAILED", error=str(exc))
+        except Exception:  # noqa: BLE001
+            logger.warning("Failed to update SQLite state for failed reprocess run %s", new_run_id)
+
+        logger.exception("Reprocess run %s failed", new_run_id)
+        return ETLTriggerResponse(
+            run_id=new_run_id,
+            pipeline_name=pipeline_name,
+            status="FAILED",
+            message=f"Reprocess of run {run_id} failed: {exc}",
+        )

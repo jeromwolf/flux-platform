@@ -25,6 +25,20 @@ class PipelineStatus(str, Enum):
     CANCELLED = "CANCELLED"
 
 
+class PipelinePhase(str, Enum):
+    """Phases in the ELT pipeline.
+
+    Reflects the ELT execution order:
+    Extract → Load Raw → Validate → Transform → Load KG
+    """
+
+    EXTRACT = "extract"
+    LOAD_RAW = "load_raw"
+    VALIDATE = "validate"
+    TRANSFORM = "transform"
+    LOAD_KG = "load_kg"
+
+
 class ETLMode(str, Enum):
     """ETL execution mode."""
 
@@ -58,6 +72,11 @@ class PipelineConfig:
         retry_delay: Seconds between retries.
         dlq_enabled: Whether to route failures to the Dead Letter Queue.
         validate: Whether to run validation rules before transforms.
+        transform_mode: Execution strategy — ``"eager"`` (ETL: transform before
+            load) or ``"deferred"`` (ELT: load raw first, transform later).
+        raw_store_enabled: When ``True`` and ``transform_mode="deferred"``,
+            raw records are persisted to an intermediate store before
+            transformation.
     """
 
     name: str
@@ -66,6 +85,8 @@ class PipelineConfig:
     retry_delay: float = 1.0
     dlq_enabled: bool = True
     validate: bool = True
+    transform_mode: str = "eager"  # "eager" (ETL) or "deferred" (ELT)
+    raw_store_enabled: bool = False
 
 
 @dataclass
@@ -80,6 +101,8 @@ class PipelineResult:
         duration_seconds: Wall-clock duration of the pipeline run.
         started_at: Timestamp when the run started.
         completed_at: Timestamp when the run finished.
+        phases_completed: Ordered tuple of ELT phase names that completed
+            successfully (e.g., ``("extract", "load_raw", "transform")``).
     """
 
     records_processed: int = 0
@@ -92,6 +115,7 @@ class PipelineResult:
     mode: str = "full"
     total_input: int = 0
     filtered_count: int = 0
+    phases_completed: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass
