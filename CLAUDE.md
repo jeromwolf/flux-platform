@@ -135,9 +135,9 @@ flux-platform/
 | `flux-n8n/kg/` | `core/kg/` | ✅ 이식 완료 |
 | `flux-n8n/maritime/` | `domains/maritime/` | ✅ 이식 완료 (재설계 예정) |
 | `flux-n8n/tests/` | `tests/core/`, `tests/maritime/` | ✅ 이식 완료 |
-| `flux-agent-builder/` | `agent/` | ⏳ 이식 예정 |
-| `flux-rag/` | `rag/` | ⏳ 이식 예정 |
-| 신규 | `ui/`, `gateway/`, `infra/` | 🆕 신규 개발 |
+| `flux-agent-builder/` | `agent/` | ✅ 이식 완료 |
+| `flux-rag/` | `rag/` | ✅ 이식 완료 |
+| 신규 | `ui/`, `gateway/`, `infra/` | ✅ 개발 완료 |
 
 ## 참조 프로젝트 (workspace)
 
@@ -166,7 +166,7 @@ flux-platform/
 |------|------|
 | 시계열 DB | InfluxDB vs TimescaleDB |
 | 객체 저장소 | MinIO vs S3 |
-| Vector DB | Milvus vs Weaviate |
+| Vector DB | Qdrant (확정) |
 | GPU 분산추론 | Ray vs vLLM |
 | K8s 배포 | Helm vs Kustomize |
 
@@ -184,6 +184,10 @@ PYTHONPATH=. python3 -m pytest tests/ -m integration -v
 
 # 전체 테스트
 PYTHONPATH=. python3 -m pytest tests/ -v
+
+# 서버 실행 (Gateway + UI)
+PYTHONPATH=. python3 -m gateway --port 7749 --debug
+cd ui && npm run dev
 ```
 
 ## 코딩 규칙
@@ -212,6 +216,20 @@ NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=your_password_here
 NEO4J_DATABASE=neo4j
+
+# PostgreSQL
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=imsp
+POSTGRES_USER=imsp
+POSTGRES_PASSWORD=your_password_here
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# Qdrant
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
 ```
 
 ## 핵심 전략 문서
@@ -225,8 +243,9 @@ NEO4J_DATABASE=neo4j
 1. `.env` 파일은 git에 포함하지 않음
 2. 온톨로지는 KRISO 요구 기반 **완전 재설계** 예정 (기존 127 엔티티 폐기)
 3. `domains/maritime/`은 현재 flux-n8n에서 복사한 상태, 재설계 전 참조용
-4. `agent/`, `rag/`는 아직 비어있음 (flux-agent-builder, flux-rag에서 이식 예정)
+4. `agent/`, `rag/` 이식 및 구현 완료 (4 LLM, MCP 3 transport, 하이브리드 RAG, VectorStore 3종)
 5. Suredata Lab과 역할 분담: 우리가 전체 개발, 납품은 KG 파트만
 6. JWT → Keycloak 전환 예정, 현재 코드는 JWT 기반
 7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
 8. Activepieces → VueFlow + Argo Workflow 전환 예정
+9. 테스트 3,344개 통과 (unit + harness), 80개 skipped (실제 Neo4j 필요)
