@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -43,14 +43,16 @@ class ToolExecuteResponse(BaseModel):
 
 
 @router.post("/chat", response_model=AgentChatResponse)
-async def agent_chat(request: AgentChatRequest) -> AgentChatResponse:
+async def agent_chat(request: AgentChatRequest, req: Request) -> AgentChatResponse:
     """Chat with the agent using ReAct or Pipeline mode."""
     try:
         from agent.runtime.models import AgentConfig, ExecutionMode
         from agent.runtime.react import ReActEngine
-        from agent.tools.builtins import create_builtin_registry
 
-        registry = create_builtin_registry()
+        registry = getattr(req.app.state, "tool_registry", None)
+        if registry is None:
+            raise HTTPException(status_code=503, detail="Agent runtime not available")
+
         config = AgentConfig(
             mode=ExecutionMode.REACT,
             max_steps=request.max_steps,
@@ -78,6 +80,8 @@ async def agent_chat(request: AgentChatRequest) -> AgentChatResponse:
             tools_used=tools_used,
             mode=request.mode,
         )
+    except HTTPException:
+        raise
     except ImportError:
         raise HTTPException(status_code=503, detail="Agent runtime not available")
     except Exception as exc:
@@ -86,12 +90,13 @@ async def agent_chat(request: AgentChatRequest) -> AgentChatResponse:
 
 
 @router.post("/tools/execute", response_model=ToolExecuteResponse)
-async def execute_tool(request: ToolExecuteRequest) -> ToolExecuteResponse:
+async def execute_tool(request: ToolExecuteRequest, req: Request) -> ToolExecuteResponse:
     """Execute a specific agent tool directly."""
     try:
-        from agent.tools.builtins import create_builtin_registry
+        registry = getattr(req.app.state, "tool_registry", None)
+        if registry is None:
+            raise HTTPException(status_code=503, detail="Agent tools not available")
 
-        registry = create_builtin_registry()
         tool = registry.get(request.tool_name)
         if tool is None:
             raise HTTPException(
@@ -109,46 +114,44 @@ async def execute_tool(request: ToolExecuteRequest) -> ToolExecuteResponse:
         )
     except HTTPException:
         raise
-    except ImportError:
-        raise HTTPException(status_code=503, detail="Agent tools not available")
     except Exception as exc:
         logger.exception("Tool execution failed")
         raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.get("/tools")
-async def list_tools() -> dict[str, Any]:
+async def list_tools(req: Request) -> dict[str, Any]:
     """List available agent tools."""
-    try:
-        from agent.tools.builtins import create_builtin_registry
-
-        registry = create_builtin_registry()
-        tools = registry.list_tools()
-        return {
-            "tools": [
-                {
-                    "name": t.name,
-                    "description": t.description,
-                    "parameters": t.parameters,
-                }
-                for t in tools
-            ]
-        }
-    except ImportError:
+    registry = getattr(req.app.state, "tool_registry", None)
+    if registry is None:
         return {"tools": [], "error": "Agent tools not available"}
+    tools = registry.list_tools()
+    return {
+        "tools": [
+            {
+                "name": t.name,
+                "description": t.description,
+                "parameters": t.parameters,
+            }
+            for t in tools
+        ]
+    }
 
 
 @router.post("/chat/stream")
-async def agent_chat_stream(request: AgentChatRequest) -> StreamingResponse:
+async def agent_chat_stream(request: AgentChatRequest, req: Request) -> StreamingResponse:
     """Stream agent reasoning steps via Server-Sent Events (SSE)."""
+    registry = getattr(req.app.state, "tool_registry", None)
 
     async def event_generator():  # type: ignore[return]
         try:
             from agent.runtime.models import AgentConfig, ExecutionMode
             from agent.runtime.react import ReActEngine
-            from agent.tools.builtins import create_builtin_registry
 
-            registry = create_builtin_registry()
+            if registry is None:
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Agent runtime not available'})}\n\n"
+                return
+
             config = AgentConfig(
                 mode=ExecutionMode.REACT,
                 max_steps=request.max_steps,
@@ -247,7 +250,7 @@ async def delete_session(session_id: str) -> dict[str, Any]:
 
 
 @router.get("/status")
-async def agent_status() -> dict[str, Any]:
+async def agent_status(req: Request) -> dict[str, Any]:
     """Check agent runtime status."""
     status: dict[str, Any] = {
         "available": False,
@@ -263,18 +266,18 @@ async def agent_status() -> dict[str, Any]:
 
             status["engines"].append("pipeline")
         except ImportError:
-            pass
+            logger.debug("PipelineEngine not available")
         try:
             from agent.runtime.batch import BatchEngine  # noqa: F401
 
             status["engines"].append("batch")
         except ImportError:
-            pass
-        from agent.tools.builtins import create_builtin_registry
+            logger.debug("BatchEngine not available")
 
-        registry = create_builtin_registry()
-        status["tools_count"] = len(registry.list_tools())
-        status["available"] = True
+        registry = getattr(req.app.state, "tool_registry", None)
+        if registry is not None:
+            status["tools_count"] = len(registry.list_tools())
+            status["available"] = True
     except ImportError:
-        pass
+        logger.debug("Agent runtime not available")
     return status

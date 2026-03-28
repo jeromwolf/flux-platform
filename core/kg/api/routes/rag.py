@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -42,19 +42,13 @@ class DocumentUploadResponse(BaseModel):
 
 
 @router.post("/query", response_model=RAGQueryResponse)
-async def rag_query(request: RAGQueryRequest) -> RAGQueryResponse:
+async def rag_query(request: RAGQueryRequest, req: Request) -> RAGQueryResponse:
     """Query the RAG engine with hybrid search."""
     try:
-        from rag.engines.models import RAGConfig, RetrievalMode
-        from rag.engines.orchestrator import HybridRAGEngine
+        engine = getattr(req.app.state, "rag_engine", None)
+        if engine is None:
+            raise HTTPException(status_code=503, detail="RAG engine not available")
 
-        mode_map = {
-            "semantic": RetrievalMode.SEMANTIC,
-            "keyword": RetrievalMode.KEYWORD,
-            "hybrid": RetrievalMode.HYBRID,
-        }
-        config = RAGConfig(mode=mode_map[request.mode], top_k=request.top_k)
-        engine = HybridRAGEngine(config=config)
         result = engine.query(request.query)
 
         return RAGQueryResponse(
@@ -72,21 +66,24 @@ async def rag_query(request: RAGQueryRequest) -> RAGQueryResponse:
             mode=request.mode,
             total_chunks=result.chunk_count,
         )
-    except ImportError:
-        raise HTTPException(status_code=503, detail="RAG engine not available")
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.exception("RAG query failed")
         raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/documents", response_model=DocumentUploadResponse, status_code=201)
-async def upload_document(request: DocumentUploadRequest) -> DocumentUploadResponse:
+async def upload_document(request: DocumentUploadRequest, req: Request) -> DocumentUploadResponse:
     """Ingest a document into the RAG pipeline."""
     try:
         import hashlib
 
         from rag.documents.models import Document, DocumentType
-        from rag.documents.pipeline import DocumentPipeline
+
+        pipeline = getattr(req.app.state, "document_pipeline", None)
+        if pipeline is None:
+            raise HTTPException(status_code=503, detail="Document pipeline not available")
 
         type_map = {
             "txt": DocumentType.TXT,
@@ -108,7 +105,6 @@ async def upload_document(request: DocumentUploadRequest) -> DocumentUploadRespo
             metadata=request.metadata,
         )
 
-        pipeline = DocumentPipeline()
         ingestion_result = pipeline.ingest_document(doc)
 
         return DocumentUploadResponse(
@@ -117,6 +113,8 @@ async def upload_document(request: DocumentUploadRequest) -> DocumentUploadRespo
             chunks_created=ingestion_result.chunks_created,
             message="Document ingested successfully",
         )
+    except HTTPException:
+        raise
     except ImportError:
         raise HTTPException(status_code=503, detail="Document pipeline not available")
     except Exception as exc:
@@ -136,6 +134,6 @@ async def rag_status() -> dict[str, Any]:
         from rag.engines.orchestrator import HybridRAGEngine  # noqa: F401
 
         status["available"] = True
-    except ImportError:
+    except ImportError:  # noqa: S110
         pass
     return status

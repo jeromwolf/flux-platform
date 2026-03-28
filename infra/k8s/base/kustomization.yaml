@@ -11,6 +11,13 @@ resources:
   - api-service.yaml
   - neo4j-statefulset.yaml
   - neo4j-service.yaml
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
+  - redis-deployment.yaml
+  - redis-service.yaml
+  - qdrant-statefulset.yaml
+  - qdrant-service.yaml
+  - postgres-init-configmap.yaml
   - gateway-deployment.yaml
   - gateway-service.yaml
   - keycloak-deployment.yaml

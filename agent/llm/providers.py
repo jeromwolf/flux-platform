@@ -244,14 +244,18 @@ class AnthropicLLMProvider:
             max_tokens: Max tokens to generate.
 
         Returns:
-            Generated text, or an error message string on failure.
+            Generated text.
+
+        Raises:
+            ValueError: If the API key is not set.
+            urllib.error.HTTPError: If the Anthropic API returns an HTTP error.
+            urllib.error.URLError: If the request fails (network error, timeout).
         """
         if not self.api_key:
-            logger.warning(
+            raise ValueError(
                 "Anthropic API key not set. Provide via constructor or "
                 "ANTHROPIC_API_KEY environment variable."
             )
-            return "[AnthropicLLMProvider] Error: API key not set."
 
         payload: dict[str, Any] = {
             "model": self.model,
@@ -271,13 +275,9 @@ class AnthropicLLMProvider:
                 "content-type": "application/json",
             },
         )
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                return result["content"][0]["text"]
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.warning("AnthropicLLMProvider request failed: %s", exc)
-            return f"[AnthropicLLMProvider] Error: {exc}"
+        with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            return result["content"][0]["text"]
 
 
 # ---------------------------------------------------------------------------

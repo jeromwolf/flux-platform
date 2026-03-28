@@ -404,7 +404,7 @@ async def get_status(
             if state_run and state_run.phases_completed:
                 record.phases_completed = list(state_run.phases_completed)
         except Exception:  # noqa: BLE001
-            pass
+            logger.debug("SQLite state store read failed for run %s", run_id, exc_info=True)
 
     return record
 
@@ -487,7 +487,7 @@ async def reprocess_from_raw(
         original_run = _get_state_store().get_run(run_id)
         if original_run is not None:
             pipeline_name = original_run.pipeline_name
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: BLE001 S110
         pass
 
     # Fall back to in-memory history

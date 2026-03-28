@@ -19,5 +19,5 @@ try:
     from maritime.n10s.owl_exporter import OWLExporter  # noqa: F401
 
     __all__ += ["OWLExporter"]
-except ImportError:
+except ImportError:  # noqa: S110
     pass  # maritime domain not installed

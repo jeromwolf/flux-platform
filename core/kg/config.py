@@ -26,7 +26,7 @@ class Neo4jConfig:
 
     uri: str = "bolt://localhost:7687"
     user: str = "neo4j"
-    password: str = ""
+    password: str = ""  # noqa: S105
     database: str = "neo4j"
     max_connection_pool_size: int = 50
     connection_timeout: float = 30.0
@@ -39,7 +39,7 @@ class PostgresConfig:
     host: str = "localhost"
     port: int = 5432
     user: str = "postgres"
-    password: str = ""
+    password: str = ""  # noqa: S105
     database: str = "imsp"
     min_pool_size: int = 2
     max_pool_size: int = 10
@@ -92,7 +92,7 @@ class AppConfig:
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "5432")),
             user=os.getenv("POSTGRES_USER", "postgres"),
-            password=os.getenv("POSTGRES_PASSWORD", ""),
+            password=os.getenv("POSTGRES_PASSWORD", ""),  # noqa: S105
             database=os.getenv("POSTGRES_DATABASE", "imsp"),
         )
         redis = RedisConfig(

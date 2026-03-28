@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import urllib.parse
 from dataclasses import dataclass
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -19,7 +22,7 @@ class WSAuthConfig:
     """
 
     require_auth: bool = True
-    token_param: str = "token"
+    token_param: str = "token"  # noqa: S105
     secret_key: str = ""
 
     @classmethod
@@ -86,7 +89,10 @@ class WSAuthenticator:
             import jwt  # type: ignore[import]
 
             if not self._config.secret_key:
-                # No secret key configured — fall back to dev mode decode.
+                logger.warning(
+                    "WS auth: no secret key configured — using unverified dev-mode decode. "
+                    "Set GATEWAY_WS_SECRET_KEY for production."
+                )
                 return self._dev_decode(token)
             try:
                 claims: dict[str, Any] = jwt.decode(
@@ -136,7 +142,7 @@ class WSAuthenticator:
             decoded_bytes = base64.urlsafe_b64decode(payload_b64)
             claims: dict[str, Any] = json.loads(decoded_bytes)
             return claims
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         # Last resort: treat the whole token as a JSON string.
@@ -144,7 +150,7 @@ class WSAuthenticator:
             claims = json.loads(token)
             if isinstance(claims, dict):
                 return claims
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # noqa: S110
             pass
 
         raise ValueError(

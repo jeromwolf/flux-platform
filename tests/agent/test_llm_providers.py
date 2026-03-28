@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import io
 import json
+import urllib.error
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -390,22 +391,18 @@ class TestAnthropicLLMProviderHandlesError:
 
     @patch("agent.llm.providers.urllib.request.urlopen")
     def test_anthropic_provider_handles_error(self, mock_urlopen: MagicMock) -> None:
-        """generate() returns an error string on HTTP failure instead of raising."""
-        mock_urlopen.side_effect = Exception("Network timeout")
+        """generate() raises urllib.error.URLError on network failure."""
+        mock_urlopen.side_effect = urllib.error.URLError("Network timeout")
 
         provider = AnthropicLLMProvider(api_key="sk-ant-test-key")
-        result = provider.generate("test prompt")
+        with pytest.raises(urllib.error.URLError):
+            provider.generate("test prompt")
 
-        assert "[AnthropicLLMProvider] Error:" in result
-        assert "Network timeout" in result
-
-    def test_anthropic_provider_handles_missing_key(self) -> None:
-        """generate() returns an error string when no API key is set."""
+    def test_anthropic_provider_raises_missing_key(self) -> None:
+        """generate() raises ValueError when no API key is set."""
         provider = AnthropicLLMProvider(api_key="")
-        result = provider.generate("test prompt")
-
-        assert "[AnthropicLLMProvider] Error:" in result
-        assert "API key not set" in result
+        with pytest.raises(ValueError, match="API key not set"):
+            provider.generate("test prompt")
 
 
 # ---------------------------------------------------------------------------

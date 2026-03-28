@@ -40,6 +40,9 @@ interface HealthEvent {
 
 // ── State ──────────────────────────────────────────────────────────────────────
 
+const prometheusUrl = import.meta.env.VITE_PROMETHEUS_URL ?? 'http://localhost:9090'
+const grafanaUrl = import.meta.env.VITE_GRAFANA_URL ?? 'http://localhost:3001'
+
 const refreshing = ref(false)
 let autoRefreshTimer: ReturnType<typeof setInterval> | null = null
 let eventIdCounter = 0
@@ -487,7 +490,7 @@ onUnmounted(() => {
               </UButton>
 
               <a
-                href="http://localhost:9090"
+                :href="prometheusUrl"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="flex w-full items-center rounded-lg border border-border-default bg-surface-tertiary px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-navy-600 hover:text-text-primary"
@@ -497,7 +500,7 @@ onUnmounted(() => {
               </a>
 
               <a
-                href="http://localhost:3001"
+                :href="grafanaUrl"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="flex w-full items-center rounded-lg border border-border-default bg-surface-tertiary px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-navy-600 hover:text-text-primary"

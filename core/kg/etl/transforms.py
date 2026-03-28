@@ -87,7 +87,7 @@ class DateTimeNormalizer(TransformStep):
         for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%SZ"):
             try:
                 return datetime.strptime(value, fmt).isoformat()
-            except ValueError:
+            except ValueError:  # noqa: S112
                 continue
 
         # Korean date format

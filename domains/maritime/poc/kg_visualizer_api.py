@@ -630,7 +630,7 @@ class KGVisualizerHandler(SimpleHTTPRequestHandler):
 
 def main() -> None:
     """Start the KG Visualizer API server."""
-    host = os.getenv("KG_VIS_HOST", "0.0.0.0")
+    host = os.getenv("KG_VIS_HOST", "0.0.0.0")  # noqa: S104
     port = int(os.getenv("KG_VIS_PORT", "8765"))
 
     server = HTTPServer((host, port), KGVisualizerHandler)

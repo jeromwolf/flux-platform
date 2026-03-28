@@ -76,3 +76,18 @@ def get_workflow_repo(request: Request):
 def get_document_repo(request: Request):
     """Get the document repository from app state."""
     return request.app.state.document_repo
+
+
+def get_tool_registry(request: Request):
+    """Get the shared tool registry from app state."""
+    return getattr(request.app.state, "tool_registry", None)
+
+
+def get_rag_engine(request: Request):
+    """Get the shared RAG engine from app state."""
+    return getattr(request.app.state, "rag_engine", None)
+
+
+def get_document_pipeline(request: Request):
+    """Get the shared document pipeline from app state."""
+    return getattr(request.app.state, "document_pipeline", None)

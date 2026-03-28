@@ -219,14 +219,14 @@ class TestNetworkPolicies:
         """TC-NP02: allow-gateway-ingress NetworkPolicy allows port 8080."""
         content = _read(K8S_BASE / "network-policies.yaml")
         assert "name: allow-gateway-ingress" in content, "allow-gateway-ingress policy not found"
-        assert "app: gateway" in content, "gateway pod selector not found"
+        assert "app: imsp-gateway" in content, "gateway pod selector not found"
         assert "port: 8080" in content, "port 8080 not found in gateway ingress policy"
 
     def test_network_policy_count(self) -> None:
-        """TC-NP03: network-policies.yaml contains exactly 8 NetworkPolicy resources."""
+        """TC-NP03: network-policies.yaml contains exactly 11 NetworkPolicy resources."""
         content = _read(K8S_BASE / "network-policies.yaml")
         count = content.count("kind: NetworkPolicy")
-        assert count == 8, f"Expected 8 NetworkPolicy resources, found {count}"
+        assert count == 11, f"Expected 11 NetworkPolicy resources, found {count}"
 
     def test_kustomization_has_network_policies(self) -> None:
         """TC-NP04: kustomization.yaml lists network-policies.yaml."""

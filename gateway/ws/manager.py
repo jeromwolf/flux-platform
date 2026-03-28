@@ -105,6 +105,50 @@ class ConnectionManager:
                 del self._rooms[room_name]
         logger.info("WebSocket disconnected: connection_id=%s", connection_id)
 
+    async def start_heartbeat(self, interval: float = 30.0) -> None:
+        """Start a periodic heartbeat that pings all connections.
+
+        Dead connections (those that fail to respond) are automatically
+        disconnected.  This coroutine runs indefinitely and should be
+        launched as a background task in the ASGI lifespan.
+
+        Args:
+            interval: Seconds between heartbeat pings.
+        """
+        import asyncio
+
+        logger.info("WebSocket heartbeat started (interval=%.1fs)", interval)
+        while True:
+            await asyncio.sleep(interval)
+            await self._ping_all()
+
+    async def _ping_all(self) -> int:
+        """Ping every connection and disconnect dead ones.
+
+        Returns:
+            Number of dead connections removed.
+        """
+        with self._lock:
+            targets = list(self._connections.items())
+
+        dead: list[str] = []
+        for connection_id, websocket in targets:
+            try:
+                await websocket.send_text('{"type":"ping"}')
+            except Exception:
+                dead.append(connection_id)
+                logger.warning(
+                    "Heartbeat failed for connection_id=%s — disconnecting",
+                    connection_id,
+                )
+
+        for connection_id in dead:
+            await self.disconnect(connection_id)
+
+        if dead:
+            logger.info("Heartbeat removed %d dead connections", len(dead))
+        return len(dead)
+
     # ------------------------------------------------------------------
     # Room management
     # ------------------------------------------------------------------
@@ -222,6 +266,7 @@ class ConnectionManager:
             targets = list(self._connections.items())
 
         sent = 0
+        dead: list[str] = []
         json_payload = message.to_json()
         for connection_id, websocket in targets:
             try:
@@ -233,6 +278,12 @@ class ConnectionManager:
                     connection_id,
                     exc,
                 )
+                dead.append(connection_id)
+
+        # Clean up dead connections
+        for connection_id in dead:
+            await self.disconnect(connection_id)
+
         return sent
 
     async def broadcast_to_room(self, room: str, message: WSMessage) -> int:
@@ -261,6 +312,7 @@ class ConnectionManager:
             return 0
 
         sent = 0
+        dead: list[str] = []
         json_payload = message.to_json()
         for connection_id, websocket in targets:
             try:
@@ -273,6 +325,11 @@ class ConnectionManager:
                     connection_id,
                     exc,
                 )
+                dead.append(connection_id)
+
+        for connection_id in dead:
+            await self.disconnect(connection_id)
+
         return sent
 
     # ------------------------------------------------------------------

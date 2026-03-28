@@ -24,31 +24,9 @@ const emit = defineEmits<{
 
 const { onConnect, addEdges, addNodes, onNodeClick, onPaneClick, fitView, project } = useVueFlow()
 
-const nodes = ref<Node[]>(props.initialNodes ?? [
-  {
-    id: '1',
-    type: 'custom',
-    position: { x: 100, y: 100 },
-    data: { label: '데이터 수집', type: 'input', icon: 'download', description: '원천 데이터를 수집합니다' },
-  },
-  {
-    id: '2',
-    type: 'custom',
-    position: { x: 400, y: 100 },
-    data: { label: '데이터 변환', type: 'process', icon: 'transform', description: 'ETL 변환을 수행합니다' },
-  },
-  {
-    id: '3',
-    type: 'custom',
-    position: { x: 700, y: 100 },
-    data: { label: 'KG 적재', type: 'output', icon: 'database', description: '지식그래프에 적재합니다' },
-  },
-])
+const nodes = ref<Node[]>(props.initialNodes ?? [])
 
-const edges = ref<Edge[]>(props.initialEdges ?? [
-  { id: 'e1-2', source: '1', target: '2', animated: true },
-  { id: 'e2-3', source: '2', target: '3', animated: true },
-])
+const edges = ref<Edge[]>(props.initialEdges ?? [])
 
 onConnect((connection: Connection) => {
   addEdges([{
@@ -67,7 +45,9 @@ onPaneClick(() => {
 })
 
 onMounted(() => {
-  setTimeout(() => fitView({ padding: 0.2 }), 100)
+  if (props.initialNodes && props.initialNodes.length > 0) {
+    setTimeout(() => fitView({ padding: 0.2 }), 100)
+  }
 })
 
 function handleSave() {

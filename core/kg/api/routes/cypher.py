@@ -227,7 +227,7 @@ async def validate_cypher(body: CypherRequest) -> CypherValidationResponse:
         )
     except Exception:
         # Fallback: lightweight heuristic checks
-        pass
+        logger.debug("CypherValidator unavailable, using heuristic fallback", exc_info=True)
 
     # Lightweight fallback: check for RETURN clause on read queries
     if query_type == "read" and "RETURN" not in cypher.upper():

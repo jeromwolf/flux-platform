@@ -168,3 +168,23 @@ def sample_ontology() -> Ontology:
     from maritime.ontology.maritime_loader import load_maritime_ontology
 
     return load_maritime_ontology()
+
+
+# =========================================================================
+# Mock Neo4j Fixtures (단위 테스트용)
+# =========================================================================
+
+
+@pytest.fixture
+def mock_neo4j_session():
+    """Reusable MockNeo4jSession fixture.
+
+    Returns a factory that creates configured MockNeo4jSession instances.
+    Usage: session = mock_neo4j_session([side_effect1, side_effect2])
+    """
+    from tests.helpers.mock_neo4j import MockNeo4jSession
+
+    def _factory(side_effects=None):
+        return MockNeo4jSession(side_effects=side_effects)
+
+    return _factory

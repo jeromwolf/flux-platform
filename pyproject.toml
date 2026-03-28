@@ -38,6 +38,7 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.23.0",
     "ruff>=0.4.0",
     "mypy>=1.8.0",
     "httpx>=0.25.0",
@@ -53,8 +54,8 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["core", "domains"]
-include = ["kg*", "maritime*"]
+where = ["."]
+include = ["kg*", "maritime*", "agent*", "rag*", "gateway*"]
 
 [tool.pytest.ini_options]
 pythonpath = [".", "core", "domains"]
@@ -63,6 +64,7 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --strict-markers --tb=short"
+asyncio_mode = "auto"
 filterwarnings = [
     "ignore::DeprecationWarning:httpx._client",
     "ignore::PendingDeprecationWarning:starlette.formparsers",
@@ -80,8 +82,11 @@ target-version = "py310"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM"]
-ignore = ["E501"]  # line length handled separately
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "S"]
+ignore = ["E501", "S310", "S311", "S101", "S110"]  # E501: line length; S310: urlopen; S311: random; S101: assert; S110: try-except-pass
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S105", "S106", "S107", "S110"]  # Hardcoded credentials and intentional pass blocks in tests
 
 [tool.ruff.lint.isort]
 known-first-party = ["kg", "maritime"]

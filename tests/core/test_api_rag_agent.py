@@ -1,8 +1,9 @@
 """Unit tests for RAG and Agent REST API endpoints.
 
 All tests are marked ``@pytest.mark.unit`` and work without live external
-services. RAG engine, Document pipeline, and Agent runtime imports are
-patched with unittest.mock so no GPU / Neo4j / Ollama is required.
+services. RAG engine, Document pipeline, and Agent runtime are injected via
+app.state singletons (set directly on the test app) so no GPU / Neo4j /
+Ollama is required.
 """
 from __future__ import annotations
 
@@ -136,33 +137,20 @@ def _make_tool_definition(name: str, description: str = "A tool") -> MagicMock:
 
 @pytest.mark.unit
 def test_rag_query_returns_response(client: TestClient) -> None:
-    """Mock HybridRAGEngine and verify the /rag/query response shape."""
+    """Set rag_engine on app.state and verify the /rag/query response shape."""
     fake_result = _make_rag_result(answer="COLREG is an international convention.", chunks=2)
 
     mock_engine = MagicMock()
     mock_engine.query.return_value = fake_result
-    mock_engine_cls = MagicMock(return_value=mock_engine)
 
-    with patch.dict(
-        "sys.modules",
-        {
-            "rag": MagicMock(),
-            "rag.engines": MagicMock(),
-            "rag.engines.orchestrator": MagicMock(HybridRAGEngine=mock_engine_cls),
-            "rag.engines.models": MagicMock(
-                RAGConfig=MagicMock(return_value=MagicMock()),
-                RetrievalMode=MagicMock(
-                    SEMANTIC="semantic",
-                    KEYWORD="keyword",
-                    HYBRID="hybrid",
-                ),
-            ),
-        },
-    ):
+    client.app.state.rag_engine = mock_engine  # type: ignore[union-attr]
+    try:
         response = client.post(
             "/api/v1/rag/query",
             json={"query": "What is COLREG?", "mode": "hybrid", "top_k": 5},
         )
+    finally:
+        client.app.state.rag_engine = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     data = response.json()
@@ -185,13 +173,23 @@ def test_rag_query_empty_text_rejected(client: TestClient) -> None:
 
 
 @pytest.mark.unit
+def test_rag_query_unavailable_returns_503(client: TestClient) -> None:
+    """When rag_engine is None in app.state, /rag/query returns 503."""
+    client.app.state.rag_engine = None  # type: ignore[union-attr]
+    response = client.post(
+        "/api/v1/rag/query",
+        json={"query": "What is COLREG?", "mode": "hybrid", "top_k": 5},
+    )
+    assert response.status_code == 503
+
+
+@pytest.mark.unit
 def test_rag_document_upload(client: TestClient) -> None:
-    """Mock DocumentPipeline and verify the /rag/documents response."""
+    """Set document_pipeline on app.state and verify the /rag/documents response."""
     fake_ingestion = _make_ingestion_result(chunks_created=4)
 
     mock_pipeline = MagicMock()
     mock_pipeline.ingest_document.return_value = fake_ingestion
-    mock_pipeline_cls = MagicMock(return_value=mock_pipeline)
 
     with patch.dict(
         "sys.modules",
@@ -202,18 +200,21 @@ def test_rag_document_upload(client: TestClient) -> None:
                 Document=MagicMock(),
                 DocumentType=MagicMock(TXT="txt", MARKDOWN="markdown", HTML="html", CSV="csv"),
             ),
-            "rag.documents.pipeline": MagicMock(DocumentPipeline=mock_pipeline_cls),
         },
     ):
-        response = client.post(
-            "/api/v1/rag/documents",
-            json={
-                "title": "COLREG Overview",
-                "content": "This document describes COLREG rules.",
-                "doc_type": "txt",
-                "metadata": {"source": "imo.org"},
-            },
-        )
+        client.app.state.document_pipeline = mock_pipeline  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/rag/documents",
+                json={
+                    "title": "COLREG Overview",
+                    "content": "This document describes COLREG rules.",
+                    "doc_type": "txt",
+                    "metadata": {"source": "imo.org"},
+                },
+            )
+        finally:
+            client.app.state.document_pipeline = None  # type: ignore[union-attr]
 
     assert response.status_code == 201
     data = response.json()
@@ -221,6 +222,22 @@ def test_rag_document_upload(client: TestClient) -> None:
     assert "doc_id" in data
     assert data["chunks_created"] == 4
     assert data["message"] == "Document ingested successfully"
+
+
+@pytest.mark.unit
+def test_rag_document_upload_unavailable_returns_503(client: TestClient) -> None:
+    """When document_pipeline is None in app.state, /rag/documents returns 503."""
+    client.app.state.document_pipeline = None  # type: ignore[union-attr]
+    response = client.post(
+        "/api/v1/rag/documents",
+        json={
+            "title": "Test",
+            "content": "Test content.",
+            "doc_type": "txt",
+            "metadata": {},
+        },
+    )
+    assert response.status_code == 503
 
 
 @pytest.mark.unit
@@ -250,7 +267,7 @@ def test_rag_status(client: TestClient) -> None:
 
 @pytest.mark.unit
 def test_agent_chat_returns_response(client: TestClient) -> None:
-    """Mock ReActEngine and verify the /agent/chat response shape."""
+    """Set tool_registry on app.state and verify the /agent/chat response shape."""
     fake_result = _make_execution_result(answer="The vessel BUSAN PIONEER is at Busan port.")
 
     mock_engine = MagicMock()
@@ -258,8 +275,6 @@ def test_agent_chat_returns_response(client: TestClient) -> None:
     mock_engine_cls = MagicMock(return_value=mock_engine)
 
     mock_registry = MagicMock()
-    mock_registry_factory = MagicMock(return_value=mock_registry)
-
     mock_config_cls = MagicMock(return_value=MagicMock())
     mock_execution_mode = MagicMock(REACT="react")
 
@@ -273,14 +288,16 @@ def test_agent_chat_returns_response(client: TestClient) -> None:
                 AgentConfig=mock_config_cls,
                 ExecutionMode=mock_execution_mode,
             ),
-            "agent.tools": MagicMock(),
-            "agent.tools.builtins": MagicMock(create_builtin_registry=mock_registry_factory),
         },
     ):
-        response = client.post(
-            "/api/v1/agent/chat",
-            json={"message": "Find vessels in Busan port", "mode": "react", "max_steps": 5},
-        )
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/agent/chat",
+                json={"message": "Find vessels in Busan port", "mode": "react", "max_steps": 5},
+            )
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     data = response.json()
@@ -289,6 +306,26 @@ def test_agent_chat_returns_response(client: TestClient) -> None:
     assert data["mode"] == "react"
     assert "steps" in data
     assert "tools_used" in data
+
+
+@pytest.mark.unit
+def test_agent_chat_unavailable_returns_503(client: TestClient) -> None:
+    """When tool_registry is None in app.state, /agent/chat returns 503."""
+    client.app.state.tool_registry = None  # type: ignore[union-attr]
+    with patch.dict(
+        "sys.modules",
+        {
+            "agent": MagicMock(),
+            "agent.runtime": MagicMock(),
+            "agent.runtime.react": MagicMock(),
+            "agent.runtime.models": MagicMock(),
+        },
+    ):
+        response = client.post(
+            "/api/v1/agent/chat",
+            json={"message": "Find vessels", "mode": "react", "max_steps": 5},
+        )
+    assert response.status_code == 503
 
 
 @pytest.mark.unit
@@ -304,20 +341,15 @@ def test_agent_tool_execute(client: TestClient) -> None:
     mock_registry = MagicMock()
     mock_registry.get.return_value = fake_tool_def
     mock_registry.execute.return_value = fake_result
-    mock_registry_factory = MagicMock(return_value=mock_registry)
 
-    with patch.dict(
-        "sys.modules",
-        {
-            "agent": MagicMock(),
-            "agent.tools": MagicMock(),
-            "agent.tools.builtins": MagicMock(create_builtin_registry=mock_registry_factory),
-        },
-    ):
+    client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+    try:
         response = client.post(
             "/api/v1/agent/tools/execute",
             json={"tool_name": "vessel_search", "parameters": {"query": "BUSAN"}},
         )
+    finally:
+        client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     data = response.json()
@@ -332,20 +364,15 @@ def test_agent_tool_not_found(client: TestClient) -> None:
     """Unknown tool name returns HTTP 404."""
     mock_registry = MagicMock()
     mock_registry.get.return_value = None  # tool not registered
-    mock_registry_factory = MagicMock(return_value=mock_registry)
 
-    with patch.dict(
-        "sys.modules",
-        {
-            "agent": MagicMock(),
-            "agent.tools": MagicMock(),
-            "agent.tools.builtins": MagicMock(create_builtin_registry=mock_registry_factory),
-        },
-    ):
+    client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+    try:
         response = client.post(
             "/api/v1/agent/tools/execute",
             json={"tool_name": "nonexistent_tool", "parameters": {}},
         )
+    finally:
+        client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
@@ -367,17 +394,12 @@ def test_agent_list_tools(client: TestClient) -> None:
 
     mock_registry = MagicMock()
     mock_registry.list_tools.return_value = fake_tools
-    mock_registry_factory = MagicMock(return_value=mock_registry)
 
-    with patch.dict(
-        "sys.modules",
-        {
-            "agent": MagicMock(),
-            "agent.tools": MagicMock(),
-            "agent.tools.builtins": MagicMock(create_builtin_registry=mock_registry_factory),
-        },
-    ):
+    client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+    try:
         response = client.get("/api/v1/agent/tools")
+    finally:
+        client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     data = response.json()
@@ -389,11 +411,21 @@ def test_agent_list_tools(client: TestClient) -> None:
 
 
 @pytest.mark.unit
+def test_agent_list_tools_unavailable(client: TestClient) -> None:
+    """GET /agent/tools returns empty list when tool_registry is None."""
+    client.app.state.tool_registry = None  # type: ignore[union-attr]
+    response = client.get("/api/v1/agent/tools")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["tools"] == []
+    assert "error" in data
+
+
+@pytest.mark.unit
 def test_agent_status(client: TestClient) -> None:
     """GET /agent/status returns engine and tool information."""
     mock_registry = MagicMock()
     mock_registry.list_tools.return_value = [MagicMock()] * 7
-    mock_registry_factory = MagicMock(return_value=mock_registry)
 
     mock_react = MagicMock()
     mock_pipeline = MagicMock()
@@ -407,11 +439,13 @@ def test_agent_status(client: TestClient) -> None:
             "agent.runtime.react": MagicMock(ReActEngine=mock_react),
             "agent.runtime.pipeline": MagicMock(PipelineEngine=mock_pipeline),
             "agent.runtime.batch": MagicMock(BatchEngine=mock_batch),
-            "agent.tools": MagicMock(),
-            "agent.tools.builtins": MagicMock(create_builtin_registry=mock_registry_factory),
         },
     ):
-        response = client.get("/api/v1/agent/status")
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.get("/api/v1/agent/status")
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     data = response.json()

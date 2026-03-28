@@ -32,5 +32,5 @@ try:
         "resolve_named_entity",
         "get_term_context_for_llm",
     ]
-except ImportError:
+except ImportError:  # noqa: S110
     pass  # maritime domain not installed

@@ -81,8 +81,8 @@ def _make_execution_result(answer: str = "Stream answer") -> MagicMock:
     return result
 
 
-def _make_agent_modules(result: MagicMock | None = None) -> dict[str, Any]:
-    """Build the sys.modules patch dict for agent imports."""
+def _make_agent_runtime_modules(result: MagicMock | None = None) -> dict[str, Any]:
+    """Build the sys.modules patch dict for agent.runtime imports (not builtins)."""
     if result is None:
         result = _make_execution_result()
 
@@ -90,8 +90,6 @@ def _make_agent_modules(result: MagicMock | None = None) -> dict[str, Any]:
     mock_engine.execute.return_value = result
     mock_engine_cls = MagicMock(return_value=mock_engine)
 
-    mock_registry = MagicMock()
-    mock_registry_factory = MagicMock(return_value=mock_registry)
     mock_config_cls = MagicMock(return_value=MagicMock())
     mock_execution_mode = MagicMock(REACT="react")
 
@@ -103,8 +101,6 @@ def _make_agent_modules(result: MagicMock | None = None) -> dict[str, Any]:
             AgentConfig=mock_config_cls,
             ExecutionMode=mock_execution_mode,
         ),
-        "agent.tools": MagicMock(),
-        "agent.tools.builtins": MagicMock(create_builtin_registry=mock_registry_factory),
     }
 
 
@@ -116,12 +112,17 @@ def _make_agent_modules(result: MagicMock | None = None) -> dict[str, Any]:
 @pytest.mark.unit
 def test_stream_endpoint_returns_sse_content_type(client: TestClient) -> None:
     """POST /agent/chat/stream returns Content-Type: text/event-stream."""
-    modules = _make_agent_modules()
+    mock_registry = MagicMock()
+    modules = _make_agent_runtime_modules()
     with patch.dict("sys.modules", modules):
-        response = client.post(
-            "/api/v1/agent/chat/stream",
-            json={"message": "Find vessels", "mode": "react", "max_steps": 3},
-        )
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/agent/chat/stream",
+                json={"message": "Find vessels", "mode": "react", "max_steps": 3},
+            )
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
     assert response.status_code == 200
     assert "text/event-stream" in response.headers["content-type"]
 
@@ -129,16 +130,20 @@ def test_stream_endpoint_returns_sse_content_type(client: TestClient) -> None:
 @pytest.mark.unit
 def test_stream_has_start_event(client: TestClient) -> None:
     """SSE stream begins with a 'start' event containing the original query."""
-    modules = _make_agent_modules()
+    mock_registry = MagicMock()
+    modules = _make_agent_runtime_modules()
     with patch.dict("sys.modules", modules):
-        response = client.post(
-            "/api/v1/agent/chat/stream",
-            json={"message": "Find vessels", "mode": "react", "max_steps": 3},
-        )
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/agent/chat/stream",
+                json={"message": "Find vessels", "mode": "react", "max_steps": 3},
+            )
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     text = response.text
-    # Parse SSE events from the body
     events = _parse_sse_events(text)
     assert len(events) > 0
 
@@ -150,12 +155,17 @@ def test_stream_has_start_event(client: TestClient) -> None:
 @pytest.mark.unit
 def test_stream_has_done_event(client: TestClient) -> None:
     """SSE stream ends with a 'done' event."""
-    modules = _make_agent_modules()
+    mock_registry = MagicMock()
+    modules = _make_agent_runtime_modules()
     with patch.dict("sys.modules", modules):
-        response = client.post(
-            "/api/v1/agent/chat/stream",
-            json={"message": "Test query", "mode": "react", "max_steps": 3},
-        )
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/agent/chat/stream",
+                json={"message": "Test query", "mode": "react", "max_steps": 3},
+            )
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     events = _parse_sse_events(response.text)
@@ -167,12 +177,17 @@ def test_stream_has_done_event(client: TestClient) -> None:
 def test_stream_has_answer_event(client: TestClient) -> None:
     """SSE stream includes an 'answer' event with content and tool_calls count."""
     fake_result = _make_execution_result(answer="Busan Pioneer found")
-    modules = _make_agent_modules(result=fake_result)
+    mock_registry = MagicMock()
+    modules = _make_agent_runtime_modules(result=fake_result)
     with patch.dict("sys.modules", modules):
-        response = client.post(
-            "/api/v1/agent/chat/stream",
-            json={"message": "Find vessels", "mode": "react", "max_steps": 3},
-        )
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/agent/chat/stream",
+                json={"message": "Find vessels", "mode": "react", "max_steps": 3},
+            )
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     events = _parse_sse_events(response.text)
@@ -186,12 +201,17 @@ def test_stream_has_answer_event(client: TestClient) -> None:
 def test_stream_has_step_events(client: TestClient) -> None:
     """SSE stream includes 'step' events for each reasoning step."""
     fake_result = _make_execution_result()
-    modules = _make_agent_modules(result=fake_result)
+    mock_registry = MagicMock()
+    modules = _make_agent_runtime_modules(result=fake_result)
     with patch.dict("sys.modules", modules):
-        response = client.post(
-            "/api/v1/agent/chat/stream",
-            json={"message": "Find vessels", "mode": "react", "max_steps": 5},
-        )
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/agent/chat/stream",
+                json={"message": "Find vessels", "mode": "react", "max_steps": 5},
+            )
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     events = _parse_sse_events(response.text)
@@ -201,17 +221,16 @@ def test_stream_has_step_events(client: TestClient) -> None:
 
 
 @pytest.mark.unit
-def test_stream_import_error_returns_error_event(client: TestClient) -> None:
-    """When agent runtime is unavailable, stream yields an error event."""
+def test_stream_registry_unavailable_returns_error_event(client: TestClient) -> None:
+    """When tool_registry is None in app.state, stream yields an error event."""
+    client.app.state.tool_registry = None  # type: ignore[union-attr]
     with patch.dict(
         "sys.modules",
         {
-            "agent": None,
-            "agent.runtime": None,
-            "agent.runtime.react": None,
-            "agent.runtime.models": None,
-            "agent.tools": None,
-            "agent.tools.builtins": None,
+            "agent": MagicMock(),
+            "agent.runtime": MagicMock(),
+            "agent.runtime.react": MagicMock(),
+            "agent.runtime.models": MagicMock(),
         },
     ):
         response = client.post(
@@ -394,7 +413,6 @@ def test_agent_chat_with_session_id(client: TestClient) -> None:
     mock_engine_cls = MagicMock(return_value=mock_engine)
 
     mock_registry = MagicMock()
-    mock_registry_factory = MagicMock(return_value=mock_registry)
     mock_config_cls = MagicMock(return_value=MagicMock())
     mock_execution_mode = MagicMock(REACT="react")
 
@@ -408,19 +426,21 @@ def test_agent_chat_with_session_id(client: TestClient) -> None:
                 AgentConfig=mock_config_cls,
                 ExecutionMode=mock_execution_mode,
             ),
-            "agent.tools": MagicMock(),
-            "agent.tools.builtins": MagicMock(create_builtin_registry=mock_registry_factory),
         },
     ):
-        response = client.post(
-            "/api/v1/agent/chat",
-            json={
-                "message": "Find vessels",
-                "mode": "react",
-                "max_steps": 5,
-                "session_id": "my-test-session",
-            },
-        )
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/agent/chat",
+                json={
+                    "message": "Find vessels",
+                    "mode": "react",
+                    "max_steps": 5,
+                    "session_id": "my-test-session",
+                },
+            )
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     data = response.json()
@@ -441,7 +461,6 @@ def test_agent_chat_without_session_id_uses_default(client: TestClient) -> None:
     mock_engine_cls = MagicMock(return_value=mock_engine)
 
     mock_registry = MagicMock()
-    mock_registry_factory = MagicMock(return_value=mock_registry)
     mock_config_cls = MagicMock(return_value=MagicMock())
     mock_execution_mode = MagicMock(REACT="react")
 
@@ -455,14 +474,16 @@ def test_agent_chat_without_session_id_uses_default(client: TestClient) -> None:
                 AgentConfig=mock_config_cls,
                 ExecutionMode=mock_execution_mode,
             ),
-            "agent.tools": MagicMock(),
-            "agent.tools.builtins": MagicMock(create_builtin_registry=mock_registry_factory),
         },
     ):
-        response = client.post(
-            "/api/v1/agent/chat",
-            json={"message": "Hello", "mode": "react", "max_steps": 3},
-        )
+        client.app.state.tool_registry = mock_registry  # type: ignore[union-attr]
+        try:
+            response = client.post(
+                "/api/v1/agent/chat",
+                json={"message": "Hello", "mode": "react", "max_steps": 3},
+            )
+        finally:
+            client.app.state.tool_registry = None  # type: ignore[union-attr]
 
     assert response.status_code == 200
     mock_engine.execute.assert_called_once_with("Hello", session_id="default")

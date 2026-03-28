@@ -16,6 +16,7 @@ from kg.api.models import (
 )
 from kg.api.routes.graph import _extract_node
 from kg.api.serializers import serialize_neo4j_value
+from kg.fulltext import fulltext_search_cypher, get_fulltext_index
 
 logger = logging.getLogger(__name__)
 
@@ -237,11 +238,45 @@ async def list_nodes(
             )
         label_clause = f":{label}"
 
-    if q is not None:
-        # TODO(optimization): when label is provided and has a fulltext index
-        # (see kg.fulltext.get_fulltext_index), replace CONTAINS with a
-        # CALL db.index.fulltext.queryNodes(...) prefix for scored results.
-        # Requires restructuring count_cypher + list_cypher to CALL-based queries.
+    # Fulltext index search path — when label has a registered fulltext index
+    fulltext_index = get_fulltext_index(label) if label else None
+
+    if q is not None and fulltext_index is not None:
+        # Use scored fulltext search instead of slow CONTAINS
+        ft_call = fulltext_search_cypher(fulltext_index, result_var="n", score_var="ftScore")
+        params["searchTerm"] = q
+
+        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+        count_cypher = f"{ft_call} {where_clause} RETURN count(n) AS total"
+        count_result = await session.run(count_cypher, params)
+        count_records = [record async for record in count_result]
+        total = 0
+        if count_records:
+            try:
+                total = count_records[0]["total"]
+            except (KeyError, TypeError):
+                pass
+
+        list_cypher = (
+            f"{ft_call} {where_clause} "
+            f"RETURN n ORDER BY ftScore DESC SKIP $skip LIMIT $limit"
+        )
+        params["skip"] = offset
+        params["limit"] = limit
+        result = await session.run(list_cypher, params)
+        records = [record async for record in result]
+
+        items: list[NodeResponse] = []
+        for record in records:
+            node_dict = _extract_node(record, "n")
+            if node_dict is not None:
+                items.append(_node_dict_to_response(node_dict))
+
+        return NodeListResponse(nodes=items, total=total, limit=limit, offset=offset)
+
+    elif q is not None:
+        # Fallback: CONTAINS for labels without fulltext index
         conditions.append(
             "(n.name CONTAINS $q OR n.title CONTAINS $q OR n.nameEn CONTAINS $q)"
         )

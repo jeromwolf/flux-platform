@@ -5,6 +5,7 @@ Usage:
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import time
@@ -65,6 +66,8 @@ def get_http_client() -> httpx.AsyncClient:
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    import asyncio
+
     global _http_client
 
     gw = get_gateway()
@@ -82,7 +85,20 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     logger.info("HTTP client initialised")
 
+    # Start WebSocket heartbeat background task
+    heartbeat_task = asyncio.create_task(
+        _ws_manager.start_heartbeat(interval=gw.config.ws_ping_interval)
+    )
+    logger.info("WebSocket heartbeat task started")
+
     yield
+
+    # Cancel heartbeat task
+    heartbeat_task.cancel()
+    try:
+        await heartbeat_task
+    except asyncio.CancelledError:
+        pass
 
     # 종료 시 클라이언트 닫기
     await _http_client.aclose()
@@ -181,11 +197,11 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
                 upstream_status = "healthy"
                 http_status = 200
         except Exception:
-            pass
+            logger.debug("Upstream health check failed", exc_info=True)
 
         body = {"status": "ready" if http_status == 200 else "degraded", "upstream": upstream_status}
         return Response(
-            content=str(body).replace("'", '"'),
+            content=json.dumps(body),
             status_code=http_status,
             media_type="application/json",
         )

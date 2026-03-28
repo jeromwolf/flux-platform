@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from typing import Any
 
 from agent.skills.models import SkillDefinition, SkillResult
@@ -443,6 +444,160 @@ def _format_vessel_report(
     return json.dumps(base_report, ensure_ascii=False)
 
 
+# ---------------------------------------------------------------------------
+# Route risk assessment — constants and helpers
+# ---------------------------------------------------------------------------
+
+# Major port coordinates for distance estimation (lat, lon)
+_KNOWN_PORTS: dict[str, tuple[float, float]] = {
+    "부산": (35.10, 129.04),
+    "인천": (37.45, 126.60),
+    "울산": (35.50, 129.39),
+    "광양": (34.91, 127.70),
+    "평택": (36.97, 126.83),
+    "목포": (34.79, 126.38),
+    "제주": (33.51, 126.53),
+    "여수": (34.74, 127.74),
+    "포항": (36.02, 129.37),
+    "동해": (37.52, 129.11),
+    "상하이": (31.23, 121.47),
+    "도쿄": (35.65, 139.84),
+    "싱가포르": (1.29, 103.85),
+    "홍콩": (22.29, 114.15),
+    "카오슝": (22.62, 120.27),
+}
+
+# Sea area risk profiles:
+#   (name, lat_range, lon_range, piracy_risk, weather_risk, traffic_risk)
+_SEA_AREA_RISKS: list[tuple[str, tuple[float, float], tuple[float, float], str, str, str]] = [
+    ("말라카해협", (1.0, 6.0), (100.0, 104.0), "high", "medium", "high"),
+    ("남중국해", (5.0, 22.0), (105.0, 120.0), "medium", "high", "medium"),
+    ("대한해협", (33.5, 35.5), (128.0, 131.0), "low", "medium", "high"),
+    ("동중국해", (25.0, 33.0), (120.0, 130.0), "low", "high", "medium"),
+    ("서해", (33.0, 39.0), (120.0, 127.0), "low", "medium", "medium"),
+    ("동해", (35.0, 43.0), (129.0, 140.0), "low", "high", "low"),
+    ("아덴만", (11.0, 15.0), (43.0, 51.0), "high", "low", "medium"),
+]
+
+# Risk level ordering for comparison
+_RISK_ORDER: dict[str, int] = {"low": 0, "medium": 1, "high": 2, "unknown": -1}
+
+
+def _haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """두 위경도 좌표 사이의 거리를 해리(nautical miles)로 계산한다 (Haversine 공식).
+
+    Args:
+        lat1: 출발지 위도 (도).
+        lon1: 출발지 경도 (도).
+        lat2: 도착지 위도 (도).
+        lon2: 도착지 경도 (도).
+
+    Returns:
+        거리 (해리, nautical miles).
+    """
+    r_nm = 3440.065  # 지구 반경 (해리)
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    return 2 * r_nm * math.asin(math.sqrt(a))
+
+
+def _estimate_route_risks(origin: str, destination: str) -> dict[str, Any]:
+    """출발지와 도착지를 기반으로 규칙 기반 항로 위험도를 평가한다.
+
+    알려진 항구 좌표 사이의 대권 경로를 10개 웨이포인트로 보간한 후,
+    각 웨이포인트가 속한 해역의 위험도 프로파일을 집계하여 반환한다.
+
+    알려지지 않은 항구의 경우 "unknown" 위험도와 None 거리를 반환한다.
+
+    Args:
+        origin: 출발 항구 이름 (한국어).
+        destination: 도착 항구 이름 (한국어).
+
+    Returns:
+        다음 키를 포함하는 위험도 평가 딕셔너리:
+        - overall_risk: str — 전체 위험 수준 ("low"/"medium"/"high"/"unknown")
+        - weather_risk: str
+        - piracy_risk: str
+        - traffic_risk: str
+        - distance_nm: float | None — 추정 거리 (해리)
+        - estimated_days: float | None — 12노트 평균 속도 기준 예상 항해 일수
+        - sea_areas_crossed: list[str] — 경유하는 해역 목록
+    """
+    origin_coord = _KNOWN_PORTS.get(origin)
+    dest_coord = _KNOWN_PORTS.get(destination)
+
+    if origin_coord is None or dest_coord is None:
+        return {
+            "overall_risk": "unknown",
+            "weather_risk": "unknown",
+            "piracy_risk": "unknown",
+            "traffic_risk": "unknown",
+            "distance_nm": None,
+            "estimated_days": None,
+            "sea_areas_crossed": [],
+        }
+
+    lat1, lon1 = origin_coord
+    lat2, lon2 = dest_coord
+
+    # Interpolate 10 intermediate waypoints along the great-circle path
+    waypoints: list[tuple[float, float]] = []
+    n_steps = 10
+    for i in range(n_steps + 1):
+        t = i / n_steps
+        waypoints.append((lat1 + t * (lat2 - lat1), lon1 + t * (lon2 - lon1)))
+
+    # Determine which sea areas are crossed (bounding-box check)
+    crossed: list[str] = []
+    for area_name, lat_range, lon_range, _p, _w, _t in _SEA_AREA_RISKS:
+        lat_min, lat_max = lat_range
+        lon_min, lon_max = lon_range
+        for wp_lat, wp_lon in waypoints:
+            if lat_min <= wp_lat <= lat_max and lon_min <= wp_lon <= lon_max:
+                if area_name not in crossed:
+                    crossed.append(area_name)
+                break
+
+    # Aggregate risk levels from crossed sea areas
+    piracy_level = "low"
+    weather_level = "low"
+    traffic_level = "low"
+
+    for area_name, _lr, _lonr, piracy, weather, traffic in _SEA_AREA_RISKS:
+        if area_name in crossed:
+            if _RISK_ORDER.get(piracy, -1) > _RISK_ORDER.get(piracy_level, -1):
+                piracy_level = piracy
+            if _RISK_ORDER.get(weather, -1) > _RISK_ORDER.get(weather_level, -1):
+                weather_level = weather
+            if _RISK_ORDER.get(traffic, -1) > _RISK_ORDER.get(traffic_level, -1):
+                traffic_level = traffic
+
+    # Overall risk = maximum of individual risks
+    overall = max(
+        piracy_level,
+        weather_level,
+        traffic_level,
+        key=lambda r: _RISK_ORDER.get(r, -1),
+    )
+
+    distance_nm = _haversine_distance(lat1, lon1, lat2, lon2)
+    avg_speed_knots = 12.0
+    estimated_days = distance_nm / (avg_speed_knots * 24)
+
+    return {
+        "overall_risk": overall,
+        "weather_risk": weather_level,
+        "piracy_risk": piracy_level,
+        "traffic_risk": traffic_level,
+        "distance_nm": round(distance_nm, 1),
+        "estimated_days": round(estimated_days, 1),
+        "sea_areas_crossed": crossed,
+    }
+
+
 def _format_route_analysis(
     origin: str,
     destination: str,
@@ -450,9 +605,8 @@ def _format_route_analysis(
 ) -> str:
     """항로 분석 보고서를 JSON 형태로 포맷한다.
 
-    NOTE: Weather/risk API integration is a separate work item.
-    Currently returns stub risk data. Keeping as-is until external APIs are
-    available (planned for Y2).
+    규칙 기반 위험도 평가(_estimate_route_risks)를 사용하여 해역 위험도,
+    거리, 예상 항해 일수 등을 포함한 보고서를 생성한다.
 
     Args:
         origin: 출발 항구.
@@ -463,17 +617,14 @@ def _format_route_analysis(
         JSON 직렬화된 분석 보고서 문자열.
     """
     routes = route_data.get("routes", [])
+    risk = _estimate_route_risks(origin, destination)
     report = {
         "report_type": "route_analysis",
         "origin": origin,
         "destination": destination,
         "route_count": len(routes),
         "routes": routes,
-        "risk_assessment": {
-            "overall_risk": "low",
-            "weather_risk": "unknown",
-            "piracy_risk": "unknown",
-        },
+        "risk_assessment": risk,
         "stub": route_data.get("stub", False),
     }
     return json.dumps(report, ensure_ascii=False)

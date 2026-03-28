@@ -57,6 +57,34 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app.state.document_repo = InMemoryDocumentRepository()
         logger.info("Using in-memory repositories (PostgreSQL unavailable)")
 
+    # Agent tool registry (graceful fallback)
+    try:
+        from agent.tools.builtins import create_builtin_registry
+        app.state.tool_registry = create_builtin_registry()
+        logger.info("Agent tool registry initialized (%d tools)", len(app.state.tool_registry.list_tools()))
+    except Exception:
+        app.state.tool_registry = None
+        logger.info("Agent tools not available")
+
+    # RAG engine (graceful fallback)
+    try:
+        from rag.engines.models import RAGConfig
+        from rag.engines.orchestrator import HybridRAGEngine
+        app.state.rag_engine = HybridRAGEngine(config=RAGConfig())
+        logger.info("RAG engine initialized")
+    except Exception:
+        app.state.rag_engine = None
+        logger.info("RAG engine not available")
+
+    # Document pipeline (graceful fallback)
+    try:
+        from rag.documents.pipeline import DocumentPipeline
+        app.state.document_pipeline = DocumentPipeline()
+        logger.info("Document pipeline initialized")
+    except Exception:
+        app.state.document_pipeline = None
+        logger.info("Document pipeline not available")
+
     yield
     logger.info("Maritime KG API shutting down -- closing Neo4j drivers")
     close_driver()
@@ -68,14 +96,14 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         from kg.db.connection import close_pg_pool
         await close_pg_pool()
     except Exception:
-        pass
+        logger.debug("PostgreSQL pool close failed", exc_info=True)
 
     try:
         from kg.db.redis_client import close_redis_client
 
         close_redis_client()
     except Exception:
-        pass
+        logger.debug("Redis client close failed", exc_info=True)
 
 
 def create_app(config: AppConfig | None = None) -> FastAPI:
@@ -164,7 +192,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
                 redis_backend = RedisRateLimitBackend(redis_client=client)
                 logger.info("Rate limiting: Redis backend")
         except Exception:
-            pass
+            logger.debug("Redis rate-limit backend unavailable", exc_info=True)
 
         app.add_middleware(RateLimitMiddleware, backend=redis_backend)
 

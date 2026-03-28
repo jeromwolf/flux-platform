@@ -5,7 +5,7 @@ import AppShell from '@/layouts/AppShell.vue'
 import { USpinner, UBadge } from '@/components/ui'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import { Activity, Database, Share2, Workflow, CheckCircle, AlertCircle } from 'lucide-vue-next'
-import { healthApi, schemaApi } from '@/api/endpoints'
+import { healthApi, schemaApi, workflowPersistApi } from '@/api/endpoints'
 import { useApi } from '@/composables/useApi'
 import type { HealthResponse, SchemaResponse } from '@/api/types'
 
@@ -14,6 +14,7 @@ const { t } = useI18n()
 // API state
 const healthData = ref<HealthResponse | null>(null)
 const schemaData = ref<SchemaResponse | null>(null)
+const workflowCount = ref<number | null>(null)
 const lastCheckedAt = ref<string | null>(null)
 const loadError = ref<string | null>(null)
 
@@ -27,9 +28,10 @@ async function loadDashboardData() {
   loadError.value = null
 
   try {
-    const [health, schema] = await Promise.allSettled([
+    const [health, schema, workflows] = await Promise.allSettled([
       fetchHealth(),
       fetchSchema(),
+      workflowPersistApi.list(),
     ])
 
     if (health.status === 'fulfilled' && health.value) {
@@ -37,6 +39,10 @@ async function loadDashboardData() {
     }
     if (schema.status === 'fulfilled' && schema.value) {
       schemaData.value = schema.value
+    }
+    if (workflows.status === 'fulfilled' && workflows.value) {
+      const wfData = workflows.value as { workflows?: unknown[]; items?: unknown[] }
+      workflowCount.value = (wfData.workflows ?? wfData.items ?? []).length
     }
     lastCheckedAt.value = new Date().toLocaleString('ko-KR')
   } catch (e) {
@@ -156,14 +162,17 @@ onMounted(loadDashboardData)
           <p v-else class="mt-1 text-xs text-text-muted">API 연결 확인 중</p>
         </div>
 
-        <!-- 활성 워크플로우 (placeholder) -->
+        <!-- 활성 워크플로우 -->
         <div class="rounded-xl border border-border-subtle bg-surface-secondary p-5">
           <div class="flex items-center justify-between">
             <span class="text-sm text-text-secondary">{{ t('dashboard.activeWorkflows') }}</span>
             <Workflow class="h-5 w-5 text-status-warning" />
           </div>
-          <p class="mt-2 text-2xl font-bold text-text-primary">0</p>
-          <p class="mt-1 text-xs text-text-muted">워크플로우 엔진 준비 중</p>
+          <div class="mt-2 flex items-end gap-2">
+            <USpinner v-if="isLoading && workflowCount === null" size="sm" />
+            <p v-else class="text-2xl font-bold text-text-primary">{{ workflowCount ?? 0 }}</p>
+          </div>
+          <p class="mt-1 text-xs text-text-muted">등록된 워크플로우</p>
         </div>
       </div>
 

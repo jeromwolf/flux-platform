@@ -23,6 +23,14 @@ const language = ref<'ko' | 'en'>(
   (localStorage.getItem('imsp-language') as 'ko' | 'en') ?? 'ko',
 )
 const darkTheme = ref(localStorage.getItem('imsp_theme') !== 'light')
+
+// Apply theme on load
+if (darkTheme.value) {
+  document.documentElement.classList.add('dark')
+} else {
+  document.documentElement.classList.remove('dark')
+}
+
 const sidebarOpen = ref(localStorage.getItem('imsp_sidebar') !== 'closed')
 const generalSaving = ref(false)
 
@@ -31,6 +39,12 @@ function saveGeneral() {
   setLocale(language.value)
   localStorage.setItem('imsp_theme', darkTheme.value ? 'dark' : 'light')
   localStorage.setItem('imsp_sidebar', sidebarOpen.value ? 'open' : 'closed')
+  // Apply dark theme class to document root
+  if (darkTheme.value) {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
   setTimeout(() => {
     generalSaving.value = false
   }, 500)

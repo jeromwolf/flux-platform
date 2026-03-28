@@ -11,7 +11,7 @@ import os
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="IMSP API Gateway")
-    parser.add_argument("--host", default="0.0.0.0", help="Bind host")
+    parser.add_argument("--host", default="0.0.0.0", help="Bind host")  # noqa: S104
     parser.add_argument("--port", type=int, default=8080, help="Bind port")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     args = parser.parse_args()

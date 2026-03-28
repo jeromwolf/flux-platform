@@ -19,6 +19,7 @@ class RedisMemoryProvider:
         redis_url: Redis connection URL, e.g. ``"redis://localhost:6379"``.
         max_messages: Maximum messages to retain per session list.
         prefix: Key prefix used to namespace sessions in Redis.
+        session_ttl: Session TTL in seconds (0 = no expiration, default: 86400 = 24 hours).
     """
 
     def __init__(
@@ -26,9 +27,11 @@ class RedisMemoryProvider:
         redis_url: str = "redis://localhost:6379",
         max_messages: int = 100,
         prefix: str = "imsp:memory",
+        session_ttl: int = 86400,
     ) -> None:
         self._max_messages = max_messages
         self._prefix = prefix
+        self._session_ttl = session_ttl
         self._redis = None
         self._fallback = None
 
@@ -42,6 +45,28 @@ class RedisMemoryProvider:
             from agent.memory.file_provider import FileMemoryProvider
 
             self._fallback = FileMemoryProvider(max_messages=max_messages)
+
+    @classmethod
+    def from_env(cls) -> RedisMemoryProvider:
+        """Create provider from ``AGENT_MEMORY_*`` environment variables.
+
+        Environment variables:
+            AGENT_MEMORY_REDIS_URL: Redis connection URL (default: redis://localhost:6379).
+            AGENT_MEMORY_MAX_MESSAGES: Max messages per session (default: 100).
+            AGENT_MEMORY_PREFIX: Key prefix (default: imsp:memory).
+            AGENT_MEMORY_SESSION_TTL: Session TTL in seconds (default: 86400).
+
+        Returns:
+            A :class:`RedisMemoryProvider` instance.
+        """
+        import os
+
+        return cls(
+            redis_url=os.environ.get("AGENT_MEMORY_REDIS_URL", "redis://localhost:6379"),
+            max_messages=int(os.environ.get("AGENT_MEMORY_MAX_MESSAGES", "100")),
+            prefix=os.environ.get("AGENT_MEMORY_PREFIX", "imsp:memory"),
+            session_ttl=int(os.environ.get("AGENT_MEMORY_SESSION_TTL", "86400")),
+        )
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -85,6 +110,8 @@ class RedisMemoryProvider:
         key = self._key(session_id)
         self._redis.rpush(key, data)
         self._redis.ltrim(key, -self._max_messages, -1)
+        if self._session_ttl > 0:
+            self._redis.expire(key, self._session_ttl)
 
     def get_history(
         self,
@@ -121,12 +148,21 @@ class RedisMemoryProvider:
     def list_sessions(self) -> list[str]:
         """Return sorted list of all known session IDs.
 
+        Uses ``SCAN`` instead of ``KEYS`` to avoid blocking Redis
+        in production environments with large key spaces.
+
         Returns:
             Sorted list of session identifier strings.
         """
         if self._fallback is not None:
             return self._fallback.list_sessions()
 
-        keys = self._redis.keys(f"{self._prefix}:*")
         prefix_len = len(self._prefix) + 1  # +1 for the ":"
-        return sorted(k[prefix_len:] for k in keys)
+        sessions: list[str] = []
+        cursor = 0
+        while True:
+            cursor, keys = self._redis.scan(cursor, match=f"{self._prefix}:*", count=100)
+            sessions.extend(k[prefix_len:] for k in keys)
+            if cursor == 0:
+                break
+        return sorted(set(sessions))

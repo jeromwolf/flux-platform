@@ -18,7 +18,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: gateway
+      app: imsp-gateway
   ingress:
     - ports:
         - port: 8080
@@ -34,12 +34,12 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: api
+      app: imsp-api
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              app: gateway
+              app: imsp-gateway
       ports:
         - port: 8000
   policyTypes:
@@ -59,7 +59,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: api
+              app: imsp-api
       ports:
         - port: 7687
         - port: 7474
@@ -80,7 +80,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: gateway
+              app: imsp-gateway
       ports:
         - port: 8180
   policyTypes:
@@ -136,11 +136,72 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: gateway
+              app: imsp-gateway
         - podSelector:
             matchLabels:
-              app: api
+              app: imsp-api
       ports:
         - port: 9411
+  policyTypes:
+    - Ingress
+---
+# Allow api → redis
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-redis
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: imsp-api
+      ports:
+        - port: 6379
+  policyTypes:
+    - Ingress
+---
+# Allow api → postgres
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-postgres
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: imsp-postgres
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: imsp-api
+      ports:
+        - port: 5432
+  policyTypes:
+    - Ingress
+---
+# Allow api → qdrant
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-qdrant
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: qdrant
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: imsp-api
+      ports:
+        - port: 6333
+        - port: 6334
   policyTypes:
     - Ingress

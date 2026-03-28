@@ -164,6 +164,149 @@ class APIProxy:
                 require_auth=True,
                 timeout=15.0,
             ),
+            # Node CRUD
+            ProxyRoute(
+                path="/nodes",
+                target_url=f"{base}/nodes",
+                methods=("GET", "POST", "PUT", "DELETE"),
+                require_auth=True,
+                timeout=30.0,
+            ),
+            # Relationship CRUD
+            ProxyRoute(
+                path="/relationships",
+                target_url=f"{base}/relationships",
+                methods=("GET", "POST", "PUT", "DELETE"),
+                require_auth=True,
+                timeout=30.0,
+            ),
+            # Cypher execution
+            ProxyRoute(
+                path="/cypher/execute",
+                target_url=f"{base}/cypher/execute",
+                methods=("POST",),
+                require_auth=True,
+                timeout=60.0,
+            ),
+            ProxyRoute(
+                path="/cypher/validate",
+                target_url=f"{base}/cypher/validate",
+                methods=("POST",),
+                require_auth=True,
+                timeout=15.0,
+            ),
+            ProxyRoute(
+                path="/cypher/explain",
+                target_url=f"{base}/cypher/explain",
+                methods=("POST",),
+                require_auth=True,
+                timeout=30.0,
+            ),
+            # Embeddings
+            ProxyRoute(
+                path="/embeddings",
+                target_url=f"{base}/embeddings",
+                methods=("POST",),
+                require_auth=True,
+                timeout=30.0,
+            ),
+            # Algorithms
+            ProxyRoute(
+                path="/algorithms",
+                target_url=f"{base}/algorithms",
+                methods=("GET", "POST"),
+                require_auth=True,
+                timeout=60.0,
+            ),
+            # RAG
+            ProxyRoute(
+                path="/rag/query",
+                target_url=f"{base}/rag/query",
+                methods=("POST",),
+                require_auth=True,
+                timeout=60.0,
+            ),
+            ProxyRoute(
+                path="/rag/documents",
+                target_url=f"{base}/rag/documents",
+                methods=("POST",),
+                require_auth=True,
+                timeout=60.0,
+            ),
+            ProxyRoute(
+                path="/rag/status",
+                target_url=f"{base}/rag/status",
+                methods=("GET",),
+                require_auth=True,
+                timeout=10.0,
+            ),
+            # Agent
+            ProxyRoute(
+                path="/agent/chat",
+                target_url=f"{base}/agent/chat",
+                methods=("POST",),
+                require_auth=True,
+                timeout=60.0,
+            ),
+            ProxyRoute(
+                path="/agent/chat/stream",
+                target_url=f"{base}/agent/chat/stream",
+                methods=("POST",),
+                require_auth=True,
+                timeout=120.0,
+            ),
+            ProxyRoute(
+                path="/agent/tools",
+                target_url=f"{base}/agent/tools",
+                methods=("GET",),
+                require_auth=True,
+                timeout=10.0,
+            ),
+            ProxyRoute(
+                path="/agent/tools/execute",
+                target_url=f"{base}/agent/tools/execute",
+                methods=("POST",),
+                require_auth=True,
+                timeout=30.0,
+            ),
+            ProxyRoute(
+                path="/agent/sessions",
+                target_url=f"{base}/agent/sessions",
+                methods=("GET",),
+                require_auth=True,
+                timeout=10.0,
+            ),
+            ProxyRoute(
+                path="/agent/status",
+                target_url=f"{base}/agent/status",
+                methods=("GET",),
+                require_auth=True,
+                timeout=10.0,
+            ),
+            # Documents
+            ProxyRoute(
+                path="/documents",
+                target_url=f"{base}/documents",
+                methods=("GET", "POST"),
+                require_auth=True,
+                timeout=60.0,
+            ),
+            # Workflows
+            ProxyRoute(
+                path="/workflows",
+                target_url=f"{base}/workflows",
+                methods=("GET", "POST", "PUT", "DELETE"),
+                require_auth=True,
+                timeout=30.0,
+            ),
+            # MCP
+            ProxyRoute(
+                path="/mcp",
+                target_url=f"{base}/mcp",
+                methods=("GET", "POST"),
+                require_auth=True,
+                timeout=30.0,
+            ),
         ]
 
     async def forward_request(

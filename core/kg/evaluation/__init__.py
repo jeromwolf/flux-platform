@@ -50,5 +50,5 @@ try:
         "ReasoningType",
         "Difficulty",
     ]
-except ImportError:
+except ImportError:  # noqa: S110
     pass  # maritime domain not installed

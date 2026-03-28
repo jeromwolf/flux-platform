@@ -545,8 +545,8 @@ class HWPParser:
                 import shutil as _shutil
                 tmp_path = os.path.join(tmp_dir, os.path.basename(file_path))
                 _shutil.copy2(file_path, tmp_path)
-                result = subprocess.run(
-                    ["hwp5txt", tmp_path],
+                result = subprocess.run(  # noqa: S603 S607
+                    ["hwp5txt", tmp_path],  # noqa: S607
                     capture_output=True,
                     text=True,
                     cwd=tmp_dir,
@@ -598,7 +598,7 @@ class HWPParser:
                         text = HWPParser._extract_text_from_ole_stream(raw, struct)
                         if text.strip():
                             text_parts.append(text.strip())
-                    except Exception:
+                    except Exception:  # noqa: S112
                         continue
 
             ole.close()
@@ -753,9 +753,9 @@ class DOCXParser:
                     if cells:
                         paragraphs.append("\t".join(cells))
             return "\n\n".join(paragraphs)
-        except ImportError:
+        except ImportError:  # noqa: S110
             pass
-        except Exception:
+        except Exception:  # noqa: S110
             # python-docx is installed but the file is malformed / not a real DOCX;
             # fall through to the zipfile fallback.
             pass
@@ -896,9 +896,9 @@ class PPTXParser:
                 if len(slide_parts) > 1:
                     slides_text.append("\n".join(slide_parts))
             return "\n\n".join(slides_text)
-        except ImportError:
+        except ImportError:  # noqa: S110
             pass
-        except Exception:
+        except Exception:  # noqa: S110
             # python-pptx is installed but the file is malformed / not a real PPTX;
             # fall through to the zipfile fallback.
             pass

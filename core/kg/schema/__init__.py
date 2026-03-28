@@ -9,5 +9,5 @@ try:
     from maritime.schema.load_sample_data import load_sample_data  # noqa: F401
 
     __all__ += ["load_sample_data"]
-except ImportError:
+except ImportError:  # noqa: S110
     pass  # maritime domain not installed

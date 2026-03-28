@@ -49,7 +49,8 @@ class InProcessTransport:
         return await self.server.handle(request)
 
     def close(self) -> None:
-        pass
+        logger.debug("InProcessTransport closed")
+        self.server = None
 
 
 @dataclass
@@ -64,6 +65,7 @@ class HttpTransport:
     api_key: str = ""
     timeout: float = 30.0
     _headers: dict[str, str] = field(default_factory=dict, init=False)
+    _closed: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         self._headers = {
@@ -77,6 +79,8 @@ class HttpTransport:
         """Send JSON-RPC request over HTTP POST and return parsed response."""
         if not self.url:
             return MCPResponse(error="No URL configured", request_id=request.request_id)
+        if self._closed:
+            return MCPResponse(error="Transport is closed", request_id=request.request_id)
 
         from urllib.error import HTTPError, URLError
         from urllib.request import Request, urlopen
@@ -111,7 +115,9 @@ class HttpTransport:
             return MCPResponse(error=f"Transport error: {e}", request_id=request.request_id)
 
     def close(self) -> None:
-        pass
+        if not self._closed:
+            self._closed = True
+            logger.debug("HttpTransport closed (url=%s)", self.url)
 
 
 @dataclass
@@ -125,11 +131,14 @@ class SseTransport:
     url: str = ""
     api_key: str = ""
     timeout: float = 60.0
+    _closed: bool = field(default=False, init=False)
 
     async def send(self, request: MCPRequest) -> MCPResponse:
         """Send request and collect SSE response stream into a single response."""
         if not self.url:
             return MCPResponse(error="No URL configured", request_id=request.request_id)
+        if self._closed:
+            return MCPResponse(error="Transport is closed", request_id=request.request_id)
 
         from urllib.error import HTTPError, URLError
         from urllib.request import Request, urlopen
@@ -202,7 +211,9 @@ class SseTransport:
             return MCPResponse(error=f"SSE transport error: {e}", request_id=request.request_id)
 
     def close(self) -> None:
-        pass
+        if not self._closed:
+            self._closed = True
+            logger.debug("SseTransport closed (url=%s)", self.url)
 
 
 @dataclass(frozen=True)

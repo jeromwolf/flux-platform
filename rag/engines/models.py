@@ -1,6 +1,7 @@
 """RAG engine configuration and result models."""
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -36,6 +37,40 @@ class RAGConfig:
     rerank: bool = False
     reranker_backend: str = "score_boost"
     include_metadata: bool = True
+
+    @classmethod
+    def from_env(cls) -> RAGConfig:
+        """Create config from ``RAG_*`` environment variables.
+
+        Environment variables:
+            RAG_MODE: Retrieval mode -- ``semantic``, ``keyword``, or ``hybrid`` (default: hybrid).
+            RAG_TOP_K: Maximum chunks to return (default: 5).
+            RAG_SIMILARITY_THRESHOLD: Minimum cosine similarity (default: 0.7).
+            RAG_RERANK: Enable re-ranking -- ``1``/``true``/``yes`` (default: false).
+            RAG_RERANKER_BACKEND: Reranker backend name (default: score_boost).
+            RAG_INCLUDE_METADATA: Include metadata -- ``1``/``true``/``yes`` (default: true).
+
+        Returns:
+            A :class:`RAGConfig` populated from the environment.
+        """
+        mode_str = os.environ.get("RAG_MODE", "hybrid").lower()
+        mode_map = {"semantic": RetrievalMode.SEMANTIC, "keyword": RetrievalMode.KEYWORD, "hybrid": RetrievalMode.HYBRID}
+        mode = mode_map.get(mode_str, RetrievalMode.HYBRID)
+
+        rerank_raw = os.environ.get("RAG_RERANK", "false").lower()
+        rerank = rerank_raw in ("1", "true", "yes")
+
+        include_meta_raw = os.environ.get("RAG_INCLUDE_METADATA", "true").lower()
+        include_metadata = include_meta_raw in ("1", "true", "yes")
+
+        return cls(
+            mode=mode,
+            top_k=int(os.environ.get("RAG_TOP_K", "5")),
+            similarity_threshold=float(os.environ.get("RAG_SIMILARITY_THRESHOLD", "0.7")),
+            rerank=rerank,
+            reranker_backend=os.environ.get("RAG_RERANKER_BACKEND", "score_boost"),
+            include_metadata=include_metadata,
+        )
 
 
 @dataclass(frozen=True)

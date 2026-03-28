@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: imsp-qdrant
+  namespace: imsp
+  labels:
+    app.kubernetes.io/name: imsp-qdrant
+    app.kubernetes.io/component: vector-db
+    app.kubernetes.io/part-of: imsp-platform
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  replicas: 1
+  serviceName: qdrant
+  selector:
+    matchLabels:
+      app: qdrant
+  template:
+    metadata:
+      labels:
+        app: qdrant
+        app.kubernetes.io/name: imsp-qdrant
+        app.kubernetes.io/component: vector-db
+        app.kubernetes.io/part-of: imsp-platform
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: qdrant
+          image: qdrant/qdrant:v1.12.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 6333
+              protocol: TCP
+            - name: grpc
+              containerPort: 6334
+              protocol: TCP
+          env:
+            - name: QDRANT__SERVICE__GRPC_PORT
+              value: "6334"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 6333
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 6333
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: qdrant-data
+              mountPath: /qdrant/storage
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+  volumeClaimTemplates:
+    - metadata:
+        name: qdrant-data
+        labels:
+          app.kubernetes.io/name: imsp-qdrant
+          app.kubernetes.io/component: vector-db
+          app.kubernetes.io/part-of: imsp-platform
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi

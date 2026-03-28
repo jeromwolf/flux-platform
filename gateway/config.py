@@ -21,7 +21,7 @@ class GatewayConfig:
         debug: Enable debug mode (verbose logging, reload, etc.).
     """
 
-    host: str = "0.0.0.0"
+    host: str = "0.0.0.0"  # noqa: S104
     port: int = 8080
     cors_origins: tuple[str, ...] = ("http://localhost:5180",)
     api_base_url: str = "http://localhost:8000"
@@ -56,7 +56,7 @@ class GatewayConfig:
         debug = debug_raw in ("1", "true", "yes")
 
         return cls(
-            host=os.getenv("GATEWAY_HOST", "0.0.0.0"),
+            host=os.getenv("GATEWAY_HOST", "0.0.0.0"),  # noqa: S104
             port=int(os.getenv("GATEWAY_PORT", "8080")),
             cors_origins=cors_origins,
             api_base_url=os.getenv("GATEWAY_API_BASE_URL", "http://localhost:8000"),

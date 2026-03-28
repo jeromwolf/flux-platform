@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Any
@@ -22,6 +23,7 @@ class KeycloakConfig:
     client_id: str
     public_paths: list[str] = field(default_factory=list)
     _jwks_cache: dict[str, Any] | None = field(default=None, repr=False)
+    _jwks_cached_at: float = field(default=0.0, repr=False)
 
     @property
     def issuer(self) -> str:
@@ -41,6 +43,10 @@ class KeycloakConfig:
     def clear_jwks_cache(self) -> None:
         """Clear the cached JWKS data (useful for testing or key rotation)."""
         self._jwks_cache = None
+        self._jwks_cached_at = 0.0
+
+
+_JWKS_CACHE_TTL = 3600  # 1 hour in seconds
 
 
 class KeycloakMiddleware(BaseHTTPMiddleware):
@@ -146,12 +152,15 @@ class KeycloakMiddleware(BaseHTTPMiddleware):
         return self._decode_token_fallback(token)
 
     def _fetch_jwks(self) -> dict[str, Any] | None:
-        """Fetch JWKS from Keycloak (cached).
+        """Fetch JWKS from Keycloak (cached with TTL).
 
         Returns:
             Parsed JWKS dict if successful, None if fetch fails.
         """
-        if self._config._jwks_cache is not None:
+        if (
+            self._config._jwks_cache is not None
+            and (time.time() - self._config._jwks_cached_at) < _JWKS_CACHE_TTL
+        ):
             return self._config._jwks_cache
 
         try:
@@ -159,6 +168,7 @@ class KeycloakMiddleware(BaseHTTPMiddleware):
             with urllib.request.urlopen(req, timeout=5) as resp:
                 jwks = json.loads(resp.read())
                 self._config._jwks_cache = jwks
+                self._config._jwks_cached_at = time.time()
                 logger.info(
                     "JWKS fetched from %s (%d keys)",
                     self._config.jwks_uri,

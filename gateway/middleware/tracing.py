@@ -113,5 +113,5 @@ def _report_span(
             method="POST",
         )
         urlopen(req, timeout=1)
-    except Exception:
+    except Exception:  # noqa: S110
         pass  # Fire-and-forget — never surface tracing errors to callers

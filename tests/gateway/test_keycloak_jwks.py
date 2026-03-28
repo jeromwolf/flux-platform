@@ -221,12 +221,96 @@ class TestFetchJwks:
         mw = _make_middleware(keycloak_url="http://keycloak:8080")
         existing = {"keys": [{"kid": "cached-key", "kty": "RSA"}]}
         mw._config._jwks_cache = existing
+        mw._config._jwks_cached_at = time.time()
 
         with patch("urllib.request.urlopen") as mock_open:
             result = mw._fetch_jwks()
 
         mock_open.assert_not_called()
         assert result is existing
+
+
+# ---------------------------------------------------------------------------
+# TC-KJ05: JWKS cache TTL behavior
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestJwksCacheTTL:
+    """TC-KJ05: JWKS cache TTL behavior."""
+
+    # TC-KJ05a: fresh cache is returned without HTTP call
+    def test_fresh_cache_skips_fetch(self):
+        """Cache populated within TTL returns cached value without HTTP request."""
+        mw = _make_middleware(keycloak_url="http://keycloak:8080")
+        existing = {"keys": [{"kid": "k1", "kty": "RSA"}]}
+        mw._config._jwks_cache = existing
+        mw._config._jwks_cached_at = time.time()  # just now
+
+        with patch("urllib.request.urlopen") as mock_open:
+            result = mw._fetch_jwks()
+
+        mock_open.assert_not_called()
+        assert result is existing
+
+    # TC-KJ05b: expired cache triggers re-fetch
+    def test_expired_cache_triggers_refetch(self):
+        """Cache older than TTL triggers new HTTP fetch."""
+        mw = _make_middleware(keycloak_url="http://keycloak:8080")
+        old_cache = {"keys": [{"kid": "old", "kty": "RSA"}]}
+        mw._config._jwks_cache = old_cache
+        mw._config._jwks_cached_at = time.time() - 3601  # expired
+
+        new_jwks = {"keys": [{"kid": "new", "kty": "RSA"}]}
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps(new_jwks).encode()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_resp):
+            result = mw._fetch_jwks()
+
+        assert result == new_jwks
+        assert mw._config._jwks_cache == new_jwks
+        assert mw._config._jwks_cached_at > time.time() - 5  # recently updated
+
+    # TC-KJ05c: clear_jwks_cache resets both cache and timestamp
+    def test_clear_cache_resets_timestamp(self):
+        """clear_jwks_cache resets _jwks_cache and _jwks_cached_at."""
+        mw = _make_middleware(keycloak_url="http://keycloak:8080")
+        mw._config._jwks_cache = {"keys": []}
+        mw._config._jwks_cached_at = time.time()
+
+        mw._config.clear_jwks_cache()
+
+        assert mw._config._jwks_cache is None
+        assert mw._config._jwks_cached_at == 0.0
+
+    # TC-KJ05d: cache at exactly TTL boundary still valid
+    def test_cache_at_ttl_boundary_still_valid(self):
+        """Cache exactly at TTL - 1 second is still considered valid."""
+        mw = _make_middleware(keycloak_url="http://keycloak:8080")
+        existing = {"keys": [{"kid": "boundary", "kty": "RSA"}]}
+        mw._config._jwks_cache = existing
+        mw._config._jwks_cached_at = time.time() - 3599  # 1 second before expiry
+
+        with patch("urllib.request.urlopen") as mock_open:
+            result = mw._fetch_jwks()
+
+        mock_open.assert_not_called()
+        assert result is existing
+
+    # TC-KJ05e: expired cache with fetch failure returns None
+    def test_expired_cache_fetch_failure_returns_none(self):
+        """When cache is expired and re-fetch fails, returns None."""
+        mw = _make_middleware(keycloak_url="http://keycloak:8080")
+        mw._config._jwks_cache = {"keys": []}
+        mw._config._jwks_cached_at = time.time() - 7200  # long expired
+
+        with patch("urllib.request.urlopen", side_effect=OSError("connection refused")):
+            result = mw._fetch_jwks()
+
+        assert result is None
 
 
 # ---------------------------------------------------------------------------
