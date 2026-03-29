@@ -100,8 +100,8 @@ check_untyped_defs = true
 ignore_missing_imports = true
 
 [tool.coverage.run]
-source = ["kg", "maritime"]
-omit = ["kg/crawlers/*", "maritime/crawlers/*", "maritime/schema/*", "maritime/rbac/*", "kg/utils/verification.py", "*/test_*"]
+source = ["kg", "maritime", "agent", "rag", "gateway"]
+omit = ["kg/crawlers/*", "maritime/crawlers/*", "maritime/schema/*", "maritime/rbac/*", "kg/utils/verification.py", "*/test_*", "maritime/poc/*"]
 
 [tool.coverage.report]
 show_missing = true
