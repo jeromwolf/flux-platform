@@ -5,7 +5,7 @@ falls below configurable thresholds. Per GraphRAG Part 12 enterprise patterns.
 
 Checks run WITHOUT a Neo4j connection (unit-test friendly). They validate:
 - Ontology structure (object types exist, link types exist)
-- Evaluation dataset completeness (30 questions, balanced distribution)
+- Evaluation dataset completeness (300 questions, balanced distribution)
 - Pipeline functionality (can generate Cypher from sample questions)
 - Relationship type coverage
 - Node property completeness
@@ -302,8 +302,8 @@ class QualityGate:
         """Validate the built-in evaluation dataset structure and balance.
 
         Checks:
-        - Dataset has exactly 30 questions
-        - 10 questions per difficulty level (EASY, MEDIUM, HARD)
+        - Dataset has exactly 300 questions
+        - 60 EASY, 100 MEDIUM, 140 HARD questions
         - All 5 reasoning types are represented
         - Every question has ground truth Cypher and expected labels
 
@@ -318,14 +318,20 @@ class QualityGate:
 
             # Total count
             total = len(dataset.questions)
-            if total != 30:
-                issues.append(f"Expected 30 questions, got {total}")
+            if total != 300:
+                issues.append(f"Expected 300 questions, got {total}")
 
-            # Difficulty distribution
+            # Difficulty distribution (60 EASY, 100 MEDIUM, 140 HARD)
+            expected_counts = {
+                Difficulty.EASY: 60,
+                Difficulty.MEDIUM: 100,
+                Difficulty.HARD: 140,
+            }
             for diff in Difficulty:
                 count = len(dataset.get_by_difficulty(diff))
-                if count != 10:
-                    issues.append(f"Expected 10 {diff.value} questions, got {count}")
+                expected = expected_counts[diff]
+                if count != expected:
+                    issues.append(f"Expected {expected} {diff.value} questions, got {count}")
 
             # Reasoning type coverage
             present_types = {q.reasoning_type for q in dataset.questions}

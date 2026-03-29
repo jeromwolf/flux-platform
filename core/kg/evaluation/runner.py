@@ -311,11 +311,11 @@ if __name__ == "__main__":
     # Create pipeline
     pipeline = TextToCypherPipeline()
 
-    # Load builtin dataset (30 questions)
+    # Load builtin dataset (300 questions)
     dataset = EvalDataset.builtin()
 
     # Run evaluation
-    print("Running evaluation on 30 builtin questions...")
+    print("Running evaluation on 300 builtin questions...")
     runner = EvaluationRunner(pipeline=pipeline)
     report = runner.run(dataset)
 

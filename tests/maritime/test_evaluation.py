@@ -159,18 +159,18 @@ class TestBuiltinDataset:
     """Built-in 해사 평가 데이터셋 검증."""
 
     @pytest.mark.unit
-    def test_builtin_has_30_questions(self) -> None:
-        """Built-in 데이터셋 30문항."""
+    def test_builtin_has_300_questions(self) -> None:
+        """Built-in 데이터셋 300문항."""
         ds = EvalDataset.builtin()
-        assert len(ds.questions) == 30
+        assert len(ds.questions) == 300
 
     @pytest.mark.unit
     def test_builtin_difficulty_distribution(self) -> None:
-        """Built-in 데이터셋 난이도 분포: 10/10/10."""
+        """Built-in 데이터셋 난이도 분포: 60/100/140."""
         ds = EvalDataset.builtin()
-        assert len(ds.get_by_difficulty(Difficulty.EASY)) == 10
-        assert len(ds.get_by_difficulty(Difficulty.MEDIUM)) == 10
-        assert len(ds.get_by_difficulty(Difficulty.HARD)) == 10
+        assert len(ds.get_by_difficulty(Difficulty.EASY)) == 60
+        assert len(ds.get_by_difficulty(Difficulty.MEDIUM)) == 100
+        assert len(ds.get_by_difficulty(Difficulty.HARD)) == 140
 
     @pytest.mark.unit
     def test_builtin_all_have_cypher(self) -> None:
@@ -213,8 +213,8 @@ class TestBuiltinDataset:
         ds1 = EvalDataset.builtin()
         ds2 = EvalDataset.builtin()
         ds1.questions.pop()
-        assert len(ds1.questions) == 29
-        assert len(ds2.questions) == 30
+        assert len(ds1.questions) == 299
+        assert len(ds2.questions) == 300
 
 
 # =========================================================================

@@ -352,7 +352,7 @@ class TestCheckEvaluationDataset:
         gate = QualityGate()
         result = gate.check_evaluation_dataset()
         assert result.status == CheckStatus.PASSED
-        assert "30 questions" in result.message
+        assert "300 questions" in result.message
 
     @pytest.mark.unit
     def test_details_contain_reasoning_types(self) -> None:

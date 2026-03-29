@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지식그래프 기반 그라운딩 아키텍처 — IMSP</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0f1e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1060" width="1200" height="1060" font-family="'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">
+      <defs>
+        <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0c1428"/>
+          <stop offset="100%" stop-color="#111d3a"/>
+        </linearGradient>
+        <linearGradient id="layerAI" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#7c3a00" stop-opacity="0.0"/>
+          <stop offset="30%" stop-color="#7c3a00" stop-opacity="0.25"/>
+          <stop offset="70%" stop-color="#7c3a00" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#7c3a00" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="layerAgent" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#553c00" stop-opacity="0.0"/>
+          <stop offset="20%" stop-color="#553c00" stop-opacity="0.18"/>
+          <stop offset="80%" stop-color="#553c00" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#553c00" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="layerGround" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#1a4a47" stop-opacity="0.0"/>
+          <stop offset="30%" stop-color="#1a4a47" stop-opacity="0.25"/>
+          <stop offset="70%" stop-color="#1a4a47" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#1a4a47" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="layerRAG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#1a3555" stop-opacity="0.0"/>
+          <stop offset="10%" stop-color="#1a3555" stop-opacity="0.22"/>
+          <stop offset="90%" stop-color="#1a3555" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#1a3555" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="layerKG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#0f2e1e" stop-opacity="0.0"/>
+          <stop offset="10%" stop-color="#0f2e1e" stop-opacity="0.28"/>
+          <stop offset="90%" stop-color="#0f2e1e" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#0f2e1e" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="layerReady" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#1a3040" stop-opacity="0.0"/>
+          <stop offset="10%" stop-color="#1a3040" stop-opacity="0.22"/>
+          <stop offset="90%" stop-color="#1a3040" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#1a3040" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="cardAI" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c05621"/>
+          <stop offset="100%" stop-color="#92400e"/>
+        </linearGradient>
+        <linearGradient id="cardAgent" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#9c6f1e"/>
+          <stop offset="100%" stop-color="#6b4c14"/>
+        </linearGradient>
+        <linearGradient id="cardGround" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2c7a7b"/>
+          <stop offset="100%" stop-color="#1d5a5b"/>
+        </linearGradient>
+        <linearGradient id="cardRAG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2b6cb0"/>
+          <stop offset="100%" stop-color="#1a4a7e"/>
+        </linearGradient>
+        <linearGradient id="cardGraphRAG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0987a0"/>
+          <stop offset="100%" stop-color="#065666"/>
+        </linearGradient>
+        <linearGradient id="cardOntology" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#553c9a"/>
+          <stop offset="100%" stop-color="#3b2677"/>
+        </linearGradient>
+        <linearGradient id="cardKG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#276749"/>
+          <stop offset="100%" stop-color="#1c4d35"/>
+        </linearGradient>
+        <linearGradient id="cardMeta" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c53030"/>
+          <stop offset="100%" stop-color="#922020"/>
+        </linearGradient>
+        <linearGradient id="cardReady" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2a6496"/>
+          <stop offset="100%" stop-color="#1a4060"/>
+        </linearGradient>
+        <linearGradient id="cardSource" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2d3748"/>
+          <stop offset="100%" stop-color="#1a202c"/>
+        </linearGradient>
+        <marker id="arrowGold" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#f6ad55"/>
+        </marker>
+        <marker id="arrowYellow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#ecc94b"/>
+        </marker>
+        <marker id="arrowCyan" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#4fd1c5"/>
+        </marker>
+        <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#63b3ed"/>
+        </marker>
+        <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#68d391"/>
+        </marker>
+        <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#b794f4"/>
+        </marker>
+        <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#fc8181"/>
+        </marker>
+        <marker id="arrowSky" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#63b3ed"/>
+        </marker>
+        <filter id="shadowCard" x="-10%" y="-10%" width="120%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.4"/>
+        </filter>
+        <filter id="shadowGlow" x="-20%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#f6ad55" flood-opacity="0.5"/>
+        </filter>
+        <filter id="shadowGlowYellow" x="-20%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#ecc94b" flood-opacity="0.4"/>
+        </filter>
+        <filter id="shadowGlowCyan" x="-20%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#4fd1c5" flood-opacity="0.4"/>
+        </filter>
+        <filter id="shadowGlowGreen" x="-20%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#68d391" flood-opacity="0.35"/>
+        </filter>
+        <filter id="shadowGlowSky" x="-20%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#63b3ed" flood-opacity="0.35"/>
+        </filter>
+      </defs>
+
+      <!-- BACKGROUND -->
+      <rect width="1200" height="1060" fill="url(#bgGrad)"/>
+
+      <!-- Grid -->
+      <g opacity="0.04" stroke="#ffffff" stroke-width="0.5">
+        <line x1="0" y1="100" x2="1200" y2="100"/><line x1="0" y1="200" x2="1200" y2="200"/>
+        <line x1="0" y1="300" x2="1200" y2="300"/><line x1="0" y1="400" x2="1200" y2="400"/>
+        <line x1="0" y1="500" x2="1200" y2="500"/><line x1="0" y1="600" x2="1200" y2="600"/>
+        <line x1="0" y1="700" x2="1200" y2="700"/><line x1="0" y1="800" x2="1200" y2="800"/>
+        <line x1="0" y1="900" x2="1200" y2="900"/><line x1="0" y1="1000" x2="1200" y2="1000"/>
+        <line x1="100" y1="0" x2="100" y2="1060"/><line x1="200" y1="0" x2="200" y2="1060"/>
+        <line x1="300" y1="0" x2="300" y2="1060"/><line x1="400" y1="0" x2="400" y2="1060"/>
+        <line x1="500" y1="0" x2="500" y2="1060"/><line x1="600" y1="0" x2="600" y2="1060"/>
+        <line x1="700" y1="0" x2="700" y2="1060"/><line x1="800" y1="0" x2="800" y2="1060"/>
+        <line x1="900" y1="0" x2="900" y2="1060"/><line x1="1000" y1="0" x2="1000" y2="1060"/>
+        <line x1="1100" y1="0" x2="1100" y2="1060"/>
+      </g>
+
+      <!-- TITLE -->
+      <text x="600" y="42" text-anchor="middle" font-size="22" font-weight="700" fill="#e2e8f0" letter-spacing="1">지식그래프 기반 AI 그라운딩 아키텍처</text>
+      <text x="600" y="64" text-anchor="middle" font-size="13" fill="#718096" letter-spacing="0.5">Knowledge Graph–Grounded AI Agent Pipeline</text>
+      <line x1="200" y1="75" x2="1000" y2="75" stroke="#2d3748" stroke-width="1"/>
+
+      <!-- ============ LAYER BANDS ============ -->
+      <!-- Layer 7: Source -->
+      <rect x="60" y="938" width="1080" height="72" rx="8" fill="url(#layerKG)" opacity="0.5"/>
+      <!-- Layer 6: AI-Ready Data -->
+      <rect x="60" y="838" width="1080" height="90" rx="8" fill="url(#layerReady)"/>
+      <!-- Layer 5: KG Foundation -->
+      <rect x="60" y="618" width="1080" height="210" rx="8" fill="url(#layerKG)"/>
+      <!-- Layer 4: RAG/GraphRAG -->
+      <rect x="60" y="448" width="1080" height="160" rx="8" fill="url(#layerRAG)"/>
+      <!-- Layer 3: Grounding -->
+      <rect x="180" y="308" width="840" height="130" rx="8" fill="url(#layerGround)"/>
+      <!-- Layer 2: Agent -->
+      <rect x="250" y="198" width="700" height="100" rx="8" fill="url(#layerAgent)"/>
+      <!-- Layer 1: AI Answer -->
+      <rect x="340" y="88" width="520" height="100" rx="8" fill="url(#layerAI)"/>
+
+      <!-- Layer labels -->
+      <text x="1158" y="143" text-anchor="end" font-size="10" fill="#4a5568" font-weight="500" letter-spacing="1">LAYER 1</text>
+      <text x="1158" y="253" text-anchor="end" font-size="10" fill="#4a5568" font-weight="500" letter-spacing="1">LAYER 2</text>
+      <text x="1158" y="378" text-anchor="end" font-size="10" fill="#4a5568" font-weight="500" letter-spacing="1">LAYER 3</text>
+      <text x="1158" y="530" text-anchor="end" font-size="10" fill="#4a5568" font-weight="500" letter-spacing="1">LAYER 4</text>
+      <text x="1158" y="720" text-anchor="end" font-size="10" fill="#4a5568" font-weight="500" letter-spacing="1">LAYER 5</text>
+      <text x="1158" y="880" text-anchor="end" font-size="10" fill="#4a5568" font-weight="500" letter-spacing="1">LAYER 6</text>
+      <text x="1158" y="978" text-anchor="end" font-size="10" fill="#4a5568" font-weight="500" letter-spacing="1">LAYER 7</text>
+
+      <!-- ============ LAYER 1: AI ANSWER ============ -->
+      <rect x="400" y="95" width="400" height="86" rx="14" fill="url(#cardAI)" filter="url(#shadowGlow)" stroke="#f6ad55" stroke-width="1.5" stroke-opacity="0.6"/>
+      <g transform="translate(430, 130)">
+        <polygon points="0,-14 3.5,-3.5 14,0 3.5,3.5 0,14 -3.5,3.5 -14,0 -3.5,-3.5" fill="#fbd38d" opacity="0.9"/>
+        <polygon points="0,-8 2,-2 8,0 2,2 0,8 -2,2 -8,0 -2,-2" fill="#fefcbf"/>
+      </g>
+      <text x="600" y="128" text-anchor="middle" font-size="18" font-weight="700" fill="#fef3c7">AI 답변 생성</text>
+      <text x="600" y="148" text-anchor="middle" font-size="12" fill="#fde68a">Grounded Generation</text>
+      <text x="600" y="168" text-anchor="middle" font-size="11" fill="#fbbf24" opacity="0.85">환각(Hallucination) 없는 신뢰 답변</text>
+
+      <!-- ============ LAYER 2: AI AGENT ============ -->
+      <rect x="310" y="205" width="580" height="86" rx="14" fill="url(#cardAgent)" filter="url(#shadowGlowYellow)" stroke="#ecc94b" stroke-width="1.5" stroke-opacity="0.6"/>
+      <!-- Icon: robot/agent -->
+      <g transform="translate(342, 242)">
+        <rect x="-12" y="-14" width="24" height="18" rx="4" fill="none" stroke="#faf089" stroke-width="1.8"/>
+        <circle cx="-5" cy="-6" r="2.5" fill="#faf089"/>
+        <circle cx="5" cy="-6" r="2.5" fill="#faf089"/>
+        <line x1="-4" y1="0" x2="4" y2="0" stroke="#faf089" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="-8" y1="6" x2="-14" y2="10" stroke="#faf089" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="8" y1="6" x2="14" y2="10" stroke="#faf089" stroke-width="1.5" stroke-linecap="round"/>
+      </g>
+      <text x="600" y="234" text-anchor="middle" font-size="17" font-weight="700" fill="#fefcbf">AI 에이전트 (Agent)</text>
+      <text x="600" y="254" text-anchor="middle" font-size="12" fill="#f6e05e">자율적 판단 · 도구 선택 · 멀티스텝 추론</text>
+      <text x="600" y="274" text-anchor="middle" font-size="11" fill="#ecc94b" opacity="0.8">RAG/GraphRAG 오케스트레이션 · 그라운딩 검증 · 사용자 의도 파악</text>
+
+      <!-- ============ LAYER 3: GROUNDING ============ -->
+      <rect x="340" y="315" width="520" height="110" rx="14" fill="url(#cardGround)" filter="url(#shadowGlowCyan)" stroke="#4fd1c5" stroke-width="1.5" stroke-opacity="0.6"/>
+      <g transform="translate(374, 362)">
+        <path d="M0,-16 L12,-8 L12,4 Q12,14 0,18 Q-12,14 -12,4 L-12,-8 Z" fill="none" stroke="#81e6d9" stroke-width="2"/>
+        <path d="M0,-8 L0,10 M-6,2 L6,2" stroke="#81e6d9" stroke-width="2"/>
+      </g>
+      <text x="600" y="347" text-anchor="middle" font-size="17" font-weight="700" fill="#e6fffa">그라운딩 (Grounding)</text>
+      <text x="600" y="367" text-anchor="middle" font-size="12" fill="#81e6d9">컨텍스트 통합 및 신뢰도 검증</text>
+      <text x="600" y="387" text-anchor="middle" font-size="11" fill="#4fd1c5" opacity="0.8">RAG 문서 컨텍스트 + GraphRAG 추론 컨텍스트 → LLM 프롬프트</text>
+      <text x="600" y="406" text-anchor="middle" font-size="11" fill="#4fd1c5" opacity="0.8">사실 근거 기반 생성 · 출처 추적 가능</text>
+
+      <!-- ============ LAYER 4: RAG + GraphRAG ============ -->
+      <!-- RAG -->
+      <rect x="100" y="460" width="420" height="132" rx="14" fill="url(#cardRAG)" filter="url(#shadowCard)" stroke="#63b3ed" stroke-width="1.5" stroke-opacity="0.6"/>
+      <g transform="translate(134, 514)">
+        <rect x="-10" y="-16" width="14" height="18" rx="2" fill="none" stroke="#90cdf4" stroke-width="1.8"/>
+        <line x1="-8" y1="-10" x2="1" y2="-10" stroke="#90cdf4" stroke-width="1.2"/>
+        <line x1="-8" y1="-5" x2="1" y2="-5" stroke="#90cdf4" stroke-width="1.2"/>
+        <line x1="-8" y1="0" x2="-2" y2="0" stroke="#90cdf4" stroke-width="1.2"/>
+        <circle cx="6" cy="5" r="5" fill="none" stroke="#90cdf4" stroke-width="1.8"/>
+        <line x1="9.5" y1="8.5" x2="13" y2="12" stroke="#90cdf4" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <text x="310" y="492" text-anchor="middle" font-size="17" font-weight="700" fill="#ebf8ff">RAG</text>
+      <text x="310" y="512" text-anchor="middle" font-size="12" fill="#90cdf4">Retrieval-Augmented Generation</text>
+      <text x="310" y="532" text-anchor="middle" font-size="11" fill="#63b3ed" opacity="0.85">문서 청크 벡터 임베딩 · 유사도 검색</text>
+      <text x="310" y="549" text-anchor="middle" font-size="11" fill="#63b3ed" opacity="0.85">BM25 + Dense Retrieval 하이브리드</text>
+      <text x="310" y="573" text-anchor="middle" font-size="10.5" fill="#4299e1" opacity="0.75">입력: 질의(Query) → 출력: 관련 문서 청크</text>
+
+      <!-- GraphRAG -->
+      <rect x="680" y="460" width="420" height="132" rx="14" fill="url(#cardGraphRAG)" filter="url(#shadowCard)" stroke="#76e4f7" stroke-width="1.5" stroke-opacity="0.6"/>
+      <g transform="translate(714, 514)">
+        <circle cx="0" cy="-12" r="5" fill="none" stroke="#9decf9" stroke-width="1.8"/>
+        <circle cx="-11" cy="6" r="5" fill="none" stroke="#9decf9" stroke-width="1.8"/>
+        <circle cx="11" cy="6" r="5" fill="none" stroke="#9decf9" stroke-width="1.8"/>
+        <line x1="-2.5" y1="-7.5" x2="-8.5" y2="1.5" stroke="#9decf9" stroke-width="1.5"/>
+        <line x1="2.5" y1="-7.5" x2="8.5" y2="1.5" stroke="#9decf9" stroke-width="1.5"/>
+        <line x1="-6" y1="6" x2="6" y2="6" stroke="#9decf9" stroke-width="1.5"/>
+      </g>
+      <text x="890" y="492" text-anchor="middle" font-size="17" font-weight="700" fill="#e0f7fa">GraphRAG</text>
+      <text x="890" y="512" text-anchor="middle" font-size="12" fill="#9decf9">Graph-based Retrieval &amp; Reasoning</text>
+      <text x="890" y="532" text-anchor="middle" font-size="11" fill="#76e4f7" opacity="0.85">KG 엔티티 · 관계 그래프 순회</text>
+      <text x="890" y="549" text-anchor="middle" font-size="11" fill="#76e4f7" opacity="0.85">다단계 추론 · 서브그래프 추출</text>
+      <text x="890" y="573" text-anchor="middle" font-size="10.5" fill="#0bc5ea" opacity="0.75">입력: 질의(Query) → 출력: 추론 경로 + 사실</text>
+
+      <!-- ============ LAYER 5: KG FOUNDATION ============ -->
+      <!-- Ontology -->
+      <rect x="80" y="632" width="280" height="140" rx="14" fill="url(#cardOntology)" filter="url(#shadowCard)" stroke="#b794f4" stroke-width="1.5" stroke-opacity="0.6"/>
+      <g transform="translate(110, 686)">
+        <rect x="-8" y="-16" width="16" height="10" rx="2" fill="none" stroke="#d6bcfa" stroke-width="1.8"/>
+        <line x1="0" y1="-6" x2="0" y2="2" stroke="#d6bcfa" stroke-width="1.5"/>
+        <line x1="-10" y1="2" x2="10" y2="2" stroke="#d6bcfa" stroke-width="1.5"/>
+        <rect x="-18" y="2" width="14" height="9" rx="2" fill="none" stroke="#d6bcfa" stroke-width="1.5"/>
+        <rect x="4" y="2" width="14" height="9" rx="2" fill="none" stroke="#d6bcfa" stroke-width="1.5"/>
+      </g>
+      <text x="220" y="660" text-anchor="middle" font-size="16" font-weight="700" fill="#faf5ff">온톨로지</text>
+      <text x="220" y="678" text-anchor="middle" font-size="11.5" fill="#d6bcfa">Ontology</text>
+      <text x="220" y="700" text-anchor="middle" font-size="10.5" fill="#b794f4" opacity="0.9">개념 분류 · 관계 공리 정의</text>
+      <text x="220" y="717" text-anchor="middle" font-size="10.5" fill="#b794f4" opacity="0.9">도메인 스키마 · SHACL 제약</text>
+      <text x="220" y="734" text-anchor="middle" font-size="10" fill="#9f7aea" opacity="0.75">OWL/RDFS 기반 의미 체계</text>
+      <text x="220" y="751" text-anchor="middle" font-size="10" fill="#9f7aea" opacity="0.75">KG 구조의 청사진 역할</text>
+
+      <!-- KG (center) -->
+      <rect x="420" y="625" width="360" height="155" rx="14" fill="url(#cardKG)" filter="url(#shadowGlowGreen)" stroke="#68d391" stroke-width="2" stroke-opacity="0.7"/>
+      <g transform="translate(452, 688)">
+        <ellipse cx="0" cy="-18" rx="13" ry="5" fill="none" stroke="#9ae6b4" stroke-width="1.8"/>
+        <line x1="-13" y1="-18" x2="-13" y2="0" stroke="#9ae6b4" stroke-width="1.8"/>
+        <line x1="13" y1="-18" x2="13" y2="0" stroke="#9ae6b4" stroke-width="1.8"/>
+        <ellipse cx="0" cy="0" rx="13" ry="5" fill="none" stroke="#9ae6b4" stroke-width="1.8"/>
+        <ellipse cx="0" cy="-9" rx="13" ry="5" fill="none" stroke="#9ae6b4" stroke-width="1.2" stroke-dasharray="3,2"/>
+      </g>
+      <text x="600" y="654" text-anchor="middle" font-size="16" font-weight="700" fill="#f0fff4">지식그래프</text>
+      <text x="600" y="673" text-anchor="middle" font-size="12" fill="#9ae6b4">Knowledge Graph (KG)</text>
+      <text x="600" y="695" text-anchor="middle" font-size="11" fill="#68d391" opacity="0.9">엔티티 · 관계 · 속성 저장</text>
+      <text x="600" y="712" text-anchor="middle" font-size="11" fill="#68d391" opacity="0.9">Neo4j 그래프 데이터베이스</text>
+      <text x="600" y="731" text-anchor="middle" font-size="10.5" fill="#48bb78" opacity="0.75">구조적 지식 표현 · 다중 홉 추론</text>
+      <text x="600" y="748" text-anchor="middle" font-size="10.5" fill="#48bb78" opacity="0.75">메타데이터 연계 · 온톨로지 준수</text>
+      <text x="600" y="765" text-anchor="middle" font-size="10" fill="#38a169" opacity="0.7">W3C PROV-O 기반 데이터 계보 추적</text>
+
+      <!-- Metadata -->
+      <rect x="840" y="632" width="280" height="140" rx="14" fill="url(#cardMeta)" filter="url(#shadowCard)" stroke="#fc8181" stroke-width="1.5" stroke-opacity="0.6"/>
+      <g transform="translate(870, 686)">
+        <path d="M-14,-12 L4,-12 L14,-2 L14,8 L-14,8 Z" fill="none" stroke="#feb2b2" stroke-width="1.8"/>
+        <circle cx="-7" cy="-5" r="3" fill="none" stroke="#feb2b2" stroke-width="1.5"/>
+        <line x1="2" y1="0" x2="10" y2="0" stroke="#feb2b2" stroke-width="1.5"/>
+        <line x1="-2" y1="4" x2="10" y2="4" stroke="#feb2b2" stroke-width="1.2"/>
+      </g>
+      <text x="980" y="660" text-anchor="middle" font-size="16" font-weight="700" fill="#fff5f5">메타데이터</text>
+      <text x="980" y="678" text-anchor="middle" font-size="11.5" fill="#feb2b2">Metadata</text>
+      <text x="980" y="700" text-anchor="middle" font-size="10.5" fill="#fc8181" opacity="0.9">출처 · 시간 · 분류 · 신뢰도</text>
+      <text x="980" y="717" text-anchor="middle" font-size="10.5" fill="#fc8181" opacity="0.9">데이터 품질 · 버전 관리</text>
+      <text x="980" y="734" text-anchor="middle" font-size="10" fill="#f56565" opacity="0.75">Dublin Core / Schema.org 표준</text>
+      <text x="980" y="751" text-anchor="middle" font-size="10" fill="#f56565" opacity="0.75">KG 노드/엣지 속성으로 태깅</text>
+
+      <!-- ============ LAYER 6: AI-READY DATA ============ -->
+      <rect x="130" y="848" width="940" height="72" rx="14" fill="url(#cardReady)" filter="url(#shadowGlowSky)" stroke="#63b3ed" stroke-width="1.5" stroke-opacity="0.5"/>
+      <!-- Icon: check/data -->
+      <g transform="translate(170, 880)">
+        <rect x="-14" y="-12" width="28" height="24" rx="4" fill="none" stroke="#90cdf4" stroke-width="1.8"/>
+        <polyline points="-6,-2 -1,4 8,-6" fill="none" stroke="#68d391" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="600" y="872" text-anchor="middle" font-size="16" font-weight="700" fill="#ebf8ff">AI 레디 데이터 (AI-Ready Data)</text>
+      <text x="600" y="892" text-anchor="middle" font-size="11.5" fill="#90cdf4">인공지능이 별도의 가공 없이 즉시 학습 및 분석에 활용할 수 있도록</text>
+      <text x="600" y="909" text-anchor="middle" font-size="11.5" fill="#90cdf4">정제, 표준화, 식별 가능한 형태로 준비된 데이터</text>
+
+      <!-- ============ LAYER 7: SOURCE DATA ============ -->
+      <text x="600" y="940" text-anchor="middle" font-size="11" fill="#4a5568" font-weight="500" letter-spacing="1">원천 데이터 (Raw Data Sources)</text>
+
+      <rect x="100" y="950" width="220" height="50" rx="10" fill="url(#cardSource)" stroke="#4a5568" stroke-width="1" stroke-opacity="0.7"/>
+      <text x="210" y="971" text-anchor="middle" font-size="12" font-weight="600" fill="#cbd5e0">문서 · 논문</text>
+      <text x="210" y="988" text-anchor="middle" font-size="10" fill="#718096">PDF / HWP / DOCX</text>
+
+      <rect x="350" y="950" width="180" height="50" rx="10" fill="url(#cardSource)" stroke="#4a5568" stroke-width="1" stroke-opacity="0.7"/>
+      <text x="440" y="971" text-anchor="middle" font-size="12" font-weight="600" fill="#cbd5e0">데이터베이스</text>
+      <text x="440" y="988" text-anchor="middle" font-size="10" fill="#718096">SQL / NoSQL</text>
+
+      <rect x="560" y="950" width="200" height="50" rx="10" fill="url(#cardSource)" stroke="#4a5568" stroke-width="1" stroke-opacity="0.7"/>
+      <text x="660" y="971" text-anchor="middle" font-size="12" font-weight="600" fill="#cbd5e0">센서 · 실시간</text>
+      <text x="660" y="988" text-anchor="middle" font-size="10" fill="#718096">AIS / 기상 / IoT</text>
+
+      <rect x="790" y="950" width="230" height="50" rx="10" fill="url(#cardSource)" stroke="#4a5568" stroke-width="1" stroke-opacity="0.7"/>
+      <text x="905" y="971" text-anchor="middle" font-size="12" font-weight="600" fill="#cbd5e0">웹 · 크롤링</text>
+      <text x="905" y="988" text-anchor="middle" font-size="10" fill="#718096">IMO / Port / S-100</text>
+
+      <!-- ============ CONNECTION LINES ============ -->
+
+      <!-- Source → AI-Ready Data -->
+      <path d="M 600 948 L 600 922" stroke="#63b3ed" stroke-width="2" stroke-opacity="0.5" fill="none" marker-end="url(#arrowSky)" stroke-dasharray="5,3"/>
+      <rect x="555" y="925" width="90" height="16" rx="4" fill="#0c1428" fill-opacity="0.7"/>
+      <text x="600" y="936" text-anchor="middle" font-size="9.5" fill="#63b3ed">정제 · 표준화</text>
+
+      <!-- AI-Ready → KG (ELT) -->
+      <path d="M 560 846 L 560 782" stroke="#68d391" stroke-width="2" stroke-opacity="0.6" fill="none" marker-end="url(#arrowGreen)" stroke-dasharray="5,3"/>
+      <rect x="518" y="810" width="84" height="16" rx="4" fill="#0c1428" fill-opacity="0.7"/>
+      <text x="560" y="821" text-anchor="middle" font-size="9.5" fill="#68d391">ELT 적재</text>
+
+      <!-- AI-Ready → Metadata -->
+      <path d="M 900 846 L 960 774" stroke="#fc8181" stroke-width="1.8" stroke-opacity="0.6" fill="none" marker-end="url(#arrowRed)" stroke-dasharray="5,3"/>
+      <rect x="908" y="808" width="56" height="16" rx="4" fill="#0c1428" fill-opacity="0.7"/>
+      <text x="936" y="819" text-anchor="middle" font-size="9.5" fill="#fc8181">메타 추출</text>
+
+      <!-- AI-Ready → RAG -->
+      <path d="M 250 846 L 270 594" stroke="#63b3ed" stroke-width="1.8" stroke-opacity="0.6" fill="none" marker-end="url(#arrowBlue)" stroke-dasharray="5,3"/>
+      <rect x="218" y="740" width="66" height="16" rx="4" fill="#0c1428" fill-opacity="0.7"/>
+      <text x="251" y="751" text-anchor="middle" font-size="9.5" fill="#63b3ed">벡터 임베딩</text>
+
+      <!-- Ontology → KG -->
+      <path d="M 360 695 L 418 695" stroke="#b794f4" stroke-width="2" stroke-opacity="0.7" fill="none" marker-end="url(#arrowPurple)"/>
+      <rect x="362" y="683" width="72" height="16" rx="4" fill="#0c1428" fill-opacity="0.8"/>
+      <text x="398" y="694" text-anchor="middle" font-size="9.5" fill="#b794f4">스키마 정의</text>
+
+      <!-- Metadata → KG -->
+      <path d="M 840 695 L 782 695" stroke="#fc8181" stroke-width="2" stroke-opacity="0.7" fill="none" marker-end="url(#arrowRed)"/>
+      <rect x="782" y="683" width="54" height="16" rx="4" fill="#0c1428" fill-opacity="0.8"/>
+      <text x="809" y="694" text-anchor="middle" font-size="9.5" fill="#fc8181">속성 태깅</text>
+
+      <!-- KG → GraphRAG -->
+      <path d="M 740 625 L 820 594" stroke="#76e4f7" stroke-width="2" stroke-opacity="0.7" fill="none" marker-end="url(#arrowCyan)"/>
+      <rect x="740" y="600" width="66" height="16" rx="4" fill="#0c1428" fill-opacity="0.8"/>
+      <text x="773" y="611" text-anchor="middle" font-size="9.5" fill="#76e4f7">그래프 순회</text>
+
+      <!-- RAG → Grounding -->
+      <path d="M 380 459 L 490 426" stroke="#63b3ed" stroke-width="2" stroke-opacity="0.7" fill="none" marker-end="url(#arrowBlue)"/>
+      <rect x="388" y="434" width="72" height="16" rx="4" fill="#0c1428" fill-opacity="0.8"/>
+      <text x="424" y="445" text-anchor="middle" font-size="9.5" fill="#63b3ed">문서 컨텍스트</text>
+
+      <!-- GraphRAG → Grounding -->
+      <path d="M 820 459 L="710 426" stroke="#76e4f7" stroke-width="2" stroke-opacity="0.7" fill="none" marker-end="url(#arrowCyan)"/>
+      <rect x="738" y="434" width="72" height="16" rx="4" fill="#0c1428" fill-opacity="0.8"/>
+      <text x="774" y="445" text-anchor="middle" font-size="9.5" fill="#76e4f7">추론 컨텍스트</text>
+
+      <!-- Grounding → Agent -->
+      <path d="M 600 315 L 600 292" stroke="#ecc94b" stroke-width="2.5" stroke-opacity="0.8" fill="none" marker-end="url(#arrowYellow)"/>
+      <rect x="536" y="296" width="128" height="16" rx="4" fill="#0c1428" fill-opacity="0.85"/>
+      <text x="600" y="307" text-anchor="middle" font-size="9.5" fill="#ecc94b">그라운딩된 컨텍스트</text>
+
+      <!-- Agent → AI Answer -->
+      <path d="M 600 205 L 600 182" stroke="#f6ad55" stroke-width="2.5" stroke-opacity="0.8" fill="none" marker-end="url(#arrowGold)"/>
+      <rect x="542" y="185" width="116" height="16" rx="4" fill="#0c1428" fill-opacity="0.85"/>
+      <text x="600" y="196" text-anchor="middle" font-size="9.5" fill="#f6ad55">신뢰 답변 생성</text>
+
+      <!-- Agent side arrows to RAG/GraphRAG -->
+      <path d="M 380 248 L 310 460" stroke="#ecc94b" stroke-width="1.5" stroke-opacity="0.4" fill="none" marker-end="url(#arrowYellow)" stroke-dasharray="4,4"/>
+      <rect x="308" y="350" width="72" height="16" rx="4" fill="#0c1428" fill-opacity="0.7"/>
+      <text x="344" y="361" text-anchor="middle" font-size="9" fill="#ecc94b">검색 요청</text>
+
+      <path d="M 820 248 L 890 460" stroke="#ecc94b" stroke-width="1.5" stroke-opacity="0.4" fill="none" marker-end="url(#arrowYellow)" stroke-dasharray="4,4"/>
+      <rect x="818" y="350" width="72" height="16" rx="4" fill="#0c1428" fill-opacity="0.7"/>
+      <text x="854" y="361" text-anchor="middle" font-size="9" fill="#ecc94b">추론 요청</text>
+
+      <!-- ============ LEGEND ============ -->
+      <rect x="60" y="1020" width="1080" height="0.5" fill="#2d3748"/>
+      <g transform="translate(60, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#ed8936" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">AI 답변</text>
+      </g>
+      <g transform="translate(150, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#ecc94b" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">에이전트</text>
+      </g>
+      <g transform="translate(260, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#4fd1c5" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">그라운딩</text>
+      </g>
+      <g transform="translate(370, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#4299e1" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">RAG</text>
+      </g>
+      <g transform="translate(450, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#0bc5ea" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">GraphRAG</text>
+      </g>
+      <g transform="translate(570, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#68d391" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">지식그래프</text>
+      </g>
+      <g transform="translate(690, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#b794f4" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">온톨로지</text>
+      </g>
+      <g transform="translate(790, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#fc8181" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">메타데이터</text>
+      </g>
+      <g transform="translate(900, 1032)">
+        <rect x="0" y="0" width="12" height="12" rx="2" fill="#63b3ed" opacity="0.8"/>
+        <text x="16" y="10" font-size="10" fill="#718096">AI-Ready</text>
+      </g>
+      <text x="1140" y="1042" text-anchor="end" font-size="9.5" fill="#4a5568">IMSP / KRISO · 인사이트마이닝 2026</text>
+    </svg>
+  </div>
+</body>
+</html>
