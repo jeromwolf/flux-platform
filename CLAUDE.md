@@ -120,6 +120,9 @@ flux-platform/
 │   └── e2e/                 # E2E
 │
 ├── docs/                    ← 문서
+│   ├── ontology/            # Stanford 7-Step 온톨로지 설계
+│   │   ├── stanford_7step_ontology.html  # 멀티KG 랜딩 + 7단계 설계 (메인)
+│   │   └── step1_purpose_definition.md   # Step 1 마크다운 버전
 │   └── strategy_5year_IMSP.md  # 5개년 전략서
 │
 ├── examples/                ← 사용 예제
@@ -237,15 +240,17 @@ QDRANT_PORT=6333
 - `docs/strategy_5year_IMSP.md` — 5개년 전략서 (1,479줄)
 - `docs/architecture_flux_platform.md` — 아키텍처 설계 초안
 - `docs/meeting_20260318_KRISO.md` — KRISO 미팅 정리
+- `docs/ontology/stanford_7step_ontology.html` — DevKG 온톨로지 설계 (Stanford 7-Step, Step 1-3 완료)
 
 ## 주의사항
 
 1. `.env` 파일은 git에 포함하지 않음
-2. 온톨로지는 KRISO 요구 기반 **완전 재설계** 예정 (기존 127 엔티티 폐기)
+2. 온톨로지는 KRISO 요구 기반 **Stanford 7-Step 재설계 진행중** (Step 1-3 완료, P0 27개+P1 47개+P2 55개 = 129개 엔티티)
 3. `domains/maritime/`은 현재 flux-n8n에서 복사한 상태, 재설계 전 참조용
 4. `agent/`, `rag/` 이식 및 구현 완료 (4 LLM, MCP 3 transport, 하이브리드 RAG, VectorStore 3종)
 5. Suredata Lab과 역할 분담: 우리가 전체 개발, 납품은 KG 파트만
 6. JWT → Keycloak 전환 예정, 현재 코드는 JWT 기반
 7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
 8. Activepieces → VueFlow + Argo Workflow 전환 예정
-9. 테스트 3,990개 통과 (unit + harness), 80개 skipped (실제 Neo4j 필요)
+9. 테스트 4,189개 통과 (unit + harness), 125개 skipped (실제 Neo4j 필요), 커버리지 92%
+10. 멀티 프로젝트 KG 관리 구현 완료 — X-KG-Project 헤더 기반 레이블 격리 (KG_DevKG, KG_ProdKG 등)
