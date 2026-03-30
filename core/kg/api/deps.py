@@ -12,6 +12,7 @@ from typing import Any
 from starlette.requests import Request
 
 from kg.config import AppConfig, get_config, get_driver
+from kg.project import KGProjectContext, PROJECT_HEADER
 
 
 def get_neo4j_driver() -> Any:
@@ -91,3 +92,18 @@ def get_rag_engine(request: Request):
 def get_document_pipeline(request: Request):
     """Get the shared document pipeline from app state."""
     return getattr(request.app.state, "document_pipeline", None)
+
+
+def get_project_context(request: Request) -> KGProjectContext:
+    """Extract KG project context from the X-KG-Project request header.
+
+    Returns KGProjectContext with project="default" when header is absent.
+    Raises HTTPException(400) for invalid project names.
+    """
+    header_value = request.headers.get(PROJECT_HEADER)
+    try:
+        return KGProjectContext.from_header(header_value)
+    except ValueError as exc:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

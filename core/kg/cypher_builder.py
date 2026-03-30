@@ -93,6 +93,7 @@ class CypherBuilder:
         self._call_clauses: list[str] = []
         self._parameters: dict[str, Any] = {}
         self._param_counter: int = 0
+        self._project_label: str | None = None
 
     def _next_param(self) -> str:
         """Generate next unique parameter name."""
@@ -255,6 +256,48 @@ class CypherBuilder:
         self._call_clauses.append(f"CALL {procedure}")
         return self
 
+    def for_project(self, project: str | object) -> CypherBuilder:
+        """Scope all MATCH clauses to a project namespace.
+
+        Adds a label constraint (e.g., :KG_DevKG) to matched node patterns.
+
+        Args:
+            project: Project name string or KGProjectContext instance.
+
+        Returns:
+            Self for chaining.
+        """
+        if isinstance(project, str):
+            from kg.project import project_label
+
+            self._project_label = project_label(project)
+        else:
+            # KGProjectContext or any object with .label property
+            self._project_label = project.label  # type: ignore[union-attr]
+        return self
+
+    @staticmethod
+    def _inject_project_label(clause: str, label: str) -> str:
+        """Inject project label into node patterns within a MATCH/OPTIONAL MATCH clause.
+
+        Transforms:
+          MATCH (n:Vessel) -> MATCH (n:Vessel:KG_DevKG)
+          MATCH (n) -> MATCH (n:KG_DevKG)
+          MATCH (n:Vessel)-[r:DOCKED_AT]->(p:Port) -> MATCH (n:Vessel:KG_DevKG)-[r:DOCKED_AT]->(p:Port:KG_DevKG)
+        """
+        import re
+
+        def _add_label(m: re.Match) -> str:
+            alias = m.group(1)   # e.g., "n"
+            labels = m.group(2)  # e.g., ":Vessel" or ""
+            rest = m.group(3)    # e.g., " ", "{", ")"
+            if labels:
+                return f"({alias}{labels}:{label}{rest}"
+            return f"({alias}:{label}{rest}"
+
+        # Match node patterns: (alias[:Label...])  followed by space, {, or )
+        return re.sub(r'\((\w+)((?::\w+)*)(\s*[\{\)])', _add_label, clause)
+
     def return_(self, clause: str) -> CypherBuilder:
         """Set the RETURN clause.
 
@@ -413,11 +456,23 @@ class CypherBuilder:
         # CALL clauses first (for procedures like fulltext search)
         parts.extend(self._call_clauses)
 
-        # MATCH clauses
-        parts.extend(self._match_clauses)
+        # MATCH clauses (with project label injection if set)
+        if self._project_label:
+            parts.extend(
+                self._inject_project_label(c, self._project_label)
+                for c in self._match_clauses
+            )
+        else:
+            parts.extend(self._match_clauses)
 
-        # OPTIONAL MATCH clauses
-        parts.extend(self._optional_match_clauses)
+        # OPTIONAL MATCH clauses (with project label injection if set)
+        if self._project_label:
+            parts.extend(
+                self._inject_project_label(c, self._project_label)
+                for c in self._optional_match_clauses
+            )
+        else:
+            parts.extend(self._optional_match_clauses)
 
         # WHERE clause
         if self._where_clauses:
@@ -449,16 +504,23 @@ class CypherBuilder:
     # =========================================================================
 
     @classmethod
-    def from_query_options(cls, options: QueryOptions) -> CypherBuilder:
+    def from_query_options(
+        cls,
+        options: QueryOptions,
+        project: str | object | None = None,
+    ) -> CypherBuilder:
         """Create a CypherBuilder from QueryOptions.
 
         Args:
             options: Structured query options
+            project: Optional project name or KGProjectContext for namespace scoping.
 
         Returns:
             Configured CypherBuilder
         """
         builder = cls()
+        if project is not None:
+            builder.for_project(project)
         alias = options.type.lower()[0]
 
         # MATCH clause
@@ -495,6 +557,7 @@ class CypherBuilder:
         object_id: str,
         relationship_type: str,
         direction: Literal["outgoing", "incoming", "both"] = "both",
+        project_label: str | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Build query to find related objects.
 
@@ -502,16 +565,20 @@ class CypherBuilder:
             object_id: ID of the source object
             relationship_type: Relationship type to traverse
             direction: Relationship direction
+            project_label: Optional Neo4j label for project scoping (e.g., "KG_DevKG").
 
         Returns:
             Tuple of (query_string, parameters_dict)
         """
+        n_labels = f":{project_label}" if project_label else ""
+        r_labels = f":{project_label}" if project_label else ""
+
         if direction == "outgoing":
-            pattern = f"(n {{id: $objectId}})-[:{relationship_type}]->(related)"
+            pattern = f"(n{n_labels} {{id: $objectId}})-[:{relationship_type}]->(related{r_labels})"
         elif direction == "incoming":
-            pattern = f"(n {{id: $objectId}})<-[:{relationship_type}]-(related)"
+            pattern = f"(n{n_labels} {{id: $objectId}})<-[:{relationship_type}]-(related{r_labels})"
         else:
-            pattern = f"(n {{id: $objectId}})-[:{relationship_type}]-(related)"
+            pattern = f"(n{n_labels} {{id: $objectId}})-[:{relationship_type}]-(related{r_labels})"
 
         query = f"MATCH {pattern}\nRETURN related"
         return query, {"objectId": object_id}
@@ -522,6 +589,7 @@ class CypherBuilder:
         from_id: str,
         to_id: str,
         max_depth: int = 5,
+        project_label: str | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Build query to find shortest path between two nodes.
 
@@ -529,12 +597,15 @@ class CypherBuilder:
             from_id: Source node ID
             to_id: Target node ID
             max_depth: Maximum path length
+            project_label: Optional Neo4j label for project scoping (e.g., "KG_DevKG").
 
         Returns:
             Tuple of (query_string, parameters_dict)
         """
+        f_labels = f":{project_label}" if project_label else ""
+        t_labels = f":{project_label}" if project_label else ""
         query = f"""
-MATCH p = shortestPath((from {{id: $fromId}})-[*..{max_depth}]-(to {{id: $toId}}))
+MATCH p = shortestPath((from{f_labels} {{id: $fromId}})-[*..{max_depth}]-(to{t_labels} {{id: $toId}}))
 RETURN p
         """.strip()
         return query, {"fromId": from_id, "toId": to_id}
@@ -545,6 +616,7 @@ RETURN p
         root_id: str,
         depth: int = 2,
         relationship_types: list[str] | None = None,
+        project_label: str | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Build query to get subgraph around a node.
 
@@ -554,14 +626,16 @@ RETURN p
             root_id: Root node ID
             depth: Maximum depth to traverse
             relationship_types: Optional list of relationship types to include
+            project_label: Optional Neo4j label for project scoping (e.g., "KG_DevKG").
 
         Returns:
             Tuple of (query_string, parameters_dict)
         """
         rel_pattern = "|".join(relationship_types) if relationship_types else ""
+        r_labels = f":{project_label}" if project_label else ""
 
         query = f"""
-MATCH (root {{id: $rootId}})
+MATCH (root{r_labels} {{id: $rootId}})
 CALL apoc.path.subgraphAll(root, {{
   maxLevel: {depth},
   relationshipFilter: "{rel_pattern}"
@@ -577,6 +651,7 @@ RETURN nodes, relationships
         index_name: str,
         search_term: str,
         limit: int = 10,
+        project_label: str | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Build fulltext search query.
 
@@ -584,13 +659,15 @@ RETURN nodes, relationships
             index_name: Fulltext index name
             search_term: Search term
             limit: Maximum results
+            project_label: Optional Neo4j label for project scoping (e.g., "KG_DevKG").
 
         Returns:
             Tuple of (query_string, parameters_dict)
         """
+        where_line = f"\nWHERE node:{project_label}" if project_label else ""
         query = f"""
 CALL db.index.fulltext.queryNodes($indexName, $searchTerm)
-YIELD node, score
+YIELD node, score{where_line}
 RETURN node, score
 ORDER BY score DESC
 LIMIT {limit}
@@ -606,6 +683,7 @@ LIMIT {limit}
         radius_km: float,
         location_property: str = "location",
         limit: int = 20,
+        project_label: str | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Build query for nearby entities.
 
@@ -616,15 +694,17 @@ LIMIT {limit}
             radius_km: Radius in kilometers
             location_property: Property containing point()
             limit: Maximum results
+            project_label: Optional Neo4j label for project scoping (e.g., "KG_DevKG").
 
         Returns:
             Tuple of (query_string, parameters_dict)
         """
         alias = entity_type.lower()[0]
         radius_meters = radius_km * 1000
+        extra_label = f":{project_label}" if project_label else ""
 
         query = f"""
-MATCH ({alias}:{entity_type})
+MATCH ({alias}:{entity_type}{extra_label})
 WHERE point.distance({alias}.{location_property}, point({{latitude: $lat, longitude: $lon}})) < $radius
 WITH {alias}, point.distance({alias}.{location_property}, point({{latitude: $lat, longitude: $lon}})) AS distance
 RETURN {alias}, round(distance / 1000.0, 2) AS distance_km

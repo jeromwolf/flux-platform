@@ -11,10 +11,11 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 
-from kg.api.deps import get_async_neo4j_session
+from kg.api.deps import get_async_neo4j_session, get_project_context
 from kg.api.models import NLQueryRequest, NLQueryResponse
 from kg.api.serializers import serialize_neo4j_value
 from kg.pipeline import TextToCypherPipeline
+from kg.project import KGProjectContext
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ _pipeline = TextToCypherPipeline()
 async def natural_language_query(
     body: NLQueryRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> NLQueryResponse:
     """Execute a Korean natural language query against the knowledge graph.
 
@@ -41,7 +43,7 @@ async def natural_language_query(
     Returns:
         NLQueryResponse with generated Cypher, parameters, and results.
     """
-    output = _pipeline.process(body.text)
+    output = _pipeline.process(body.text, project=project)
 
     # Build base response
     response = NLQueryResponse(
@@ -62,7 +64,11 @@ async def natural_language_query(
         try:
             # Inject limit into the query if not already present
             cypher = output.generated_query.query
-            params = dict(output.generated_query.parameters)
+            params = {
+                **dict(output.generated_query.parameters),
+                "__kg_project_label": project.label,
+                "__kg_project_name": project.property_value,
+            }
 
             # Append LIMIT if the generated query does not have one
             if "LIMIT" not in cypher.upper():

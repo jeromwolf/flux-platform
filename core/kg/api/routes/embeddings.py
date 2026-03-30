@@ -12,7 +12,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from kg.api.deps import get_async_neo4j_session
+from kg.api.deps import get_async_neo4j_session, get_project_context
 from kg.api.models import (
     CreateIndexRequest,
     EmbeddingSearchRequest,
@@ -21,6 +21,7 @@ from kg.api.models import (
 )
 from kg.embeddings.manager import EmbeddingManager
 from kg.embeddings.models import VectorIndexConfig
+from kg.project import KGProjectContext
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ _embedding_manager = EmbeddingManager()
 async def vector_search(
     body: EmbeddingSearchRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> EmbeddingSearchResponse:
     """Run a vector similarity search against a Neo4j vector index.
 
@@ -70,6 +72,10 @@ async def vector_search(
         top_k=body.topK,
     )
     params["queryVector"] = body.queryVector
+    # NOTE: Vector search currently spans all projects.
+    # Per-project vector indexes will be added in Phase 2.
+    params["__kg_project_label"] = project.label
+    params["__kg_project_name"] = project.property_value
 
     try:
         result = await session.run(cypher, params)
@@ -111,6 +117,7 @@ async def vector_search(
 async def hybrid_search(
     body: HybridSearchRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> EmbeddingSearchResponse:
     """Run a hybrid vector + full-text search with Reciprocal Rank Fusion.
 
@@ -146,6 +153,10 @@ async def hybrid_search(
     )
     params["queryVector"] = body.queryVector
     params["queryText"] = body.textQuery
+    # NOTE: Vector search currently spans all projects.
+    # Per-project vector indexes will be added in Phase 2.
+    params["__kg_project_label"] = project.label
+    params["__kg_project_name"] = project.property_value
 
     try:
         result = await session.run(cypher, params)
@@ -216,6 +227,7 @@ async def list_indexes() -> dict[str, Any]:
 async def create_index(
     body: CreateIndexRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> dict[str, Any]:
     """Create a Neo4j vector index for a node label and property.
 

@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 
-from kg.api.deps import get_async_neo4j_session
+from kg.api.deps import get_async_neo4j_session, get_project_context
 try:
     from maritime.entity_groups import (
         ENTITY_GROUPS,
@@ -25,6 +25,7 @@ except ImportError:
     def get_group_for_label(label: str) -> str:  # type: ignore[misc]
         return "unknown"
 from kg.api.models import SchemaResponse
+from kg.project import KGProjectContext, PROJECT_LABEL_PREFIX
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ router = APIRouter(tags=["schema"])
 @router.get("/schema", response_model=SchemaResponse)
 async def schema(
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> SchemaResponse:
     """Return available labels, relationship types, and entity group metadata."""
     # Get node labels
@@ -42,6 +44,9 @@ async def schema(
     labels_records = [record async for record in labels_result]
     for record in labels_records:
         lbl = record["label"]
+        # Filter out internal KG_ prefix labels from schema results
+        if lbl.startswith(PROJECT_LABEL_PREFIX):
+            continue
         labels_info.append(
             {
                 "label": lbl,
@@ -66,7 +71,7 @@ async def schema(
             label_counts[lbl] = 0
             continue
         try:
-            cnt_result = await session.run(f"MATCH (n:{lbl}) RETURN count(n) AS cnt")
+            cnt_result = await session.run(f"MATCH (n:{lbl}:{project.label}) RETURN count(n) AS cnt")
             cnt_record = await cnt_result.single()
             label_counts[lbl] = cnt_record["cnt"] if cnt_record else 0
         except Exception:

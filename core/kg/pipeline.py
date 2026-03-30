@@ -36,6 +36,7 @@ Usage::
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -161,11 +162,42 @@ class TextToCypherPipeline:
     # Public API
     # ------------------------------------------------------------------
 
-    def process(self, text: str) -> PipelineOutput:
+    @staticmethod
+    def _inject_project_label(query: str, project: Any) -> str:
+        """Inject a project label into MATCH/MERGE patterns in *query*.
+
+        Accepts the same ``project`` types as :class:`~kg.etl.loader.Neo4jBatchLoader`:
+        a plain string or an object with ``.label`` attribute.
+
+        Delegates to :meth:`~kg.cypher_builder.CypherBuilder._inject_project_label`
+        so that bare nodes ``(n)`` and labelled nodes ``(n:Label)`` are both handled
+        with the same regex logic.
+
+        Args:
+            query: Cypher query string to rewrite.
+            project: Project scoping context (str or object with ``.label``).
+
+        Returns:
+            Rewritten Cypher string.
+        """
+        if isinstance(project, str):
+            proj_label = f"KG_{project}"
+        else:
+            proj_label = getattr(project, "label", f"KG_{project}")
+
+        from kg.cypher_builder import CypherBuilder
+
+        return CypherBuilder._inject_project_label(query, proj_label)
+
+    def process(self, text: str, *, project: Any | None = None) -> PipelineOutput:
         """Run the full pipeline: Korean text -> StructuredQuery -> Cypher.
 
         Args:
             text: Korean natural language query string.
+            project: Optional project scoping context.  When provided, the
+                generated Cypher is rewritten to include a project label in
+                all MATCH patterns.  Accepts a plain string or an object with
+                a ``.label`` attribute.
 
         Returns:
             PipelineOutput with parse result and generated Cypher.
@@ -307,6 +339,18 @@ class TextToCypherPipeline:
                     "Hallucination detection failed", exc_info=True
                 )
 
+        # Step 8: Optional project-scoping label injection
+        if project is not None and generated is not None:
+            scoped_query = self._inject_project_label(generated.query, project)
+            generated = GeneratedQuery(
+                language=generated.language,
+                query=scoped_query,
+                parameters=generated.parameters,
+                explanation=generated.explanation,
+                estimated_complexity=generated.estimated_complexity,
+                warnings=generated.warnings,
+            )
+
         return PipelineOutput(
             input_text=text,
             parse_result=parse_result,
@@ -332,11 +376,17 @@ class TextToCypherPipeline:
         """
         return self._parser.parse(text)
 
-    def process_to_cypher(self, structured: StructuredQuery) -> GeneratedQuery:
+    def process_to_cypher(
+        self, structured: StructuredQuery, *, project: Any | None = None
+    ) -> GeneratedQuery:
         """Run only the generation step: StructuredQuery -> Cypher.
 
         Args:
             structured: A pre-built StructuredQuery.
+            project: Optional project scoping context.  When provided, the
+                generated Cypher is rewritten to include a project label in
+                all MATCH patterns.  Accepts a plain string or an object with
+                a ``.label`` attribute.
 
         Returns:
             GeneratedQuery with Cypher text and parameters.
@@ -349,4 +399,15 @@ class TextToCypherPipeline:
                 "StructuredQuery must have at least one object_type",
                 language="cypher",
             )
-        return self._generator.generate_cypher(structured)
+        generated = self._generator.generate_cypher(structured)
+        if project is not None:
+            scoped_query = self._inject_project_label(generated.query, project)
+            generated = GeneratedQuery(
+                language=generated.language,
+                query=scoped_query,
+                parameters=generated.parameters,
+                explanation=generated.explanation,
+                estimated_complexity=generated.estimated_complexity,
+                warnings=generated.warnings,
+            )
+        return generated

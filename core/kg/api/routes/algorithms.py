@@ -12,7 +12,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from kg.api.deps import get_async_neo4j_session
+from kg.api.deps import get_async_neo4j_session, get_project_context
 from kg.api.models import (
     AlgorithmRequest,
     AlgorithmResponse,
@@ -21,6 +21,7 @@ from kg.api.models import (
     SimilarityRequest,
 )
 from kg.algorithms.runner import GDSAvailability, GraphAlgorithmRunner
+from kg.project import KGProjectContext
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +110,7 @@ async def list_algorithms() -> dict[str, Any]:
 async def run_pagerank(
     body: PageRankRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> AlgorithmResponse:
     """Run PageRank centrality algorithm on an in-memory graph projection.
 
@@ -133,6 +135,9 @@ async def run_pagerank(
         max_iterations=body.iterations,
         damping_factor=body.dampingFactor,
     )
+    # NOTE: GDS algorithms operate on the full graph across all projects.
+    # Project-scoped projections will be added when GDS supports label filtering.
+    params["__kg_project_label"] = project.label
 
     results = await _execute_algorithm(session, "pagerank", cypher, params)
 
@@ -154,6 +159,7 @@ async def run_pagerank(
 async def run_community_detection(
     body: AlgorithmRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> AlgorithmResponse:
     """Run Louvain community detection algorithm.
 
@@ -173,6 +179,9 @@ async def run_community_detection(
     """
     projection = f"{body.label}_{body.relationshipType}_proj"
     cypher, params = _runner.generate_louvain(projection)
+    # NOTE: GDS algorithms operate on the full graph across all projects.
+    # Project-scoped projections will be added when GDS supports label filtering.
+    params["__kg_project_label"] = project.label
 
     results = await _execute_algorithm(session, "louvain", cypher, params)
 
@@ -192,6 +201,7 @@ async def run_community_detection(
 async def run_centrality(
     body: AlgorithmRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> AlgorithmResponse:
     """Run Betweenness Centrality algorithm.
 
@@ -211,6 +221,9 @@ async def run_centrality(
     """
     projection = f"{body.label}_{body.relationshipType}_proj"
     cypher, params = _runner.generate_betweenness(projection)
+    # NOTE: GDS algorithms operate on the full graph across all projects.
+    # Project-scoped projections will be added when GDS supports label filtering.
+    params["__kg_project_label"] = project.label
 
     results = await _execute_algorithm(session, "betweenness", cypher, params)
 
@@ -230,6 +243,7 @@ async def run_centrality(
 async def run_shortest_path(
     body: ShortestPathRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> AlgorithmResponse:
     """Run Dijkstra shortest-path algorithm between two nodes.
 
@@ -255,6 +269,9 @@ async def run_shortest_path(
         target_id=body.targetId,
         weight_property=body.weightProperty,
     )
+    # NOTE: GDS algorithms operate on the full graph across all projects.
+    # Project-scoped projections will be added when GDS supports label filtering.
+    params["__kg_project_label"] = project.label
 
     results = await _execute_algorithm(session, "dijkstra", cypher, params)
 
@@ -276,6 +293,7 @@ async def run_shortest_path(
 async def run_node_similarity(
     body: SimilarityRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> AlgorithmResponse:
     """Run Node Similarity algorithm (Jaccard coefficient).
 
@@ -295,6 +313,9 @@ async def run_node_similarity(
     """
     projection = f"{body.label}_{body.relationshipType}_proj"
     cypher, params = _runner.generate_node_similarity(projection, top_k=body.topK)
+    # NOTE: GDS algorithms operate on the full graph across all projects.
+    # Project-scoped projections will be added when GDS supports label filtering.
+    params["__kg_project_label"] = project.label
 
     results = await _execute_algorithm(session, "nodeSimilarity", cypher, params)
 
@@ -314,6 +335,7 @@ async def run_node_similarity(
 @router.get("/gds-status")
 async def gds_status(
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> dict[str, Any]:
     """Check whether the Neo4j GDS plugin is installed and return its version.
 

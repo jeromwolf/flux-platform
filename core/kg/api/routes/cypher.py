@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from kg.api.deps import get_async_neo4j_session
+from kg.api.deps import get_async_neo4j_session, get_project_context
 from kg.api.models import (
     CypherExplainResponse,
     CypherRequest,
@@ -17,6 +17,8 @@ from kg.api.models import (
     CypherValidationResponse,
 )
 from kg.api.serializers import serialize_neo4j_value
+from kg.cypher_builder import CypherBuilder
+from kg.project import KGProjectContext
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +144,7 @@ def _serialize_record(record: Any) -> dict[str, Any]:
 async def execute_cypher(
     body: CypherRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> CypherResponse:
     """Execute a raw Cypher query against the knowledge graph.
 
@@ -165,9 +168,18 @@ async def execute_cypher(
     if dangerous:
         raise HTTPException(status_code=403, detail=reason)
 
+    # Inject project scoping into MATCH patterns to enforce project isolation.
+    body_cypher = CypherBuilder._inject_project_label(body.cypher, project.label)
+
+    params = {
+        **body.parameters,
+        "__kg_project_label": project.label,
+        "__kg_project_name": project.property_value,
+    }
+
     start_ms = time.monotonic()
     try:
-        result = await session.run(body.cypher, body.parameters)
+        result = await session.run(body_cypher, params)
         records = [record async for record in result]
     except Exception as exc:
         logger.exception("Cypher execution failed")
@@ -244,6 +256,7 @@ async def validate_cypher(body: CypherRequest) -> CypherValidationResponse:
 async def explain_cypher(
     body: CypherRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> CypherExplainResponse:
     """Return the execution plan for a Cypher query without running it.
 
@@ -265,9 +278,18 @@ async def explain_cypher(
     if dangerous:
         raise HTTPException(status_code=403, detail=reason)
 
-    explain_cypher = f"EXPLAIN {body.cypher}"
+    # Inject project scoping into MATCH patterns to enforce project isolation.
+    body_cypher = CypherBuilder._inject_project_label(body.cypher, project.label)
+
+    params = {
+        **body.parameters,
+        "__kg_project_label": project.label,
+        "__kg_project_name": project.property_value,
+    }
+
+    explain_cypher = f"EXPLAIN {body_cypher}"
     try:
-        result = await session.run(explain_cypher, body.parameters)
+        result = await session.run(explain_cypher, params)
         # Consume the result to get the summary/plan
         records = [record async for record in result]
         # Try to access the query plan from the result summary

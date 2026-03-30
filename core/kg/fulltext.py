@@ -56,6 +56,7 @@ def fulltext_search_cypher(
     *,
     result_var: str = "node",
     score_var: str = "score",
+    project_label: str | None = None,
 ) -> str:
     """Generate a ``CALL db.index.fulltext.queryNodes(...)`` Cypher clause.
 
@@ -66,22 +67,30 @@ def fulltext_search_cypher(
         index_name: Name of the Neo4j fulltext index.
         result_var: Variable name for the matched node.
         score_var: Variable name for the relevance score.
+        project_label: Optional project label to filter results.  When set,
+            a ``WHERE {result_var}:{project_label}`` clause is appended so
+            that only nodes carrying that label are returned.
 
     Returns:
         A Cypher string like
         ``CALL db.index.fulltext.queryNodes('vessel_search', $searchTerm)
         YIELD node AS node, score AS score``.
+        With project_label set, an additional
+        ``WHERE node:KG_DevKG`` clause is appended.
     """
-    return (
+    cypher = (
         f"CALL db.index.fulltext.queryNodes('{index_name}', $searchTerm) "
         f"YIELD node AS {result_var}, score AS {score_var}"
     )
+    if project_label is not None:
+        cypher += f" WHERE {result_var}:{project_label}"
+    return cypher
 
 
 def multi_fulltext_search_cypher(
     index_names: list[str] | None = None,
-    *,
     limit: int = 30,
+    project_label: str | None = None,
 ) -> str:
     """Generate a UNION ALL query across multiple fulltext indexes.
 
@@ -91,6 +100,10 @@ def multi_fulltext_search_cypher(
     Args:
         index_names: Specific indexes to search.  Defaults to all registered.
         limit: Per-index result limit.
+        project_label: Optional project label to filter each UNION branch.
+            When set, a ``WHERE node:<project_label>`` clause is inserted
+            after the YIELD line in every branch so that only nodes belonging
+            to the given project are returned.
 
     Returns:
         A Cypher string with UNION ALL branches and final ordering.
@@ -98,12 +111,21 @@ def multi_fulltext_search_cypher(
     names = index_names or list(FULLTEXT_INDEX_MAP.values())
     branches: list[str] = []
     for idx_name in names:
-        branch = (
-            f"CALL db.index.fulltext.queryNodes('{idx_name}', $searchTerm) "
-            f"YIELD node, score "
-            f"WITH node, score LIMIT $limit "
-            f"RETURN node, score, labels(node)[0] AS nodeLabel"
-        )
+        if project_label is not None:
+            branch = (
+                f"CALL db.index.fulltext.queryNodes('{idx_name}', $searchTerm) "
+                f"YIELD node, score "
+                f"WHERE node:{project_label} "
+                f"WITH node, score LIMIT $limit "
+                f"RETURN node, score, labels(node)[0] AS nodeLabel"
+            )
+        else:
+            branch = (
+                f"CALL db.index.fulltext.queryNodes('{idx_name}', $searchTerm) "
+                f"YIELD node, score "
+                f"WITH node, score LIMIT $limit "
+                f"RETURN node, score, labels(node)[0] AS nodeLabel"
+            )
         branches.append(branch)
 
     union = "\nUNION ALL\n".join(branches)

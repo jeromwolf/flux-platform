@@ -1,4 +1,5 @@
 import { getKeycloak } from '@/auth/keycloak'
+import { useProject, HEADER_NAME as KG_PROJECT_HEADER } from '@/composables/useProject'
 
 export interface ApiError {
   type: string
@@ -60,8 +61,10 @@ async function request<T>(
   }
 
   const authHeaders = await getAuthHeaders()
+  const { currentProject } = useProject()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    [KG_PROJECT_HEADER]: currentProject.value,
     ...authHeaders,
     ...options.headers,
   }

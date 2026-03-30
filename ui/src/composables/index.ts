@@ -1,4 +1,5 @@
 export { useApi } from './useApi'
+export { useProject, HEADER_NAME as KG_PROJECT_HEADER } from './useProject'
 export type { UseApiReturn } from './useApi'
 export { usePagination } from './usePagination'
 export type { UsePaginationOptions } from './usePagination'

@@ -11,7 +11,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 
-from kg.api.deps import get_async_neo4j_session
+from kg.api.deps import get_async_neo4j_session, get_project_context
 from kg.api.models import (
     LineageNodesResponse,
     LineageResponse,
@@ -24,6 +24,7 @@ from kg.lineage.queries import (
     GET_FULL_LINEAGE,
     GET_LINEAGE_TIMELINE,
 )
+from kg.project import KGProjectContext
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ async def get_full_lineage(
     entity_type: str = Path(..., description="Entity label (e.g. Vessel)"),  # noqa: B008
     entity_id: str = Path(..., description="Entity identifier (e.g. VES-001)"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> LineageResponse:
     """Return the full lineage graph (ancestors + descendants) for an entity.
 
@@ -47,9 +49,15 @@ async def get_full_lineage(
         LineageResponse with nodes, edges, and metadata.
     """
     try:
+        # NOTE: Lineage queries are intentionally cross-project.
+        # The __kg_project_label param is available for future per-project lineage.
         result = await session.run(
             GET_FULL_LINEAGE,
-            {"entityType": entity_type, "entityId": entity_id},
+            {
+                "entityType": entity_type,
+                "entityId": entity_id,
+                "__kg_project_label": project.label,
+            },
         )
 
         nodes: list[dict[str, Any]] = []
@@ -99,6 +107,7 @@ async def get_ancestors(
     entity_type: str = Path(..., description="Entity label"),  # noqa: B008
     entity_id: str = Path(..., description="Entity identifier"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> LineageNodesResponse:
     """Return ancestor lineage nodes for an entity.
 
@@ -112,8 +121,14 @@ async def get_ancestors(
     """
     try:
         result = await session.run(
+            # NOTE: Lineage queries are intentionally cross-project.
+            # The __kg_project_label param is available for future per-project lineage.
             GET_ANCESTORS,
-            {"entityType": entity_type, "entityId": entity_id},
+            {
+                "entityType": entity_type,
+                "entityId": entity_id,
+                "__kg_project_label": project.label,
+            },
         )
 
         nodes: list[dict[str, Any]] = []
@@ -153,6 +168,7 @@ async def get_descendants(
     entity_type: str = Path(..., description="Entity label"),  # noqa: B008
     entity_id: str = Path(..., description="Entity identifier"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> LineageNodesResponse:
     """Return descendant lineage nodes for an entity.
 
@@ -166,8 +182,14 @@ async def get_descendants(
     """
     try:
         result = await session.run(
+            # NOTE: Lineage queries are intentionally cross-project.
+            # The __kg_project_label param is available for future per-project lineage.
             GET_DESCENDANTS,
-            {"entityType": entity_type, "entityId": entity_id},
+            {
+                "entityType": entity_type,
+                "entityId": entity_id,
+                "__kg_project_label": project.label,
+            },
         )
 
         nodes: list[dict[str, Any]] = []
@@ -207,6 +229,7 @@ async def get_lineage_timeline(
     entity_type: str = Path(..., description="Entity label"),  # noqa: B008
     entity_id: str = Path(..., description="Entity identifier"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> LineageTimelineResponse:
     """Return lineage events for an entity ordered chronologically.
 
@@ -220,8 +243,14 @@ async def get_lineage_timeline(
     """
     try:
         result = await session.run(
+            # NOTE: Lineage queries are intentionally cross-project.
+            # The __kg_project_label param is available for future per-project lineage.
             GET_LINEAGE_TIMELINE,
-            {"entityType": entity_type, "entityId": entity_id},
+            {
+                "entityType": entity_type,
+                "entityId": entity_id,
+                "__kg_project_label": project.label,
+            },
         )
 
         events: list[dict[str, Any]] = []

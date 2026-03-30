@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from kg.api.deps import get_async_neo4j_session
+from kg.api.deps import get_async_neo4j_session, get_project_context
 from kg.api.models import (
     CreateRelationshipRequest,
     EdgeResponse,
@@ -17,6 +17,7 @@ from kg.api.models import (
 )
 from kg.api.routes.graph import _extract_node, _extract_relationship
 from kg.api.serializers import serialize_neo4j_value
+from kg.project import KGProjectContext
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ def _edge_dict_to_response(edge_dict: dict[str, Any]) -> EdgeResponse:
 async def create_relationship(
     body: CreateRelationshipRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> RelationshipDetailResponse:
     """Create a directed relationship between two existing nodes.
 
@@ -52,6 +54,7 @@ async def create_relationship(
         body: Source node ID, target node ID, relationship type, and
             optional properties.
         session: Async Neo4j session injected via FastAPI dependency.
+        project: KG project context for multi-project isolation.
 
     Returns:
         RelationshipDetailResponse containing the relationship and both nodes.
@@ -62,7 +65,7 @@ async def create_relationship(
     """
     rel_type = body.type  # already validated by Pydantic pattern
     cypher = (
-        f"MATCH (a), (b) "
+        f"MATCH (a:{project.label}), (b:{project.label}) "
         f"WHERE elementId(a) = $src AND elementId(b) = $tgt "
         f"CREATE (a)-[r:{rel_type}]->(b) SET r += $props "
         f"RETURN r, a, b"
@@ -111,12 +114,14 @@ async def create_relationship(
 async def get_relationship(
     rel_id: str,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> RelationshipDetailResponse:
     """Retrieve a single relationship by its Neo4j element ID.
 
     Args:
         rel_id: The Neo4j element ID of the relationship.
         session: Async Neo4j session injected via FastAPI dependency.
+        project: KG project context for multi-project isolation.
 
     Returns:
         RelationshipDetailResponse with the relationship and its endpoint nodes.
@@ -125,7 +130,7 @@ async def get_relationship(
         HTTPException: 404 if no relationship with the given ID exists.
     """
     cypher = (
-        "MATCH (a)-[r]->(b) WHERE elementId(r) = $id RETURN r, a, b"
+        f"MATCH (a:{project.label})-[r]->(b:{project.label}) WHERE elementId(r) = $id RETURN r, a, b"
     )
 
     result = await session.run(cypher, {"id": rel_id})
@@ -160,6 +165,7 @@ async def update_relationship(
     rel_id: str,
     body: UpdateRelationshipRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> EdgeResponse:
     """Update properties of an existing relationship (merge semantics).
 
@@ -169,6 +175,7 @@ async def update_relationship(
         rel_id: The Neo4j element ID of the relationship to update.
         body: New property values to merge onto the relationship.
         session: Async Neo4j session injected via FastAPI dependency.
+        project: KG project context for multi-project isolation.
 
     Returns:
         Updated EdgeResponse.
@@ -178,7 +185,7 @@ async def update_relationship(
         HTTPException: 500 if the update operation fails.
     """
     cypher = (
-        "MATCH ()-[r]->() WHERE elementId(r) = $id SET r += $props RETURN r, "
+        f"MATCH (:{project.label})-[r]->(:{project.label}) WHERE elementId(r) = $id SET r += $props RETURN r, "
         "startNode(r) AS a, endNode(r) AS b"
     )
 
@@ -210,12 +217,14 @@ async def update_relationship(
 async def delete_relationship(
     rel_id: str,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> dict[str, Any]:
     """Delete a relationship by its Neo4j element ID.
 
     Args:
         rel_id: The Neo4j element ID of the relationship to delete.
         session: Async Neo4j session injected via FastAPI dependency.
+        project: KG project context for multi-project isolation.
 
     Returns:
         Dict with ``deleted`` flag and ``relationshipId``.
@@ -226,7 +235,7 @@ async def delete_relationship(
     """
     # Check existence first
     check_cypher = (
-        "MATCH ()-[r]->() WHERE elementId(r) = $id RETURN count(r) AS cnt"
+        f"MATCH (:{project.label})-[r]->(:{project.label}) WHERE elementId(r) = $id RETURN count(r) AS cnt"
     )
     check_result = await session.run(check_cypher, {"id": rel_id})
     check_records = [record async for record in check_result]
@@ -236,7 +245,7 @@ async def delete_relationship(
             status_code=404, detail=f"Relationship '{rel_id}' not found"
         )
 
-    cypher = "MATCH ()-[r]->() WHERE elementId(r) = $id DELETE r"
+    cypher = f"MATCH (:{project.label})-[r]->(:{project.label}) WHERE elementId(r) = $id DELETE r"
     try:
         await session.run(cypher, {"id": rel_id})
     except Exception as exc:
@@ -264,6 +273,7 @@ async def list_relationships(
     ),
     offset: int = Query(default=0, ge=0, description="Number to skip"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> RelationshipListResponse:
     """List relationships with optional filtering and pagination.
 
@@ -296,7 +306,7 @@ async def list_relationships(
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
     count_cypher = (
-        f"MATCH (a)-[r{rel_type_clause}]->(b) {where_clause} RETURN count(r) AS total"
+        f"MATCH (a:{project.label})-[r{rel_type_clause}]->(b:{project.label}) {where_clause} RETURN count(r) AS total"
     )
     count_result = await session.run(count_cypher, params)
     count_records = [record async for record in count_result]
@@ -308,7 +318,7 @@ async def list_relationships(
             total = 0
 
     list_cypher = (
-        f"MATCH (a)-[r{rel_type_clause}]->(b) {where_clause} "
+        f"MATCH (a:{project.label})-[r{rel_type_clause}]->(b:{project.label}) {where_clause} "
         f"RETURN r SKIP $offset LIMIT $limit"
     )
     result = await session.run(list_cypher, params)

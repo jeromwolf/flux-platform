@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from kg.api.deps import get_async_neo4j_session
+from kg.api.deps import get_async_neo4j_session, get_project_context
 from kg.api.models import (
     CreateNodeRequest,
     NodeListResponse,
@@ -17,6 +17,7 @@ from kg.api.models import (
 from kg.api.routes.graph import _extract_node
 from kg.api.serializers import serialize_neo4j_value
 from kg.fulltext import fulltext_search_cypher, get_fulltext_index
+from kg.project import KGProjectContext
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +48,14 @@ def _node_dict_to_response(node_dict: dict[str, Any]) -> NodeResponse:
 async def create_node(
     body: CreateNodeRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> NodeResponse:
     """Create a new node in the knowledge graph.
 
     Args:
         body: Labels and initial properties for the new node.
         session: Async Neo4j session injected via FastAPI dependency.
+        project: KG project context for multi-project isolation.
 
     Returns:
         NodeResponse containing the created node.
@@ -69,11 +72,12 @@ async def create_node(
                 detail=f"Invalid label '{label}': must be a valid identifier",
             )
 
-    label_str = ":".join(body.labels)
+    label_str = ":".join(body.labels) + ":" + project.label
+    props = {**body.properties, "_kg_project": project.property_value}
     cypher = f"CREATE (n:{label_str}) SET n += $props RETURN n"
 
     try:
-        result = await session.run(cypher, {"props": body.properties})
+        result = await session.run(cypher, {"props": props})
         records = [record async for record in result]
     except Exception as exc:
         logger.exception("Failed to create node")
@@ -93,12 +97,14 @@ async def create_node(
 async def get_node(
     node_id: str,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> NodeResponse:
     """Retrieve a single node by its Neo4j element ID.
 
     Args:
         node_id: The Neo4j element ID of the node.
         session: Async Neo4j session injected via FastAPI dependency.
+        project: KG project context for multi-project isolation.
 
     Returns:
         NodeResponse for the matching node.
@@ -106,7 +112,7 @@ async def get_node(
     Raises:
         HTTPException: 404 if no node with the given ID exists.
     """
-    cypher = "MATCH (n) WHERE elementId(n) = $id RETURN n"
+    cypher = f"MATCH (n:{project.label}) WHERE elementId(n) = $id RETURN n"
 
     result = await session.run(cypher, {"id": node_id})
     records = [record async for record in result]
@@ -126,6 +132,7 @@ async def update_node(
     node_id: str,
     body: UpdateNodeRequest,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> NodeResponse:
     """Update properties of an existing node (merge semantics).
 
@@ -135,6 +142,7 @@ async def update_node(
         node_id: The Neo4j element ID of the node to update.
         body: New property values to merge onto the node.
         session: Async Neo4j session injected via FastAPI dependency.
+        project: KG project context for multi-project isolation.
 
     Returns:
         NodeResponse with the updated node.
@@ -143,7 +151,7 @@ async def update_node(
         HTTPException: 404 if no node with the given ID exists.
         HTTPException: 500 if the update operation fails.
     """
-    cypher = "MATCH (n) WHERE elementId(n) = $id SET n += $props RETURN n"
+    cypher = f"MATCH (n:{project.label}) WHERE elementId(n) = $id SET n += $props RETURN n"
 
     try:
         result = await session.run(cypher, {"id": node_id, "props": body.properties})
@@ -166,6 +174,7 @@ async def update_node(
 async def delete_node(
     node_id: str,
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> dict[str, Any]:
     """Delete a node and all its relationships.
 
@@ -175,6 +184,7 @@ async def delete_node(
     Args:
         node_id: The Neo4j element ID of the node to delete.
         session: Async Neo4j session injected via FastAPI dependency.
+        project: KG project context for multi-project isolation.
 
     Returns:
         Dict with ``deleted`` flag and ``nodeId``.
@@ -184,7 +194,7 @@ async def delete_node(
         HTTPException: 500 if the delete operation fails.
     """
     # First check the node exists
-    check_cypher = "MATCH (n) WHERE elementId(n) = $id RETURN count(n) AS cnt"
+    check_cypher = f"MATCH (n:{project.label}) WHERE elementId(n) = $id RETURN count(n) AS cnt"
     check_result = await session.run(check_cypher, {"id": node_id})
     check_records = [record async for record in check_result]
 
@@ -192,7 +202,7 @@ async def delete_node(
         raise HTTPException(status_code=404, detail=f"Node '{node_id}' not found")
 
     # Execute delete
-    cypher = "MATCH (n) WHERE elementId(n) = $id DETACH DELETE n"
+    cypher = f"MATCH (n:{project.label}) WHERE elementId(n) = $id DETACH DELETE n"
     try:
         await session.run(cypher, {"id": node_id})
     except Exception as exc:
@@ -209,6 +219,7 @@ async def list_nodes(
     offset: int = Query(default=0, ge=0, description="Number of nodes to skip"),  # noqa: B008
     q: str | None = Query(default=None, description="Search query (matches name/title)"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
+    project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> NodeListResponse:
     """List nodes with optional filtering and pagination.
 
@@ -229,14 +240,14 @@ async def list_nodes(
     conditions: list[str] = []
     params: dict[str, Any] = {"limit": limit, "offset": offset}
 
-    label_clause = ""
+    label_clause = f":{project.label}"
     if label is not None:
         if not label.isidentifier():
             raise HTTPException(
                 status_code=422,
                 detail=f"Invalid label '{label}': must be a valid identifier",
             )
-        label_clause = f":{label}"
+        label_clause = f":{label}:{project.label}"
 
     # Fulltext index search path — when label has a registered fulltext index
     fulltext_index = get_fulltext_index(label) if label else None
@@ -246,6 +257,8 @@ async def list_nodes(
         ft_call = fulltext_search_cypher(fulltext_index, result_var="n", score_var="ftScore")
         params["searchTerm"] = q
 
+        # Add project label filter after fulltext YIELD
+        conditions.append(f"n:{project.label}")
         where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
         count_cypher = f"{ft_call} {where_clause} RETURN count(n) AS total"
