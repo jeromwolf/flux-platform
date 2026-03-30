@@ -248,4 +248,4 @@ QDRANT_PORT=6333
 6. JWT → Keycloak 전환 예정, 현재 코드는 JWT 기반
 7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
 8. Activepieces → VueFlow + Argo Workflow 전환 예정
-9. 테스트 3,508개 통과 (unit + harness), 80개 skipped (실제 Neo4j 필요)
+9. 테스트 3,990개 통과 (unit + harness), 80개 skipped (실제 Neo4j 필요)

@@ -74,16 +74,21 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("IMSP Gateway starting — port %s", gw.config.port)
 
     # httpx AsyncClient 초기화 — 공유 커넥션 풀
-    _http_client = httpx.AsyncClient(
-        timeout=httpx.Timeout(
-            connect=10.0,
-            read=30.0,
-            write=30.0,
-            pool=5.0,
-        ),
-        follow_redirects=True,
-    )
-    logger.info("HTTP client initialised")
+    # Only create if not already set (allows tests to inject a mock client before startup)
+    _client_owned = _http_client is None
+    if _client_owned:
+        _http_client = httpx.AsyncClient(
+            timeout=httpx.Timeout(
+                connect=10.0,
+                read=30.0,
+                write=30.0,
+                pool=5.0,
+            ),
+            follow_redirects=True,
+        )
+        logger.info("HTTP client initialised")
+    else:
+        logger.info("HTTP client already set — using existing instance")
 
     # Start WebSocket heartbeat background task
     heartbeat_task = asyncio.create_task(
@@ -100,9 +105,10 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except asyncio.CancelledError:
         pass
 
-    # 종료 시 클라이언트 닫기
-    await _http_client.aclose()
-    _http_client = None
+    # 종료 시 클라이언트 닫기 — only close if we created it
+    if _client_owned and _http_client is not None:
+        await _http_client.aclose()
+        _http_client = None
     logger.info("IMSP Gateway shutting down")
 
 
