@@ -103,7 +103,17 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["kg", "maritime", "agent", "rag", "gateway"]
-omit = ["kg/crawlers/*", "maritime/crawlers/*", "maritime/schema/*", "maritime/rbac/*", "kg/utils/verification.py", "*/test_*", "maritime/poc/*"]
+omit = [
+    "*/crawlers/*",
+    "*/schema/load_sample_data.py",
+    "*/schema/init_schema.py",
+    "*/rbac/*",
+    "*/poc/*",
+    "*/verification.py",
+    "*/test_*",
+    "*/n10s/__main__.py",
+    "*/crawlers/run_crawlers.py",
+]
 
 [tool.coverage.report]
 show_missing = true
