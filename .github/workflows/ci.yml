@@ -48,9 +48,9 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install httpx
-      - name: Run unit tests
+      - name: Run unit tests (randomized order)
         run: |
-          PYTHONPATH=.:core:domains python -m pytest tests/ -m unit -v --tb=short --junitxml=test-results.xml
+          PYTHONPATH=.:core:domains python -m pytest tests/ -m unit -v -p randomly --tb=short --junitxml=test-results.xml
       - name: Run E2E tests
         run: |
           PYTHONPATH=.:core:domains python -m pytest tests/e2e/test_e2e_pipeline.py -v --tb=short
@@ -74,9 +74,12 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install httpx
-      - name: Run tests with coverage
+      - name: Run tests with coverage (fail-under=80%)
         run: |
-          PYTHONPATH=.:core:domains python -m pytest tests/ -m unit --cov=core --cov=domains --cov=agent --cov=rag --cov=gateway --cov-report=xml --cov-report=term-missing --tb=short
+          PYTHONPATH=.:core:domains python -m pytest tests/ -m unit \
+            --cov=core --cov=domains --cov=agent --cov=rag --cov=gateway \
+            --cov-fail-under=80 \
+            --cov-report=xml --cov-report=term-missing --tb=short
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
