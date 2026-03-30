@@ -1,0 +1,2909 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>멀티 지식그래프 관리 | Stanford 7-Step Ontology Design - KRISO IMSP</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+@font-face {
+  font-family: 'Pretendard';
+  src: local('Pretendard'), local('Noto Sans KR');
+  font-display: swap;
+}
+
+:root {
+  --navy: #0f1923;
+  --navy-light: #1a2b3d;
+  --navy-mid: #243447;
+  --teal: #0d7377;
+  --teal-light: #11998e;
+  --teal-dim: rgba(13,115,119,0.15);
+  --ocean: #2196F3;
+  --ocean-dim: rgba(33,150,243,0.12);
+  --coral: #ff6b6b;
+  --coral-dim: rgba(255,107,107,0.12);
+  --amber: #f0a500;
+  --amber-dim: rgba(240,165,0,0.12);
+  --purple: #9c6ade;
+  --purple-dim: rgba(156,106,222,0.12);
+  --green: #27ae60;
+  --green-dim: rgba(39,174,96,0.12);
+  --slate: #64748b;
+  --bg: #f8f9fb;
+  --bg-card: #ffffff;
+  --text: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 16px;
+  --sidebar-w: 280px;
+  --header-h: 72px;
+  --font-body: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+
+  /* Step Colors */
+  --step1: #0d7377;
+  --step2: #2196F3;
+  --step3: #f0a500;
+  --step4: #e74c3c;
+  --step5: #9c6ade;
+  --step6: #27ae60;
+  --step7: #ff6b6b;
+}
+
+html { scroll-behavior: smooth; font-size: 15px; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar-fixed {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  height: 4px; background: var(--border);
+}
+.progress-bar-fixed .fill {
+  height: 100%; width: 42.86%; /* 3/7 */
+  background: linear-gradient(90deg, var(--teal), var(--teal-light));
+  border-radius: 0 2px 2px 0;
+  transition: width 0.6s ease;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--navy);
+  color: #cbd5e1;
+  z-index: 900;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo h2 {
+  font-size: 1.15rem; font-weight: 700;
+  color: #fff; letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+.sidebar-logo .subtitle {
+  font-size: 0.75rem; color: var(--teal-light);
+  font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.sidebar-progress {
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-progress .label {
+  font-size: 0.7rem; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.sidebar-progress .bar {
+  height: 6px; background: rgba(255,255,255,0.1);
+  border-radius: 3px; overflow: hidden;
+}
+.sidebar-progress .bar-fill {
+  height: 100%; width: 42.86%;
+  background: linear-gradient(90deg, var(--teal), var(--teal-light));
+  border-radius: 3px;
+}
+.sidebar-progress .frac {
+  margin-top: 6px; font-size: 0.78rem; color: #94a3b8;
+}
+.sidebar-progress .frac strong { color: #fff; }
+
+.sidebar-nav { padding: 16px 0; flex: 1; }
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 24px;
+  color: #94a3b8; text-decoration: none;
+  font-size: 0.85rem; font-weight: 500;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+.sidebar-nav a:hover {
+  color: #e2e8f0; background: rgba(255,255,255,0.04);
+}
+.sidebar-nav a.active {
+  color: #fff; background: rgba(13,115,119,0.15);
+  border-left-color: var(--teal-light);
+}
+.sidebar-nav a .step-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.sidebar-nav a .step-label { flex: 1; }
+.sidebar-nav a .step-status {
+  font-size: 0.65rem; padding: 2px 7px;
+  border-radius: 10px; font-weight: 600;
+}
+.step-status.done { background: rgba(39,174,96,0.2); color: #27ae60; }
+.step-status.wip { background: rgba(240,165,0,0.2); color: #f0a500; }
+
+.sidebar-footer {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.7rem; color: #64748b;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 50%, #1a3a4a 100%);
+  color: #fff;
+  padding: 56px 48px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(13,115,119,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(33,150,243,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 1200 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,30 Q150,0 300,25 T600,20 T900,30 T1200,15 L1200,60 L0,60Z' fill='%23f8f9fb' opacity='0.6'/%3E%3Cpath d='M0,40 Q200,15 400,35 T800,25 T1200,35 L1200,60 L0,60Z' fill='%23f8f9fb'/%3E%3C/svg%3E") no-repeat bottom center;
+  background-size: cover;
+}
+.header-content { position: relative; z-index: 1; max-width: 900px; }
+.header .badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(13,115,119,0.3); border: 1px solid rgba(13,115,119,0.5);
+  color: var(--teal-light); padding: 5px 14px;
+  border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.header h1 {
+  font-size: 2.2rem; font-weight: 800;
+  letter-spacing: -0.03em; line-height: 1.25;
+  margin-bottom: 10px;
+}
+.header .desc {
+  font-size: 1.05rem; color: #94a3b8;
+  line-height: 1.6; max-width: 700px;
+}
+.header-meta {
+  display: flex; gap: 24px; margin-top: 24px;
+  flex-wrap: wrap;
+}
+.header-meta .meta-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; color: #94a3b8;
+}
+.header-meta .meta-item strong { color: #e2e8f0; }
+
+/* ===== CONTENT AREA ===== */
+.content {
+  max-width: 960px;
+  padding: 40px 48px 80px;
+}
+
+/* ===== STEP SECTION ===== */
+.step-section {
+  margin-bottom: 32px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow 0.3s;
+}
+.step-section:hover { box-shadow: var(--shadow-md); }
+
+.step-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 20px 28px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+  border-bottom: 1px solid transparent;
+}
+.step-header:hover { background: var(--border-light); }
+.step-header.open { border-bottom-color: var(--border); }
+
+.step-number {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+}
+.step-header-text { flex: 1; }
+.step-header-text h2 {
+  font-size: 1.15rem; font-weight: 700;
+  letter-spacing: -0.02em; margin-bottom: 2px;
+}
+.step-header-text .step-subtitle {
+  font-size: 0.78rem; color: var(--text-secondary);
+}
+.step-status-badge {
+  font-size: 0.7rem; font-weight: 700; padding: 4px 12px;
+  border-radius: 12px; letter-spacing: 0.02em;
+}
+.step-status-badge.complete { background: var(--green-dim); color: var(--green); }
+.step-status-badge.pending { background: var(--amber-dim); color: var(--amber); }
+.unverified-tag { display:inline-block; background:rgba(240,165,0,0.15); color:var(--amber); font-size:0.75rem; font-weight:600; padding:2px 8px; border-radius:6px; border:1px solid rgba(240,165,0,0.3); margin-left:6px; vertical-align:middle; }
+.unverified-note { background:rgba(240,165,0,0.08); border:1px solid rgba(240,165,0,0.2); border-radius:8px; padding:0.8rem 1rem; margin-top:1rem; font-size:0.88rem; color:#ccc; }
+.unverified-note::before { content:"\\26A0  "; color:var(--amber); font-weight:700; }
+
+.step-chevron {
+  width: 20px; height: 20px; flex-shrink: 0;
+  transition: transform 0.3s ease;
+  color: var(--text-muted);
+}
+.step-header.open .step-chevron { transform: rotate(180deg); }
+
+.step-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.step-body.open { max-height: 50000px; }
+.step-body-inner { padding: 28px; }
+
+/* ===== SUB-SECTIONS ===== */
+.subsection {
+  margin-bottom: 36px;
+}
+.subsection:last-child { margin-bottom: 0; }
+.subsection-title {
+  font-size: 1.02rem; font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+}
+.subsection-title .sec-icon {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+}
+.subsection-intro {
+  font-size: 0.88rem; color: var(--text-secondary);
+  margin-bottom: 16px; line-height: 1.7;
+}
+.subsection-intro strong { color: var(--text); }
+
+/* ===== TABLES ===== */
+.table-wrap {
+  overflow-x: auto; margin: 12px 0 4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.82rem;
+}
+thead th {
+  background: var(--navy);
+  color: #e2e8f0;
+  padding: 11px 16px;
+  text-align: left; font-weight: 600;
+  font-size: 0.75rem; letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+thead th:first-child { border-radius: var(--radius) 0 0 0; }
+thead th:last-child { border-radius: 0 var(--radius) 0 0; }
+tbody td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(33,150,243,0.03); }
+.priority-core {
+  display: inline-block; padding: 2px 10px;
+  background: var(--green-dim); color: var(--green);
+  border-radius: 10px; font-size: 0.7rem; font-weight: 700;
+}
+.priority-extended {
+  display: inline-block; padding: 2px 10px;
+  background: var(--amber-dim); color: var(--amber);
+  border-radius: 10px; font-size: 0.7rem; font-weight: 700;
+}
+.priority-future {
+  display: inline-block; padding: 2px 10px;
+  background: var(--purple-dim); color: var(--purple);
+  border-radius: 10px; font-size: 0.7rem; font-weight: 700;
+}
+.quality-a {
+  display: inline-block; padding: 2px 8px;
+  background: var(--green-dim); color: var(--green);
+  border-radius: 8px; font-size: 0.72rem; font-weight: 700;
+}
+.quality-b {
+  display: inline-block; padding: 2px 8px;
+  background: var(--amber-dim); color: var(--amber);
+  border-radius: 8px; font-size: 0.72rem; font-weight: 700;
+}
+.quality-c {
+  display: inline-block; padding: 2px 8px;
+  background: var(--coral-dim); color: var(--coral);
+  border-radius: 8px; font-size: 0.72rem; font-weight: 700;
+}
+
+/* ===== DESIGN PRINCIPLES ===== */
+.principles-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-top: 14px;
+}
+.principle-card {
+  padding: 16px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.principle-card:hover {
+  border-color: var(--teal);
+  box-shadow: 0 2px 8px rgba(13,115,119,0.08);
+}
+.principle-card h4 {
+  font-size: 0.82rem; font-weight: 700; color: var(--teal);
+  margin-bottom: 4px;
+}
+.principle-card p {
+  font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6;
+}
+
+/* ===== OUT-OF-SCOPE ===== */
+.oos-list {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 12px;
+}
+.oos-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  background: rgba(255,107,107,0.04);
+  border: 1px solid rgba(255,107,107,0.12);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem; color: var(--text-secondary);
+}
+.oos-item::before {
+  content: '\2715';
+  color: var(--coral); font-weight: 700; font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* ===== CQ CARDS ===== */
+.cq-card {
+  margin-bottom: 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.3s, transform 0.2s;
+}
+.cq-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.cq-card:last-child { margin-bottom: 0; }
+.cq-top {
+  padding: 18px 22px;
+  display: flex; align-items: flex-start; gap: 14px;
+  border-bottom: 1px solid var(--border-light);
+}
+.cq-badge {
+  padding: 4px 10px; border-radius: 8px;
+  font-size: 0.65rem; font-weight: 800;
+  white-space: nowrap; letter-spacing: 0.02em;
+  flex-shrink: 0; margin-top: 2px;
+}
+.cq-badge.hop1 { background: var(--green-dim); color: var(--green); }
+.cq-badge.hop2 { background: var(--ocean-dim); color: var(--ocean); }
+.cq-badge.multi { background: var(--purple-dim); color: var(--purple); }
+.cq-badge.comp { background: var(--amber-dim); color: var(--amber); }
+
+.cq-question {
+  font-size: 0.95rem; font-weight: 700; color: var(--text);
+  line-height: 1.5; flex: 1;
+}
+.cq-details {
+  padding: 16px 22px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  font-size: 0.78rem; color: var(--text-secondary);
+  background: var(--bg);
+}
+.cq-detail-item .cq-label {
+  font-size: 0.68rem; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 3px;
+}
+.cq-detail-item .cq-value {
+  line-height: 1.5;
+}
+.cq-detail-item .cq-value code {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  background: rgba(13,115,119,0.08);
+  color: var(--teal);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.cq-cypher {
+  padding: 0;
+}
+.cq-cypher pre {
+  margin: 0;
+  padding: 18px 22px;
+  background: #0d1117;
+  color: #c9d1d9;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  line-height: 1.65;
+  overflow-x: auto;
+  border-radius: 0;
+}
+
+/* Cypher syntax highlights */
+.cy-kw { color: #ff7b72; font-weight: 600; }
+.cy-fn { color: #d2a8ff; }
+.cy-str { color: #a5d6ff; }
+.cy-num { color: #79c0ff; }
+.cy-prop { color: #7ee787; }
+.cy-lbl { color: #ffa657; }
+.cy-rel { color: #ff7b72; }
+.cy-cmt { color: #8b949e; font-style: italic; }
+.cy-var { color: #c9d1d9; }
+.cy-alias { color: #d2a8ff; }
+
+/* ===== TIER CARDS ===== */
+.tier-section {
+  margin-bottom: 24px;
+}
+.tier-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.tier-badge {
+  font-size: 0.72rem; font-weight: 800; padding: 4px 14px;
+  border-radius: 10px; letter-spacing: 0.04em;
+}
+.tier-badge.core { background: var(--teal-dim); color: var(--teal); }
+.tier-badge.extended { background: var(--amber-dim); color: var(--amber); }
+.tier-badge.future { background: var(--purple-dim); color: var(--purple); }
+.tier-header span {
+  font-size: 0.82rem; color: var(--text-secondary);
+}
+
+/* ===== PLACEHOLDER ===== */
+.placeholder-body {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 28px; text-align: center;
+}
+.placeholder-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; margin-bottom: 16px;
+  background: var(--amber-dim);
+}
+.placeholder-body h3 {
+  font-size: 1rem; font-weight: 700; margin-bottom: 6px;
+}
+.placeholder-body p {
+  font-size: 0.82rem; color: var(--text-muted);
+  max-width: 400px; line-height: 1.6;
+}
+.placeholder-items {
+  margin-top: 16px; display: flex; flex-direction: column;
+  gap: 6px; text-align: left;
+}
+.placeholder-items li {
+  font-size: 0.78rem; color: var(--text-secondary);
+  list-style: none; padding-left: 16px;
+  position: relative;
+}
+.placeholder-items li::before {
+  content: '\2022'; position: absolute; left: 0;
+  color: var(--amber); font-weight: 700;
+}
+
+/* ===== QUALITY GRADE CARDS ===== */
+.grade-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-top: 14px;
+}
+.grade-card {
+  padding: 18px; border-radius: var(--radius);
+  border: 1px solid var(--border); text-align: center;
+}
+.grade-card.a { border-top: 3px solid var(--green); }
+.grade-card.b { border-top: 3px solid var(--amber); }
+.grade-card.c { border-top: 3px solid var(--coral); }
+.grade-card .grade-letter {
+  font-size: 1.6rem; font-weight: 800; margin-bottom: 4px;
+}
+.grade-card.a .grade-letter { color: var(--green); }
+.grade-card.b .grade-letter { color: var(--amber); }
+.grade-card.c .grade-letter { color: var(--coral); }
+.grade-card .grade-label {
+  font-size: 0.78rem; font-weight: 600; color: var(--text);
+  margin-bottom: 6px;
+}
+.grade-card .grade-desc {
+  font-size: 0.72rem; color: var(--text-muted); line-height: 1.5;
+}
+
+/* ===== DEVKG GOAL ===== */
+.devkg-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-top: 14px;
+}
+.devkg-item {
+  padding: 14px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.devkg-item .dk-label {
+  font-size: 0.68rem; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.devkg-item .dk-value {
+  font-size: 0.88rem; font-weight: 600; color: var(--text);
+}
+.devkg-item .dk-value code {
+  font-family: var(--font-mono); font-size: 0.8rem;
+  background: var(--teal-dim); color: var(--teal);
+  padding: 2px 8px; border-radius: 4px;
+}
+
+/* ===== BACK TO TOP ===== */
+.back-to-top {
+  position: fixed; bottom: 32px; right: 32px;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--navy); color: #fff;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
+  opacity: 0; pointer-events: none;
+  transition: all 0.3s;
+  z-index: 800;
+}
+.back-to-top.visible { opacity: 1; pointer-events: auto; }
+.back-to-top:hover { background: var(--teal); transform: translateY(-2px); }
+
+/* ===== FOOTER ===== */
+.footer {
+  margin-left: var(--sidebar-w);
+  padding: 32px 48px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 12px;
+}
+.footer-left { font-size: 0.78rem; color: var(--text-muted); }
+.footer-right { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ===== MOBILE ===== */
+.sidebar-toggle {
+  display: none; position: fixed; top: 12px; left: 12px;
+  z-index: 950; width: 40px; height: 40px;
+  border-radius: 10px; background: var(--navy);
+  color: #fff; border: none; cursor: pointer;
+  align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 900px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    transition: transform 0.3s ease;
+  }
+  .sidebar.open { transform: translateX(0); --sidebar-w: 280px; }
+  .sidebar-toggle { display: flex; }
+  .content { padding: 24px 20px 60px; }
+  .header { padding: 40px 20px 36px; }
+  .header h1 { font-size: 1.5rem; }
+  .footer { margin-left: 0; padding: 24px 20px; }
+  .principles-grid { grid-template-columns: 1fr; }
+  .cq-details { grid-template-columns: 1fr; }
+  .grade-grid { grid-template-columns: 1fr; }
+  .devkg-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== DIVIDER ===== */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 8px 0 24px;
+}
+
+/* ===== REFERENCE TABLE SPECIAL ===== */
+.ref-table tbody td:first-child {
+  font-weight: 600; color: var(--text); white-space: nowrap;
+}
+
+/* ===== PRINT ===== */
+@media print {
+  .sidebar, .sidebar-toggle, .back-to-top, .progress-bar-fixed { display: none !important; }
+  .main, .footer { margin-left: 0 !important; }
+  .step-body { max-height: none !important; overflow: visible !important; }
+  .step-chevron { display: none !important; }
+  .header { break-after: avoid; }
+  .step-section { break-inside: avoid; }
+  body { font-size: 12px; background: #fff; }
+  .cq-cypher pre { white-space: pre-wrap; word-break: break-all; }
+}
+
+/* ===== RELATION PATH ===== */
+.relation-path {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  margin: 6px 0;
+  display: inline-block;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.relation-path .rp-node { color: var(--teal); font-weight: 600; }
+.relation-path .rp-rel { color: var(--coral); }
+.relation-path .rp-arrow { color: var(--text-muted); }
+
+/* ===== PERFORMANCE CRITERIA ===== */
+.perf-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  margin-top: 14px;
+}
+.perf-item {
+  padding: 14px 16px; text-align: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.perf-item .perf-value {
+  font-size: 1.1rem; font-weight: 800; color: var(--teal);
+  margin-bottom: 2px;
+}
+.perf-item .perf-label {
+  font-size: 0.7rem; color: var(--text-muted);
+}
+
+/* ===== JOIN KEY VISUAL ===== */
+.join-arrow {
+  font-family: var(--font-mono);
+  font-size: 0.76rem; color: var(--teal);
+}
+
+/* ===== LANDING PAGE ===== */
+.landing {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.landing-header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 50%, #1a3a4a 100%);
+  color: #fff;
+  padding: 40px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.landing-header::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(13,115,119,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(33,150,243,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.landing-header-content {
+  position: relative; z-index: 1;
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.landing-title {
+  font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em;
+}
+.landing-title span {
+  color: var(--teal-light); font-weight: 400; font-size: 0.9rem;
+  display: block; margin-top: 4px; letter-spacing: 0.02em;
+}
+.landing-count {
+  background: rgba(13,115,119,0.25);
+  border: 1px solid rgba(13,115,119,0.4);
+  padding: 8px 20px; border-radius: 12px;
+  font-size: 0.85rem; font-weight: 600;
+}
+.landing-count strong {
+  font-size: 1.4rem; color: var(--teal-light);
+}
+
+.landing-body {
+  flex: 1; padding: 40px 48px;
+  max-width: 1200px; margin: 0 auto; width: 100%;
+}
+.landing-subtitle {
+  font-size: 0.85rem; color: var(--text-muted);
+  margin-bottom: 24px; font-weight: 500;
+}
+.kg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+.kg-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  position: relative;
+  transition: all 0.3s;
+  cursor: pointer;
+  overflow: hidden;
+}
+.kg-card:hover {
+  border-color: var(--teal);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+.kg-card.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.kg-card.disabled:hover {
+  border-color: var(--border);
+  box-shadow: none;
+  transform: none;
+}
+.kg-card-accent {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 4px;
+}
+.kg-card-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.kg-card-name {
+  font-size: 1.2rem; font-weight: 800; color: var(--text);
+  letter-spacing: -0.01em;
+}
+.kg-card-namespace {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--teal);
+  background: var(--teal-dim);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  display: inline-block;
+}
+.kg-card-status {
+  font-size: 0.68rem; font-weight: 700;
+  padding: 4px 12px; border-radius: 10px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.kg-card-status.active {
+  background: var(--green-dim); color: var(--green);
+}
+.kg-card-status.planned {
+  background: var(--purple-dim); color: var(--purple);
+}
+.kg-card-desc {
+  font-size: 0.85rem; color: var(--text-secondary);
+  margin-bottom: 20px; line-height: 1.6;
+}
+.kg-card-progress {
+  margin-bottom: 8px;
+}
+.kg-card-progress-label {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.kg-card-progress-label span {
+  font-size: 0.72rem; color: var(--text-muted);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.kg-card-progress-label strong {
+  font-size: 0.85rem; color: var(--text);
+}
+.kg-step-bar {
+  display: flex; gap: 3px; height: 8px;
+}
+.kg-step-bar .step-seg {
+  flex: 1; border-radius: 4px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.kg-step-bar .step-seg.done {
+  opacity: 1;
+}
+.kg-card-enter {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--teal);
+}
+.kg-card.disabled .kg-card-enter {
+  color: var(--text-muted);
+}
+.kg-card-enter svg {
+  transition: transform 0.2s;
+}
+.kg-card:not(.disabled):hover .kg-card-enter svg {
+  transform: translateX(4px);
+}
+
+/* Back button in sidebar */
+.sidebar-back {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 24px;
+  color: #94a3b8; text-decoration: none;
+  font-size: 0.78rem; font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sidebar-back:hover {
+  color: #fff; background: rgba(255,255,255,0.04);
+}
+
+/* View state */
+.view-landing .sidebar,
+.view-landing .main,
+.view-landing .footer,
+.view-landing .progress-bar-fixed,
+.view-landing .back-to-top,
+.view-landing .sidebar-toggle {
+  display: none !important;
+}
+.view-detail .landing {
+  display: none !important;
+}
+
+/* Landing footer */
+.landing-footer {
+  padding: 24px 48px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 12px;
+  font-size: 0.75rem; color: var(--text-muted);
+}
+
+@media (max-width: 900px) {
+  .landing-header { padding: 28px 20px; }
+  .landing-header-content { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .landing-body { padding: 24px 20px; }
+  .kg-grid { grid-template-columns: 1fr; }
+  .landing-footer { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar-fixed"><div class="fill"></div></div>
+
+<!-- ==================== LANDING PAGE ==================== -->
+<div class="landing" id="landing">
+  <header class="landing-header">
+    <div class="landing-header-content">
+      <div>
+        <div class="landing-title">
+          KRISO IMSP — 멀티 지식그래프 관리
+          <span>Stanford 7-Step Ontology Design Methodology</span>
+        </div>
+      </div>
+      <div class="landing-count">
+        <strong>5</strong> KG 프로젝트 &middot; <strong>1</strong> 활성
+      </div>
+    </div>
+  </header>
+
+  <div class="landing-body">
+    <div class="landing-subtitle">프로젝트를 선택하여 7단계 온톨로지 설계 현황을 확인하세요</div>
+
+    <div class="kg-grid">
+
+      <!-- DevKG (Active) -->
+      <div class="kg-card" onclick="enterProject('devkg')">
+        <div class="kg-card-accent" style="background:linear-gradient(90deg,var(--teal),var(--teal-light))"></div>
+        <div class="kg-card-top">
+          <div>
+            <div class="kg-card-name">DevKG</div>
+            <div class="kg-card-namespace">:KG_DevKG</div>
+          </div>
+          <span class="kg-card-status active">활성</span>
+        </div>
+        <div class="kg-card-desc">온톨로지 설계 검증 + PoC 데이터 적재 테스트</div>
+        <div class="kg-card-progress">
+          <div class="kg-card-progress-label">
+            <span>7-Step Progress</span>
+            <strong>3 / 7</strong>
+          </div>
+          <div class="kg-step-bar">
+            <div class="step-seg done" style="background:var(--step1)"></div>
+            <div class="step-seg done" style="background:var(--step2)"></div>
+            <div class="step-seg done" style="background:var(--step3)"></div>
+            <div class="step-seg"></div>
+            <div class="step-seg"></div>
+            <div class="step-seg"></div>
+            <div class="step-seg"></div>
+          </div>
+        </div>
+        <div class="kg-card-enter">
+          7단계 설계 현황 보기
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg>
+        </div>
+      </div>
+
+      <!-- ProdKG -->
+      <div class="kg-card disabled">
+        <div class="kg-card-accent" style="background:linear-gradient(90deg,var(--ocean),#64b5f6)"></div>
+        <div class="kg-card-top">
+          <div>
+            <div class="kg-card-name">ProdKG</div>
+            <div class="kg-card-namespace">:KG_ProdKG</div>
+          </div>
+          <span class="kg-card-status planned">계획</span>
+        </div>
+        <div class="kg-card-desc">운영 환경 해상교통 지식그래프</div>
+        <div class="kg-card-progress">
+          <div class="kg-card-progress-label">
+            <span>7-Step Progress</span>
+            <strong>0 / 7</strong>
+          </div>
+          <div class="kg-step-bar">
+            <div class="step-seg"></div><div class="step-seg"></div><div class="step-seg"></div>
+            <div class="step-seg"></div><div class="step-seg"></div><div class="step-seg"></div>
+            <div class="step-seg"></div>
+          </div>
+        </div>
+        <div class="kg-card-enter">
+          준비 중
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg>
+        </div>
+      </div>
+
+      <!-- CoastGuardKG -->
+      <div class="kg-card disabled">
+        <div class="kg-card-accent" style="background:linear-gradient(90deg,var(--coral),#ff8a80)"></div>
+        <div class="kg-card-top">
+          <div>
+            <div class="kg-card-name">CoastGuardKG</div>
+            <div class="kg-card-namespace">:KG_CoastGuardKG</div>
+          </div>
+          <span class="kg-card-status planned">계획</span>
+        </div>
+        <div class="kg-card-desc">해양경찰청 수색구조(SAR) 지식그래프</div>
+        <div class="kg-card-progress">
+          <div class="kg-card-progress-label">
+            <span>7-Step Progress</span>
+            <strong>0 / 7</strong>
+          </div>
+          <div class="kg-step-bar">
+            <div class="step-seg"></div><div class="step-seg"></div><div class="step-seg"></div>
+            <div class="step-seg"></div><div class="step-seg"></div><div class="step-seg"></div>
+            <div class="step-seg"></div>
+          </div>
+        </div>
+        <div class="kg-card-enter">
+          준비 중
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg>
+        </div>
+      </div>
+
+      <!-- MaritimeAccidentKG -->
+      <div class="kg-card disabled">
+        <div class="kg-card-accent" style="background:linear-gradient(90deg,var(--amber),#ffd54f)"></div>
+        <div class="kg-card-top">
+          <div>
+            <div class="kg-card-name">MaritimeAccidentKG</div>
+            <div class="kg-card-namespace">:KG_AccidentKG</div>
+          </div>
+          <span class="kg-card-status planned">계획</span>
+        </div>
+        <div class="kg-card-desc">해양사고 조사·분석 지식그래프 (MAKG 참조)</div>
+        <div class="kg-card-progress">
+          <div class="kg-card-progress-label">
+            <span>7-Step Progress</span>
+            <strong>0 / 7</strong>
+          </div>
+          <div class="kg-step-bar">
+            <div class="step-seg"></div><div class="step-seg"></div><div class="step-seg"></div>
+            <div class="step-seg"></div><div class="step-seg"></div><div class="step-seg"></div>
+            <div class="step-seg"></div>
+          </div>
+        </div>
+        <div class="kg-card-enter">
+          준비 중
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg>
+        </div>
+      </div>
+
+      <!-- TestFacilityKG -->
+      <div class="kg-card disabled">
+        <div class="kg-card-accent" style="background:linear-gradient(90deg,var(--purple),#b39ddb)"></div>
+        <div class="kg-card-top">
+          <div>
+            <div class="kg-card-name">TestFacilityKG</div>
+            <div class="kg-card-namespace">:KG_TestFacilityKG</div>
+          </div>
+          <span class="kg-card-status planned">계획</span>
+        </div>
+        <div class="kg-card-desc">KRISO 8종 시험시설 데이터 지식그래프</div>
+        <div class="kg-card-progress">
+          <div class="kg-card-progress-label">
+            <span>7-Step Progress</span>
+            <strong>0 / 7</strong>
+          </div>
+          <div class="kg-step-bar">
+            <div class="step-seg"></div><div class="step-seg"></div><div class="step-seg"></div>
+            <div class="step-seg"></div><div class="step-seg"></div><div class="step-seg"></div>
+            <div class="step-seg"></div>
+          </div>
+        </div>
+        <div class="kg-card-enter">
+          준비 중
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="landing-footer">
+    <div>
+      <strong>KRISO</strong> &middot; 한국해양과학기술원 부설 선박해양플랜트연구소
+      &mdash; IMSP 멀티 지식그래프 관리
+    </div>
+    <div>
+      Stanford 7-Step Ontology Design &middot; &copy; 2026 인사이트마이닝
+    </div>
+  </footer>
+</div>
+
+<!-- Sidebar Toggle (Mobile) -->
+<button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-back" onclick="exitProject()">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"/></svg>
+    &larr; 프로젝트 목록
+  </div>
+  <div class="sidebar-logo">
+    <h2>DevKG Ontology</h2>
+    <div class="subtitle">Stanford 7-Step Method</div>
+  </div>
+  <div class="sidebar-progress">
+    <div class="label">Overall Progress</div>
+    <div class="bar"><div class="bar-fill"></div></div>
+    <div class="frac"><strong>3</strong> / 7 Steps Complete</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#step1" class="active" onclick="closeMobileSidebar()">
+      <span class="step-dot" style="background:var(--step1)">1</span>
+      <span class="step-label">목적 정의</span>
+      <span class="step-status done">완료</span>
+    </a>
+    <a href="#step2" onclick="closeMobileSidebar()">
+      <span class="step-dot" style="background:var(--step2)">2</span>
+      <span class="step-label">재사용 분석</span>
+      <span class="step-status done">완료</span>
+    </a>
+    <a href="#step3" onclick="closeMobileSidebar()">
+      <span class="step-dot" style="background:var(--step3)">3</span>
+      <span class="step-label">핵심 용어 열거</span>
+      <span class="step-status done">완료</span>
+    </a>
+    <a href="#step4" onclick="closeMobileSidebar()">
+      <span class="step-dot" style="background:var(--step4)">4</span>
+      <span class="step-label">클래스 계층</span>
+      <span class="step-status wip">준비 중</span>
+    </a>
+    <a href="#step5" onclick="closeMobileSidebar()">
+      <span class="step-dot" style="background:var(--step5)">5</span>
+      <span class="step-label">속성 정의</span>
+      <span class="step-status wip">준비 중</span>
+    </a>
+    <a href="#step6" onclick="closeMobileSidebar()">
+      <span class="step-dot" style="background:var(--step6)">6</span>
+      <span class="step-label">제약조건 정의</span>
+      <span class="step-status wip">준비 중</span>
+    </a>
+    <a href="#step7" onclick="closeMobileSidebar()">
+      <span class="step-dot" style="background:var(--step7)">7</span>
+      <span class="step-label">인스턴스 검증</span>
+      <span class="step-status wip">준비 중</span>
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    KRISO IMSP Project &middot; 2026<br>
+    DevKG Ontology Design Document
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Stanford 7-Step Ontology Design
+      </div>
+      <h1>해사 지식그래프 온톨로지<br>설계 방법론</h1>
+      <p class="desc">대화형 해사서비스 플랫폼(IMSP)의 DevKG 구축을 위한 Stanford 7-Step 온톨로지 설계 방법론 적용 문서. KRISO 시험시설 데이터와 해상교통 도메인을 아우르는 체계적 설계.</p>
+      <div class="header-meta">
+        <div class="meta-item">
+          <strong>프로젝트</strong> DevKG
+        </div>
+        <div class="meta-item">
+          <strong>발주</strong> KRISO
+        </div>
+        <div class="meta-item">
+          <strong>수행</strong> 인사이트마이닝
+        </div>
+        <div class="meta-item">
+          <strong>작성일</strong> 2026-03-30
+        </div>
+        <div class="meta-item">
+          <strong>DB</strong> Neo4j 5.x (LPG)
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ==================== STEP 1 ==================== -->
+    <div class="step-section" id="step1">
+      <div class="step-header open" onclick="toggleStep(this)">
+        <div class="step-number" style="background:var(--step1)">01</div>
+        <div class="step-header-text">
+          <h2>목적 정의 (Purpose Definition)</h2>
+          <div class="step-subtitle">온톨로지 설계 목적, 도메인 범위, 대상 사용자, 핵심 질의 정의</div>
+        </div>
+        <span class="step-status-badge complete">완료</span>
+        <svg class="step-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+      </div>
+      <div class="step-body open">
+        <div class="step-body-inner">
+
+          <!-- 1.1 설계 목적 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.1</span>
+              온톨로지 설계 목적
+            </div>
+            <p class="subsection-intro"><strong>대화형 해사서비스 플랫폼(IMSP)의 자원 의미 연결</strong>을 위한 지식그래프 온톨로지를 설계한다.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>목적</th><th>설명</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:700;color:var(--teal)">P1</td><td><strong>멀티모달 해사 데이터 통합</strong></td><td>AIS, GPS, RADAR, VHF, Port-MIS, CCTV, 기상, 시험시설 등 이질적 데이터를 하나의 의미 체계로 연결</td></tr>
+                  <tr><td style="font-weight:700;color:var(--teal)">P2</td><td><strong>자연어 기반 지식 탐색</strong></td><td>Text-to-Cypher 파이프라인을 통해 비전문가도 자연어로 KG를 질의할 수 있도록 지원</td></tr>
+                  <tr><td style="font-weight:700;color:var(--teal)">P3</td><td><strong>KRISO 시험시설 데이터 구조화</strong></td><td>선형수조, 캐비테이션터널 등 시험시설의 시험 이력/결과/보고서를 체계적으로 관리</td></tr>
+                  <tr><td style="font-weight:700;color:var(--teal)">P4</td><td><strong>국제 표준 정합성 확보</strong></td><td>IHO S-100, IMO AIS 표준 기반 온톨로지로 국제 해사 데이터와의 상호운용성 보장</td></tr>
+                  <tr><td style="font-weight:700;color:var(--teal)">P5</td><td><strong>2차년도 LLM 연계 기반 마련</strong></td><td>GraphRAG + LLM 대화형 인터페이스와 즉시 연계 가능한 스키마 설계</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="principles-grid">
+              <div class="principle-card">
+                <h4>LPG 기반</h4>
+                <p>Neo4j Community Edition 사용 (Labeled Property Graph). RDF 대비 직관적 쿼리 성능 우위.</p>
+              </div>
+              <div class="principle-card">
+                <h4>Schema-optional</h4>
+                <p>유연한 확장성 + SHACL 사전 품질 검증으로 무결성 보장. 스키마 강제 없이 품질 확보.</p>
+              </div>
+              <div class="principle-card">
+                <h4>Cypher 최적화</h4>
+                <p>Text-to-Cypher 변환 시 직관적인 노드/관계 명명 규칙 적용. PascalCase 노드, SCREAMING_SNAKE 관계.</p>
+              </div>
+              <div class="principle-card">
+                <h4>URN 식별 체계</h4>
+                <p><code style="font-family:var(--font-mono);font-size:0.74rem;background:var(--teal-dim);color:var(--teal);padding:1px 6px;border-radius:3px">urn:kriso:kg:{type}:{subtype}:{id}</code> 형식의 글로벌 고유 식별자.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.2 도메인 범위 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.2</span>
+              도메인 범위 (Scope)
+            </div>
+            <p class="subsection-intro"><strong>포함 도메인 (In Scope)</strong></p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>서브도메인</th><th>핵심 데이터</th><th>우선순위</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>해상교통</strong></td><td>AIS, RADAR, VHF, 항로</td><td><span class="priority-core">Core</span></td></tr>
+                  <tr><td><strong>항만물류</strong></td><td>Port-MIS, 선석, 화물</td><td><span class="priority-core">Core</span></td></tr>
+                  <tr><td><strong>해양환경</strong></td><td>기상, 환경, ENC(전자해도)</td><td><span class="priority-core">Core</span></td></tr>
+                  <tr><td><strong>선박안전</strong></td><td>시험시설, 인증, 법규</td><td><span class="priority-core">Core (KRISO)</span></td></tr>
+                  <tr><td>시계열 분석</td><td>InfluxDB 연계 (2차년도)</td><td><span class="priority-extended">Extended</span></td></tr>
+                  <tr><td>영상/음성</td><td>CCTV(YOLO), VHF(STT)</td><td><span class="priority-extended">Extended</span></td></tr>
+                  <tr><td>외부 KG 연계</td><td>MAKG, DBpedia, Wikidata</td><td><span class="priority-future">Future</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="subsection-intro" style="margin-top:20px"><strong>제외 도메인 (Out of Scope)</strong></p>
+            <div class="oos-list">
+              <div class="oos-item">상업 항만 운영 시스템 (ERP, TOS)</div>
+              <div class="oos-item">군사/보안 해역 정보 (CLASSIFIED)</div>
+              <div class="oos-item">실시간 스트리밍 처리 (별도 InfluxDB로 분리, KG는 메타만 보관)</div>
+              <div class="oos-item">선박 설계/건조 프로세스 (조선 도메인)</div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.3 대상 사용자 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.3</span>
+              대상 사용자 (Target Users)
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>사용자 유형</th><th>역할</th><th>KG 활용 시나리오</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>KRISO 연구원</strong></td><td>시험시설 운영, 실험 수행</td><td>시험 이력 조회, 유사 실험 검색, 결과 비교 분석</td></tr>
+                  <tr><td><strong>해양안전 분석관</strong></td><td>VTS 관제, 사고 분석</td><td>항로 위험도 평가, COLREGS(국제해상충돌예방규칙) 적용 조문 확인</td></tr>
+                  <tr><td><strong>해사 데이터 과학자</strong></td><td>데이터 분석, 모델 개발</td><td>Multi-hop 질의, 그래프 패턴 탐색, 데이터 품질 분석</td></tr>
+                  <tr><td><strong>플랫폼 개발자</strong></td><td>API/파이프라인 개발</td><td>Cypher 쿼리 빌더, ETL 파이프라인, GraphRAG</td></tr>
+                  <tr><td><strong>민간 해사 서비스</strong></td><td>2단계 R&amp;D 활용 (2029~)</td><td>해사 데이터 조회, 서비스 연동</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.4 Competency Questions -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.4</span>
+              Competency Questions (CQ) &mdash; 핵심 5개
+            </div>
+            <p class="subsection-intro">Stanford 7-Step에서 CQ는 온톨로지가 <strong>반드시 답할 수 있어야 하는 질문</strong>이다. 이 질문들이 Step 3(핵심 용어), Step 4(클래스 계층), Step 5(속성)를 이끈다.</p>
+
+            <!-- CQ1 -->
+            <div class="cq-card">
+              <div class="cq-top">
+                <span class="cq-badge hop1">1-hop &middot; Direct</span>
+                <div class="cq-question">CQ1: "VLCC 모형선의 14노트 저항계수(Ct)는?"</div>
+              </div>
+              <div class="cq-details">
+                <div class="cq-detail-item">
+                  <div class="cq-label">관련 엔티티</div>
+                  <div class="cq-value"><code>Vessel</code> <code>TestScenario</code> <code>MeasurementRecord</code></div>
+                </div>
+                <div class="cq-detail-item">
+                  <div class="cq-label">필요 관계</div>
+                  <div class="cq-value">
+                    <div class="relation-path"><span class="rp-node">Vessel</span> <span class="rp-arrow">-[</span><span class="rp-rel">TESTED_IN</span><span class="rp-arrow">]-&gt;</span> <span class="rp-node">TestScenario</span> <span class="rp-arrow">-[</span><span class="rp-rel">PRODUCES</span><span class="rp-arrow">]-&gt;</span> <span class="rp-node">MeasurementRecord</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="cq-cypher">
+<pre><span class="cy-kw">MATCH</span> (<span class="cy-var">v</span>:<span class="cy-lbl">Vessel</span> {<span class="cy-prop">vesselType</span>: <span class="cy-str">"VLCC"</span>})-[:<span class="cy-rel">TESTED_IN</span>]-&gt;(<span class="cy-var">ts</span>:<span class="cy-lbl">TestScenario</span>)
+      -[:<span class="cy-rel">PRODUCES</span>]-&gt;(<span class="cy-var">mr</span>:<span class="cy-lbl">MeasurementRecord</span> {<span class="cy-prop">speed</span>: <span class="cy-num">14</span>})
+<span class="cy-kw">RETURN</span> <span class="cy-var">mr</span>.<span class="cy-prop">resistanceCoefficient</span> <span class="cy-kw">AS</span> <span class="cy-alias">Ct</span></pre>
+              </div>
+            </div>
+
+            <!-- CQ2 -->
+            <div class="cq-card">
+              <div class="cq-top">
+                <span class="cq-badge hop2">2-hop &middot; Bridge</span>
+                <div class="cq-question">CQ2: "설계 EHP(유효마력)와 실해역 연시(Sea Trial) 결과의 차이는?"</div>
+              </div>
+              <div class="cq-details">
+                <div class="cq-detail-item">
+                  <div class="cq-label">관련 엔티티</div>
+                  <div class="cq-value"><code>Vessel</code> <code>TestScenario</code> <code>MeasurementRecord</code> <code>VoyageEvent</code></div>
+                </div>
+                <div class="cq-detail-item">
+                  <div class="cq-label">추론 유형</div>
+                  <div class="cq-value">Bridge (순차 이동 A&rarr;B&rarr;C)</div>
+                </div>
+              </div>
+              <div class="cq-cypher">
+<pre><span class="cy-kw">MATCH</span> (<span class="cy-var">v</span>:<span class="cy-lbl">Vessel</span>)-[:<span class="cy-rel">TESTED_IN</span>]-&gt;(<span class="cy-var">ts</span>:<span class="cy-lbl">TestScenario</span>)-[:<span class="cy-rel">PRODUCES</span>]-&gt;(<span class="cy-var">mr</span>:<span class="cy-lbl">MeasurementRecord</span>)
+<span class="cy-kw">MATCH</span> (<span class="cy-var">v</span>)-[:<span class="cy-rel">PARTICIPATED_IN</span>]-&gt;(<span class="cy-var">ve</span>:<span class="cy-lbl">VoyageEvent</span>)
+<span class="cy-kw">WHERE</span> <span class="cy-var">mr</span>.<span class="cy-prop">parameterType</span> = <span class="cy-str">"EHP"</span> <span class="cy-kw">AND</span> <span class="cy-var">ve</span>.<span class="cy-prop">hasPerformanceData</span> = <span class="cy-num">true</span>
+<span class="cy-kw">RETURN</span> <span class="cy-var">mr</span>.<span class="cy-prop">value</span> <span class="cy-kw">AS</span> <span class="cy-alias">designEHP</span>, <span class="cy-var">ve</span>.<span class="cy-prop">actualEHP</span> <span class="cy-kw">AS</span> <span class="cy-alias">seaTrialEHP</span>,
+       <span class="cy-fn">abs</span>(<span class="cy-var">mr</span>.<span class="cy-prop">value</span> - <span class="cy-var">ve</span>.<span class="cy-prop">actualEHP</span>) <span class="cy-kw">AS</span> <span class="cy-alias">difference</span></pre>
+              </div>
+            </div>
+
+            <!-- CQ3 -->
+            <div class="cq-card">
+              <div class="cq-top">
+                <span class="cq-badge hop2">2-hop &middot; Bridge</span>
+                <div class="cq-question">CQ3: "부산항 VTS 관제구역에 적용되는 COLREGS(국제해상충돌예방규칙) 조문은?"</div>
+              </div>
+              <div class="cq-details">
+                <div class="cq-detail-item">
+                  <div class="cq-label">관련 엔티티</div>
+                  <div class="cq-value"><code>Port</code> <code>SeaArea</code> <code>Regulation</code></div>
+                </div>
+                <div class="cq-detail-item">
+                  <div class="cq-label">필요 관계</div>
+                  <div class="cq-value">
+                    <div class="relation-path"><span class="rp-node">Port</span> <span class="rp-arrow">-[</span><span class="rp-rel">HAS_VTS_ZONE</span><span class="rp-arrow">]-&gt;</span> <span class="rp-node">SeaArea</span> <span class="rp-arrow">&lt;-[</span><span class="rp-rel">APPLIES_TO</span><span class="rp-arrow">]-</span> <span class="rp-node">Regulation</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="cq-cypher">
+<pre><span class="cy-kw">MATCH</span> (<span class="cy-var">p</span>:<span class="cy-lbl">Port</span> {<span class="cy-prop">name</span>: <span class="cy-str">"부산항"</span>})-[:<span class="cy-rel">HAS_VTS_ZONE</span>]-&gt;(<span class="cy-var">sa</span>:<span class="cy-lbl">SeaArea</span>)
+<span class="cy-kw">MATCH</span> (<span class="cy-var">r</span>:<span class="cy-lbl">Regulation</span>)-[:<span class="cy-rel">APPLIES_TO</span>]-&gt;(<span class="cy-var">sa</span>)
+<span class="cy-kw">WHERE</span> <span class="cy-var">r</span>.<span class="cy-prop">framework</span> = <span class="cy-str">"COLREGS"</span>
+<span class="cy-kw">RETURN</span> <span class="cy-var">r</span>.<span class="cy-prop">articleNumber</span>, <span class="cy-var">r</span>.<span class="cy-prop">title</span>, <span class="cy-var">sa</span>.<span class="cy-prop">name</span></pre>
+              </div>
+            </div>
+
+            <!-- CQ4 -->
+            <div class="cq-card">
+              <div class="cq-top">
+                <span class="cq-badge comp">2-hop &middot; Composition</span>
+                <div class="cq-question">CQ4: "파고 3m 이상 조건에서 선박 저항 증가율은?"</div>
+              </div>
+              <div class="cq-details">
+                <div class="cq-detail-item">
+                  <div class="cq-label">관련 엔티티</div>
+                  <div class="cq-value"><code>SeaArea</code> <code>OceanEnvironment</code> <code>MeasurementRecord</code> <code>TestCondition</code></div>
+                </div>
+                <div class="cq-detail-item">
+                  <div class="cq-label">추론 유형</div>
+                  <div class="cq-value">Composition (환경 조건 + 성능 데이터 결합)</div>
+                </div>
+              </div>
+              <div class="cq-cypher">
+<pre><span class="cy-kw">MATCH</span> (<span class="cy-var">tc</span>:<span class="cy-lbl">TestCondition</span>)-[:<span class="cy-rel">PRODUCES</span>]-&gt;(<span class="cy-var">mr</span>:<span class="cy-lbl">MeasurementRecord</span>)
+<span class="cy-kw">WHERE</span> <span class="cy-var">tc</span>.<span class="cy-prop">waveHeight</span> &gt;= <span class="cy-num">3.0</span>
+<span class="cy-kw">RETURN</span> <span class="cy-var">tc</span>.<span class="cy-prop">waveHeight</span>, <span class="cy-var">mr</span>.<span class="cy-prop">resistanceCoefficient</span>,
+       <span class="cy-var">mr</span>.<span class="cy-prop">resistanceIncrease</span> <span class="cy-kw">AS</span> <span class="cy-alias">increaseRate</span>
+<span class="cy-kw">ORDER BY</span> <span class="cy-var">tc</span>.<span class="cy-prop">waveHeight</span></pre>
+              </div>
+            </div>
+
+            <!-- CQ5 -->
+            <div class="cq-card">
+              <div class="cq-top">
+                <span class="cq-badge multi">Multi-hop &middot; Intersection</span>
+                <div class="cq-question">CQ5: "캐비테이션터널에서 프로펠러 공동 조건이 유사한 시험 목록은?"</div>
+              </div>
+              <div class="cq-details">
+                <div class="cq-detail-item">
+                  <div class="cq-label">관련 엔티티</div>
+                  <div class="cq-value"><code>TestFacility</code> <code>TestScenario</code> <code>TestCondition</code> <code>Sensor</code></div>
+                </div>
+                <div class="cq-detail-item">
+                  <div class="cq-label">필요 관계</div>
+                  <div class="cq-value">
+                    <div class="relation-path"><span class="rp-node">TestFacility</span> <span class="rp-arrow">-[</span><span class="rp-rel">HOSTS</span><span class="rp-arrow">]-&gt;</span> <span class="rp-node">TestScenario</span> <span class="rp-arrow">-[</span><span class="rp-rel">APPLIES</span><span class="rp-arrow">]-&gt;</span> <span class="rp-node">TestCondition</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="cq-cypher">
+<pre><span class="cy-kw">MATCH</span> (<span class="cy-var">tf</span>:<span class="cy-lbl">TestFacility</span> {<span class="cy-prop">facilityType</span>: <span class="cy-str">"캐비테이션터널"</span>})-[:<span class="cy-rel">HOSTS</span>]-&gt;(<span class="cy-var">ts</span>:<span class="cy-lbl">TestScenario</span>)
+      -[:<span class="cy-rel">APPLIES</span>]-&gt;(<span class="cy-var">tc</span>:<span class="cy-lbl">TestCondition</span>)
+<span class="cy-kw">WHERE</span> <span class="cy-var">tc</span>.<span class="cy-prop">cavitationType</span> <span class="cy-kw">IS NOT NULL</span>
+<span class="cy-kw">WITH</span> <span class="cy-var">tc</span>.<span class="cy-prop">pressure</span> <span class="cy-kw">AS</span> <span class="cy-alias">pressure</span>, <span class="cy-var">tc</span>.<span class="cy-prop">propellerRPM</span> <span class="cy-kw">AS</span> <span class="cy-alias">rpm</span>, <span class="cy-fn">collect</span>(<span class="cy-var">ts</span>) <span class="cy-kw">AS</span> <span class="cy-alias">scenarios</span>
+<span class="cy-kw">WHERE</span> <span class="cy-fn">size</span>(<span class="cy-var">scenarios</span>) &gt; <span class="cy-num">1</span>
+<span class="cy-kw">RETURN</span> <span class="cy-var">pressure</span>, <span class="cy-var">rpm</span>, <span class="cy-fn">size</span>(<span class="cy-var">scenarios</span>) <span class="cy-kw">AS</span> <span class="cy-alias">similarCount</span>,
+       [<span class="cy-var">s</span> <span class="cy-kw">IN</span> <span class="cy-var">scenarios</span> | <span class="cy-var">s</span>.<span class="cy-prop">scenarioId</span>] <span class="cy-kw">AS</span> <span class="cy-alias">scenarioIds</span></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.5 확장 검증 질문 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.5</span>
+              확장 검증 질문 (Q6~Q10) &mdash; PoC 심화
+            </div>
+            <p class="subsection-intro">제안서 S29 기반: Q1~Q5는 기본 탐색, <strong>Q6~Q10은 KRISO 특화 심화 탐색</strong></p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>질문</th><th>Hop</th><th>유형</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:700">Q6</td><td>VLCC 모형선 14노트 저항 계수는?</td><td>2-hop</td><td>Direct</td></tr>
+                  <tr><td style="font-weight:700">Q7</td><td>캐비테이션터널 유사 시험 목록은?</td><td>Multi-hop</td><td>Multi-hop</td></tr>
+                  <tr><td style="font-weight:700">Q8</td><td>부산항 입항 선박 중 VLCC 유형은?</td><td>2-hop</td><td>Bridge</td></tr>
+                  <tr><td style="font-weight:700">Q9</td><td>해사안전법 TSS 관련 조문은?</td><td>2-hop</td><td>Bridge</td></tr>
+                  <tr><td style="font-weight:700">Q10</td><td>이 선박의 어제 이동 경로는?</td><td>Hybrid</td><td>Hybrid</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="subsection-intro" style="margin-top:24px"><strong>성능 합격 기준 (S26)</strong></p>
+            <div class="perf-grid">
+              <div class="perf-item">
+                <div class="perf-value">&lt; 1s</div>
+                <div class="perf-label">단순 쿼리 (1-hop)</div>
+              </div>
+              <div class="perf-item">
+                <div class="perf-value">&lt; 5s</div>
+                <div class="perf-label">복합 쿼리 (2+ hop)</div>
+              </div>
+              <div class="perf-item">
+                <div class="perf-value">&lt; 1s</div>
+                <div class="perf-label">시각화 렌더링 (100노드)</div>
+              </div>
+              <div class="perf-item">
+                <div class="perf-value">&ge; 90%</div>
+                <div class="perf-label">관계 정확도</div>
+              </div>
+              <div class="perf-item">
+                <div class="perf-value">3+ hop</div>
+                <div class="perf-label">Multi-hop 탐색</div>
+              </div>
+              <div class="perf-item">
+                <div class="perf-value">10+</div>
+                <div class="perf-label">Cypher 쿼리 검증</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.6 데이터 연결 키 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.6</span>
+              데이터 연결 키 (Join Keys)
+            </div>
+            <p class="subsection-intro">멀티모달 데이터를 하나의 KG로 통합하기 위한 <strong>6대 조인 키</strong> (S11)</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>조인 키</th><th>식별자</th><th>연결 대상</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:700">1</td><td><strong>선박 (Vessel)</strong></td><td>MMSI, IMO</td><td><span class="join-arrow">AIS &harr; Port-MIS &harr; 시험 &harr; 인증</span></td></tr>
+                  <tr><td style="font-weight:700">2</td><td><strong>시간 (Time)</strong></td><td>UTC timestamp</td><td><span class="join-arrow">AIS &harr; 기상 &harr; VHF &harr; CCTV</span></td></tr>
+                  <tr><td style="font-weight:700">3</td><td><strong>위치 (Location)</strong></td><td>WGS-84, LOCODE</td><td><span class="join-arrow">AIS &harr; 항만 &harr; 해역 &harr; 전자해도</span></td></tr>
+                  <tr><td style="font-weight:700">4</td><td><strong>시설 (Facility)</strong></td><td>facilityId</td><td><span class="join-arrow">시험시설 &harr; 장비 &harr; 시험 &harr; 보고서</span></td></tr>
+                  <tr><td style="font-weight:700">5</td><td><strong>문서 (Document)</strong></td><td>documentId</td><td><span class="join-arrow">보고서 &harr; 분석결과 &harr; 시험시나리오</span></td></tr>
+                  <tr><td style="font-weight:700">6</td><td><strong>이벤트 (Event)</strong></td><td>eventId</td><td><span class="join-arrow">항해 &harr; 사고 &harr; 계측 &harr; 입출항</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.7 데이터 품질 등급 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.7</span>
+              데이터 품질 등급 (Quality Grades)
+            </div>
+            <p class="subsection-intro">데이터 소스별 사전 품질 등급 (S17 기준) &mdash; 적재 전 평가</p>
+            <div class="grade-grid">
+              <div class="grade-card a">
+                <div class="grade-letter">A</div>
+                <div class="grade-label">상 &mdash; 즉시 활용</div>
+                <div class="grade-desc">결측률 &lt; 5%<br>Core KG 직접 적재</div>
+              </div>
+              <div class="grade-card b">
+                <div class="grade-letter">B</div>
+                <div class="grade-label">중 &mdash; 보정 후 활용</div>
+                <div class="grade-desc">결측률 5~30%<br>ETL 정제 후 적재</div>
+              </div>
+              <div class="grade-card c">
+                <div class="grade-letter">C</div>
+                <div class="grade-label">하 &mdash; 향후 검토</div>
+                <div class="grade-desc">결측률 &gt; 30%<br>Future 카테고리 분류</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.8 KG 자원 우선순위 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.8</span>
+              KG 자원 우선순위 (Resource Priority)
+            </div>
+            <p class="subsection-intro">구축 순서: <strong>Core &rarr; Extended &rarr; Future</strong> (S19)</p>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge core">CORE</span>
+                <span>1차년도 즉시 구축</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>자원</th><th>데이터 소스</th><th>품질</th><th>PoC 규모</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>AIS 동적정보</strong></td><td>해양수산부 GICOMS</td><td><span class="quality-a">A</span></td><td>500척 x 1주일</td></tr>
+                    <tr><td><strong>GPS 항적</strong></td><td>AIS 파생</td><td><span class="quality-a">A</span></td><td>상동</td></tr>
+                    <tr><td><strong>Port-MIS</strong></td><td>해양수산부</td><td><span class="quality-a">A</span></td><td>부산/인천/울산 3개 항만</td></tr>
+                    <tr><td><strong>RADAR</strong></td><td>KRISO VTS</td><td><span class="quality-b">B</span></td><td>부산항 VTS 관제구역</td></tr>
+                    <tr><td><strong>시험시설</strong></td><td>KRISO 내부</td><td><span class="quality-a">A</span></td><td>선형수조(TT) 1개 시설</td></tr>
+                    <tr><td><strong>기상 데이터</strong></td><td>기상청 API</td><td><span class="quality-a">A</span></td><td>부산 인근</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge extended">EXTENDED</span>
+                <span>1차년도 말~2차년도 초</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>자원</th><th>데이터 소스</th><th>품질</th><th>비고</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>CCTV 영상</strong></td><td>KRISO/항만</td><td><span class="quality-b">B</span></td><td>YOLO 객체인식 &rarr; JSON &rarr; KG</td></tr>
+                    <tr><td><strong>VHF 음성</strong></td><td>VTS 교신</td><td><span class="quality-c">C</span></td><td>STT(Whisper) &rarr; NER(KoELECTRA) &rarr; KG</td></tr>
+                    <tr><td><strong>전자해도 (ENC)</strong></td><td>IHO S-57/S-101</td><td><span class="quality-a">A</span></td><td>gdal/ogr &rarr; GeoJSON &rarr; Cypher</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge future">FUTURE</span>
+                <span>2차년도 이후</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>자원</th><th>비고</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>외부 KG</strong> (MAKG, DBpedia)</td><td>LINKED_TO 관계로 연계</td></tr>
+                    <tr><td><strong>시계열 상세</strong> (InfluxDB)</td><td>KG는 메타만, 상세는 InfluxDB</td></tr>
+                    <tr><td><strong>실시간 스트리밍</strong></td><td>Kafka &rarr; InfluxDB &rarr; KG 메타 갱신</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.9 기존 온톨로지 재사용 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.9</span>
+              기존 온톨로지 재사용 계획 (Step 2 연계)
+            </div>
+            <p class="subsection-intro">Step 1에서 식별, <strong>Step 2에서 상세 분석</strong></p>
+            <div class="table-wrap">
+              <table class="ref-table">
+                <thead><tr><th>기존 온톨로지</th><th>활용 범위</th><th>재사용 방법</th></tr></thead>
+                <tbody>
+                  <tr><td>IHO S-100</td><td>전자해도, 해역 분류</td><td>Feature Catalogue 속성 매핑</td></tr>
+                  <tr><td>IMO AIS 메시지</td><td>선박 동적/정적 정보</td><td>Message Type 1/5/18/24 필드 매핑</td></tr>
+                  <tr><td>MAKG</td><td>해사 사고 KG 엔티티 비교</td><td>8개 엔티티 비교 매핑 (사고 도메인)</td></tr>
+                  <tr><td>오재용·김혜진 논문</td><td>멀티모달 해사 데이터 관리</td><td>VHF/CCTV 그래프 모델 관계 + 아키텍처 참고</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 1.10 DevKG 구축 목표 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step1)">1.10</span>
+              DevKG 구축 목표
+            </div>
+            <div class="devkg-grid">
+              <div class="devkg-item">
+                <div class="dk-label">프로젝트 이름</div>
+                <div class="dk-value"><code>DevKG</code> (X-KG-Project: DevKG)</div>
+              </div>
+              <div class="devkg-item">
+                <div class="dk-label">Neo4j 네임스페이스</div>
+                <div class="dk-value"><code>:KG_DevKG</code> 레이블 자동 부여</div>
+              </div>
+              <div class="devkg-item">
+                <div class="dk-label">목적</div>
+                <div class="dk-value">온톨로지 설계 검증 + PoC 데이터 적재 테스트</div>
+              </div>
+              <div class="devkg-item">
+                <div class="dk-label">핵심 엔티티</div>
+                <div class="dk-value">8종</div>
+              </div>
+              <div class="devkg-item">
+                <div class="dk-label">핵심 관계</div>
+                <div class="dk-value">14종 (S24 카탈로그 기반)</div>
+              </div>
+              <div class="devkg-item">
+                <div class="dk-label">샘플 데이터 규모</div>
+                <div class="dk-value">Vessel 500, Port 3, TestDataset 100, Regulation 10</div>
+              </div>
+              <div class="devkg-item" style="grid-column: 1 / -1;">
+                <div class="dk-label">검증 기준</div>
+                <div class="dk-value">CQ 5개 + Q6~Q10 심화 = 총 10개 질의 통과</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 참조 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--slate)">Ref</span>
+              참조 문서
+            </div>
+            <div class="table-wrap">
+              <table class="ref-table">
+                <thead><tr><th>문서</th><th>슬라이드</th><th>내용</th></tr></thead>
+                <tbody>
+                  <tr><td>KRISO 제안서</td><td>S07-S08</td><td>연구 배경, 3단계 프레임워크</td></tr>
+                  <tr><td>KRISO 제안서</td><td>S09-S11</td><td>데이터 생태계, 멀티모달 유형, 조인 키</td></tr>
+                  <tr><td>KRISO 제안서</td><td>S12-S13</td><td>Stanford 7-Step 개요, CQ 5개</td></tr>
+                  <tr><td>KRISO 제안서</td><td>S14-S19</td><td>Step 3-7 핵심 용어~인스턴스, L1-L5 계층</td></tr>
+                  <tr><td>KRISO 제안서</td><td>S20-S21</td><td>LPG vs RDF 비교, 공간 관계</td></tr>
+                  <tr><td>KRISO 제안서</td><td>S24</td><td>14개 핵심 관계 카탈로그</td></tr>
+                  <tr><td>KRISO 제안서</td><td>S26</td><td>PoC 데이터 7종 + 성능 합격 기준</td></tr>
+                  <tr><td>KRISO 제안서</td><td>S29</td><td>Q1~Q10 검증 질문</td></tr>
+                  <tr><td>DES-001</td><td>&mdash;</td><td>지식그래프 모델 설계서</td></tr>
+                  <tr><td>REQ-002</td><td>&mdash;</td><td>KG 구축 대상 자원 선정</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STEP 2 ==================== -->
+    <div class="step-section" id="step2">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-number" style="background:var(--step2)">02</div>
+        <div class="step-header-text">
+          <h2>기존 온톨로지 재사용 분석 (Reuse Evaluation)</h2>
+          <div class="step-subtitle">IHO S-100, IMO AIS, MAKG, 오재용·김혜진 외 6종 표준/논문 분석</div>
+        </div>
+        <span class="step-status-badge complete">완료</span>
+        <svg class="step-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+
+          <!-- 2.1 재사용 대상 온톨로지 식별 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.1</span>
+              재사용 대상 온톨로지 식별
+            </div>
+            <p class="subsection-intro">KRISO 해사 KG에 재사용 가능한 기존 온톨로지 4종과 표준 패턴 4종을 식별하고, 각각의 재사용 범위와 방법을 분석한다.</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>온톨로지/표준</th><th>유형</th><th>활용 범위</th><th>재사용 방법</th><th>우선순위</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>IHO S-100</strong></td><td>해사 표준</td><td>전자해도, 해역 분류, 수위, 해류</td><td>Feature Catalogue &rarr; Node Label/Property 매핑</td><td style="color:var(--coral);font-weight:700">P0</td></tr>
+                  <tr><td><strong>IMO AIS 메시지</strong></td><td>해사 표준</td><td>선박 동적/정적 정보</td><td>Message Type 1/5/18/24 필드 &rarr; Vessel Property</td><td style="color:var(--coral);font-weight:700">P0</td></tr>
+                  <tr><td><strong>MAKG</strong> (Maritime Accident KG)</td><td>학술 온톨로지</td><td>해사 사고 KG 엔티티 비교</td><td>8개 사고 엔티티 vs KRISO 매핑</td><td style="color:var(--ocean);font-weight:700">P1</td></tr>
+                  <tr><td><strong>오재용·김혜진 논문</strong> (멀티모달 해사 데이터)</td><td>학술 논문 (KRISO)</td><td>8종 멀티모달 데이터 + VHF/CCTV 그래프 모델</td><td>10개 관계 타입 + 아키텍처 패턴 참고</td><td style="color:var(--ocean);font-weight:700">P1</td></tr>
+                  <tr><td><strong>Li et al.</strong> (AIS 해상교통 KG)</td><td>학술 논문</td><td>AIS 기반 시간적 KG + 이벤트 탐지</td><td>선종 코드 매핑, DCPA/TCPA, 이벤트 탐지 알고리즘</td><td style="color:var(--ocean);font-weight:700">P1</td></tr>
+                  <tr><td><strong>Kim &amp; Lee</strong> (긴급구조 PIKG)</td><td>학술 논문</td><td>Neo4j LPG 장소 식별자 KG</td><td>시나리오 기반 CQ 설계 패턴, BELONG_TO 계층</td><td style="color:var(--ocean);font-weight:700">P2</td></tr>
+                  <tr><td><strong>W3C SSN/SOSA</strong></td><td>범용 표준</td><td>센서/관측 패턴</td><td>Sensor &rarr; Observation &rarr; Result 패턴 차용</td><td style="color:var(--ocean);font-weight:700">P1</td></tr>
+                  <tr><td><strong>OGC GeoSPARQL</strong></td><td>범용 표준</td><td>공간 쿼리 패턴</td><td>Neo4j <code>point()</code> + <code>point.distance()</code> 활용</td><td style="color:var(--coral);font-weight:700">P0</td></tr>
+                  <tr><td><strong>W3C OWL-Time</strong></td><td>범용 표준</td><td>시간 표현 패턴</td><td>Neo4j <code>datetime()</code> + <code>duration()</code> 활용</td><td style="color:var(--coral);font-weight:700">P0</td></tr>
+                  <tr><td><strong>W3C PROV-O</strong></td><td>범용 표준</td><td>데이터 계보/리니지</td><td><code>DERIVED_FROM</code>, <code>PRODUCED_BY</code> 관계 패턴</td><td style="color:var(--ocean);font-weight:700">P1</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.2 IHO S-100 Feature Catalogue 매핑 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.2</span>
+              IHO S-100 Feature Catalogue &rarr; Neo4j 매핑
+            </div>
+            <p class="subsection-intro">S-100 Feature Catalogue(FC)는 본질적으로 온톨로지와 유사한 구조를 가진다. Feature Type &rarr; Node Label, Attribute &rarr; Property, Association &rarr; Relationship으로 직접 매핑된다.</p>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">S-100 FC 구성요소 &rarr; Property Graph 대응</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>S-100 FC 구성요소</th><th>설명</th><th>Neo4j PG 매핑</th><th>예시</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Feature Type</strong></td><td>실세계 현상 분류</td><td>Node Label</td><td><code>(:Light)</code>, <code>(:Buoy)</code></td></tr>
+                  <tr><td><strong>Information Type</strong></td><td>메타 정보 유형</td><td>Node Label</td><td><code>(:Authority)</code>, <code>(:Source)</code></td></tr>
+                  <tr><td><strong>Simple Attribute</strong></td><td>단일 값 속성</td><td>Node Property</td><td><code>{height: 15.0}</code></td></tr>
+                  <tr><td><strong>Complex Attribute</strong></td><td>복합 구조 속성</td><td>중첩 Property 또는 별도 Node</td><td><code>featureName = lang + name</code></td></tr>
+                  <tr><td><strong>Feature Association</strong></td><td>Feature 간 관계</td><td>Relationship</td><td><code>-[:COMPONENT_OF]-&gt;</code></td></tr>
+                  <tr><td><strong>Role</strong></td><td>Association 역할</td><td>Relationship Property</td><td><code>{role: "parent"}</code></td></tr>
+                  <tr><td><strong>Enumeration</strong></td><td>열거형 값</td><td><code>enum_values</code></td><td><code>colour: ["red","green"]</code></td></tr>
+                  <tr><td><strong>Spatial Attribute</strong></td><td>공간 좌표</td><td><code>point()</code> / WKT</td><td><code>point({lat:35.1, lon:129.0})</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">KRISO 관련 S-100 Product Specification &rarr; KG 매핑</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>S-100 PS</th><th>주요 Feature</th><th>KG Node Label</th><th>우선순위</th><th>비고</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>S-101</strong> ENC</td><td>DepthArea, Anchorage, Fairway, TSS</td><td><code>SeaArea</code>, <code>Anchorage</code>, <code>Waterway</code>, <code>TSS</code></td><td>P0</td><td>공간 베이스맵</td></tr>
+                  <tr><td><strong>S-104</strong> 수위</td><td>WaterLevel, TidalStation</td><td><code>SensorReading</code>, <code>Sensor</code></td><td>P2</td><td>수조 연계</td></tr>
+                  <tr><td><strong>S-111</strong> 해류</td><td>SurfaceCurrent</td><td><code>SensorReading</code></td><td>P2</td><td>HDF5 인코딩</td></tr>
+                  <tr><td><strong>S-127</strong> 교통관리</td><td>VTSArea, ReportingPoint</td><td><code>SeaArea</code>, <code>GeoPoint</code></td><td>P1</td><td>VTS 연동</td></tr>
+                  <tr><td><strong>S-411</strong> 빙하</td><td>IceConcentration, IceType</td><td><code>TestCondition</code></td><td>P2</td><td>빙해수조</td></tr>
+                  <tr><td><strong>S-412</strong> 기상</td><td>WeatherOverlay</td><td><code>OceanEnvironment</code></td><td>P3</td><td>개발 중 (2027~)</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">S-100 데이터 교환 형식 &rarr; KG 변환 파이프라인</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>인코딩</th><th>기반</th><th>용도</th><th>파서</th><th>난이도</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>GML</strong></td><td>ISO 19136 (XML)</td><td>벡터 데이터 (해도, 경계선)</td><td>GDAL/OGR</td><td>중간</td></tr>
+                  <tr><td><strong>HDF5</strong></td><td>HDF Group</td><td>격자 데이터 (수심, 해류, 기상)</td><td>h5py + xarray</td><td>높음</td></tr>
+                  <tr><td><strong>ISO 8211</strong></td><td>ISO/IEC 8211</td><td>레거시 호환 (S-57)</td><td>OGR S-57 드라이버</td><td>높음</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.3 IMO AIS 메시지 필드 매핑 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.3</span>
+              IMO AIS 메시지 필드 매핑
+            </div>
+            <p class="subsection-intro">AIS(Automatic Identification System) 메시지에서 추출하는 필드를 KG의 <code>Vessel</code>, <code>AISRecord</code> 노드 속성으로 매핑한다.</p>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">AIS 메시지 타입별 추출 필드</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>메시지 타입</th><th>용도</th><th>주요 필드</th><th>KG 매핑</th><th>갱신 주기</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Type 1/2/3</strong></td><td>동적 정보 (Class A)</td>
+                    <td>MMSI, lat/lon, SOG, COG, heading, navStatus, timestamp</td>
+                    <td><code>AISRecord</code> 노드 속성</td>
+                    <td>2~10초</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Type 5</strong></td><td>정적 정보 (Class A)</td>
+                    <td>IMO, callSign, shipName, shipType, length, beam, draft, destination, ETA</td>
+                    <td><code>Vessel</code> 노드 속성</td>
+                    <td>6분</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Type 18</strong></td><td>동적 정보 (Class B)</td>
+                    <td>MMSI, lat/lon, SOG, COG, heading</td>
+                    <td><code>AISRecord</code> 노드 속성</td>
+                    <td>30초~3분</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Type 24</strong></td><td>정적 정보 (Class B)</td>
+                    <td>MMSI, shipName, shipType, vendorId, callSign</td>
+                    <td><code>Vessel</code> 노드 속성</td>
+                    <td>6분</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">AIS &rarr; KG 속성 매핑 상세</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>AIS 필드</th><th>KG Property</th><th>타입</th><th>대상 노드</th><th>비고</th></tr></thead>
+                <tbody>
+                  <tr><td>MMSI</td><td><code>mmsi</code></td><td>STRING</td><td>Vessel</td><td>고유 식별자 (9자리)</td></tr>
+                  <tr><td>IMO Number</td><td><code>imo</code></td><td>STRING</td><td>Vessel</td><td>7자리, Type 5에서만</td></tr>
+                  <tr><td>Ship Name</td><td><code>name</code></td><td>STRING</td><td>Vessel</td><td>최대 20자</td></tr>
+                  <tr><td>Ship Type</td><td><code>vesselType</code></td><td>STRING</td><td>Vessel</td><td>AIS 선종코드 &rarr; 한글 변환</td></tr>
+                  <tr><td>Latitude/Longitude</td><td><code>location</code></td><td>POINT</td><td>AISRecord</td><td><code>point({lat, lon})</code></td></tr>
+                  <tr><td>SOG</td><td><code>speed</code></td><td>FLOAT</td><td>AISRecord</td><td>노트(knots) 단위</td></tr>
+                  <tr><td>COG</td><td><code>course</code></td><td>FLOAT</td><td>AISRecord</td><td>0~360도</td></tr>
+                  <tr><td>Heading</td><td><code>heading</code></td><td>FLOAT</td><td>AISRecord</td><td>선수 방향</td></tr>
+                  <tr><td>Navigation Status</td><td><code>navStatus</code></td><td>STRING</td><td>AISRecord</td><td>정박/항해/예인 등</td></tr>
+                  <tr><td>Destination</td><td><code>destination</code></td><td>STRING</td><td>Vessel</td><td>Port &rarr; DEPARTED_FROM 관계 생성</td></tr>
+                  <tr><td>Draught</td><td><code>draft</code></td><td>FLOAT</td><td>Vessel</td><td>미터 단위 (0.1m 해상도)</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.4 MAKG 엔티티 비교 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.4</span>
+              MAKG 엔티티 비교 매핑
+            </div>
+            <p class="subsection-intro">MAKG(Maritime Accident Knowledge Graph)는 <strong>해사 사고 분석</strong>에 특화된 지식그래프이다. Liu &amp; Cheng(2024, Ocean Engineering)이 중국 MSA 사고조사 보고서 581건(2014-2023)을 기반으로 Stanford 7-step 방법론으로 구축하였다. (16,099 엔티티, 20,809 관계)</p>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">MAKG 8개 엔티티 vs KRISO KG 매핑</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>MAKG 엔티티</th><th>MAKG 역할</th><th>KRISO KG 매핑</th><th>비고</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td><strong>Case (사고)</strong></td><td>사고 사례 (핵심 엔티티)</td><td><code>MaritimeEvent</code></td><td>KRISO: 사고 외 입출항/VTS 이벤트 포함으로 범위 확장</td></tr>
+                  <tr><td>2</td><td><strong>Ship (선박)</strong></td><td>사고 관련 선박</td><td><code>Vessel</code></td><td>공통 속성: name, type, IMO. KRISO: AIS 동적 데이터 추가</td></tr>
+                  <tr><td>3</td><td><strong>Crew (선원)</strong></td><td>사고 관련 선원</td><td>해당 없음 (Phase 2 검토)</td><td>KRISO 1차년도 범위 외. MAKG 고유 엔티티</td></tr>
+                  <tr><td>4</td><td><strong>Cargo (화물)</strong></td><td>적재 화물 정보</td><td>해당 없음 (Phase 2 검토)</td><td>위험물 운송 시나리오에서 참조 가능</td></tr>
+                  <tr><td>5</td><td><strong>Organization (조직)</strong></td><td>관련 조직/기관</td><td><code>TestFacility</code> (부분 매핑)</td><td>MAKG: MSA, 해운사 등. KRISO: 시험시설로 특화</td></tr>
+                  <tr><td>6</td><td><strong>Law (법률)</strong></td><td>관련 법규/규정</td><td><code>Regulation</code></td><td>공통 개념. KRISO: COLREGS(국제해상충돌예방규칙)/SOLAS/MARPOL 조문 단위 모델링</td></tr>
+                  <tr><td>7</td><td><strong>Reason Analysis (원인 분석)</strong></td><td>사고 원인 분석 결과</td><td>해당 없음 (KRISO 독자 설계 영역)</td><td>MAKG 고유: 사고 원인 체계적 분류</td></tr>
+                  <tr><td>8</td><td><strong>Manage Suggestion (관리 제안)</strong></td><td>관리 개선 제안사항</td><td>해당 없음</td><td>MAKG 고유: 사고 재발 방지 제안</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">MAKG 핵심 기술 요소</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1rem">
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">NER 프레임워크</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">MBERT-BiLSTM-CRF-SF (F1: 0.910). 사고 보고서에서 8개 엔티티 자동 추출</p>
+              </div>
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">CRISPE 프롬프트</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">LLM 기반 KG 질의 인터페이스. KRISO KG pipeline.py에서 동일 프레임워크 채택</p>
+              </div>
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">사고 특화 도메인</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">중국 MSA 581건 기반. KRISO는 해상교통 + 시험시설로 범위 확장 필요</p>
+              </div>
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">Stanford 7-Step 적용</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">MAKG도 동일 방법론 사용. 엔티티 도출 과정 참고 가능</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.5 오재용 논문 참조 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.5</span>
+              오재용·김혜진 논문 (멀티모달 해사 데이터 관리)
+            </div>
+            <p class="subsection-intro">오재용, 김혜진(2024, KOSOMES) &mdash; "멀티 모달 해사 데이터 관리 체계 설계에 관한 연구". <strong>KRISO 책임연구원</strong>의 논문으로, 해사 멀티모달 데이터(AIS, GPS, RADAR, VHF, CCTV, Port-MIS 등 8종)를 Neo4j 그래프 모델로 통합 관리하는 체계를 제안한다.</p>
+
+            <h4 style="margin:1rem 0 0.8rem;color:var(--step2)">8종 멀티모달 데이터 유형</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>데이터 유형</th><th>형태</th><th>주요 항목</th><th>KRISO KG 반영</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>AIS</strong></td><td>정형</td><td>MMSI, 위치, 속력, 침로, 선종</td><td><code>Vessel</code> + <code>AISRecord</code> 직접 매핑</td></tr>
+                  <tr><td><strong>GPS</strong></td><td>정형</td><td>위도, 경도, 시각</td><td><code>point()</code> 속성으로 통합</td></tr>
+                  <tr><td><strong>Equipment</strong></td><td>정형</td><td>장비 상태, 센서 데이터</td><td><code>Sensor</code> &rarr; <code>SensorReading</code></td></tr>
+                  <tr><td><strong>RADAR</strong></td><td>비정형</td><td>레이더 영상, 탐지 객체</td><td>Phase 2 검토 (영상 데이터)</td></tr>
+                  <tr><td><strong>VHF</strong></td><td>비정형</td><td>교신 내용, 송수신자</td><td><code>VHFRecord</code> 관계 모델 채택</td></tr>
+                  <tr><td><strong>Port-MIS</strong></td><td>정형</td><td>입출항 신고, 선석 배정</td><td><code>Port</code>, <code>Berth</code> 엔티티 반영</td></tr>
+                  <tr><td><strong>CCTV</strong></td><td>비정형</td><td>영상, 촬영 위치, 장비</td><td><code>CCTVRecord</code> 관계 모델 참조</td></tr>
+                  <tr><td><strong>Environment</strong></td><td>정형</td><td>기상, 조류, 파고</td><td><code>WeatherCondition</code> 엔티티</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">VHF/CCTV 그래프 모델 관계 (Table 2)</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>From</th><th>관계</th><th>To</th><th>설명</th><th>KRISO KG 채택</th></tr></thead>
+                <tbody>
+                  <tr><td>VHFRecord</td><td><code>TRANSMITTED_BY</code></td><td>Vessel</td><td>VHF 송신 선박</td><td style="color:var(--green)">채택</td></tr>
+                  <tr><td>VHFRecord</td><td><code>INTENDED_FOR</code></td><td>Vessel / VTS</td><td>VHF 수신 대상</td><td style="color:var(--green)">채택</td></tr>
+                  <tr><td>Vessel</td><td><code>PORT_ENTRY</code></td><td>Port</td><td>입항</td><td style="color:var(--green)">채택 &rarr; <code>ARRIVED_AT</code></td></tr>
+                  <tr><td>Vessel</td><td><code>PORT_DEPARTURE</code></td><td>Port</td><td>출항</td><td style="color:var(--green)">채택 &rarr; <code>DEPARTED_FROM</code></td></tr>
+                  <tr><td>Vessel</td><td><code>ANCHOR_AT</code></td><td>AnchorArea</td><td>정박</td><td style="color:var(--green)">채택</td></tr>
+                  <tr><td>Vessel</td><td><code>HEAVE_AT</code></td><td>AnchorArea</td><td>양묘</td><td style="color:var(--amber)">Phase 2 검토</td></tr>
+                  <tr><td>Vessel</td><td><code>BERTH_TO</code></td><td>Berth</td><td>접안</td><td style="color:var(--green)">채택</td></tr>
+                  <tr><td>CCTVRecord</td><td><code>LOCATED_AT</code></td><td>Port / SeaArea</td><td>촬영 위치</td><td style="color:var(--amber)">Phase 2 검토</td></tr>
+                  <tr><td>CCTVRecord</td><td><code>PROVIDED_BY</code></td><td>CCTVCamera</td><td>촬영 장비</td><td style="color:var(--amber)">Phase 2 검토</td></tr>
+                  <tr><td>VTSOperator</td><td><code>COMMUNICATE_WITH</code></td><td>Vessel</td><td>VTS-선박 교신</td><td style="color:var(--green)">채택</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">시스템 아키텍처 참조</h4>
+            <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+              <p style="margin:0;font-size:0.95rem;color:var(--text-secondary)">
+                <strong>오재용 논문 아키텍처:</strong> Kafka &rarr; Workflow Manager &rarr; Neo4j + MinIO &rarr; Cypher/REST API &rarr; Grafana<br>
+                <strong>KRISO KG 아키텍처:</strong> Kafka &rarr; ELT Pipeline &rarr; Neo4j + PostgreSQL + Qdrant &rarr; FastAPI &rarr; VueFlow UI<br>
+                <span style="color:var(--step2)">&rarr;</span> Neo4j 중심 그래프 저장 + 객체저장소 보조 패턴 동일. KRISO는 벡터DB(Qdrant)와 FastAPI 추가
+              </p>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.5a Li et al. AIS 해상교통 KG -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.5a</span>
+              Li et al. AIS 기반 해상교통 시간적 KG
+            </div>
+            <p class="subsection-intro">Li et al.(2024, J. Mar. Sci. Eng.) &mdash; "Maritime Traffic Knowledge Discovery via Knowledge Graph Theory". Long Beach 항만 AIS 데이터 기반 시간적 지식그래프 구축. 선박 이동 이벤트, 충돌 위험도, 정박지를 자동 추출한다.</p>
+
+            <h4 style="margin:1rem 0 0.8rem;color:var(--step2)">KG 엔티티 구조</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>엔티티</th><th>속성</th><th>KRISO KG 매핑</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Ship</strong></td><td>MMSI, name, callsign, draft, length, beam, type</td><td><code>Vessel</code> &mdash; AIS 정적 데이터 직접 매핑</td></tr>
+                  <tr><td><strong>Navigation Event</strong></td><td>eventType (속력변화/침로변화/정지), timestamp</td><td><code>VoyageEvent</code> &mdash; 이벤트 유형 확장</td></tr>
+                  <tr><td><strong>Berth</strong></td><td>위치(DBSCAN 클러스터), 용량</td><td><code>Berth</code> &mdash; Port 하위 엔티티</td></tr>
+                  <tr><td><strong>Weather</strong></td><td>풍속, 파고, 시정, 조류</td><td><code>WeatherCondition</code></td></tr>
+                  <tr><td><strong>Time</strong></td><td>UTC timestamp, interval</td><td><code>datetime()</code> 속성으로 통합</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">AIS 선종 코드 매핑</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>AIS 코드</th><th>선종</th><th>KRISO vesselType</th></tr></thead>
+                <tbody>
+                  <tr><td>50-59</td><td>특수작업선 (예인선, 준설선 등)</td><td><code>SPECIAL</code></td></tr>
+                  <tr><td>60-69</td><td>여객선</td><td><code>PASSENGER</code></td></tr>
+                  <tr><td>70-79</td><td>화물선</td><td><code>CARGO</code></td></tr>
+                  <tr><td>80-89</td><td>유조선</td><td><code>TANKER</code></td></tr>
+                  <tr><td>90-99</td><td>기타 (어선, 범선 등)</td><td><code>OTHER</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">핵심 알고리즘 참조</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">DCPA/TCPA 충돌 위험도</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">두 선박 간 최근접점 거리(DCPA)와 도달 시간(TCPA) 공식. KRISO: CollisionRisk 관계의 score 속성으로 반영</p>
+              </div>
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">Sliding Window 이벤트 탐지</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">속력/침로 급변 시점을 탐지하여 Navigation Event 생성. KRISO: ELT 파이프라인 transform 단계에서 적용 가능</p>
+              </div>
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">DBSCAN 정박지 식별</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">AIS 위치 클러스터링으로 정박지/선석 자동 식별. KRISO: Berth 엔티티 자동 생성에 참조</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.5b 긴급구조 장소 식별자 KG -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.5b</span>
+              긴급구조 장소 식별자 KG (PIKG)
+            </div>
+            <p class="subsection-intro">Kim &amp; Lee(2024) &mdash; "긴급구조 접수 및 출동을 위한 장소 식별자 지식그래프 구축". Neo4j LPG 모델을 활용한 국내 장소 식별자 통합 KG. 시나리오 기반 Cypher 질의 설계 패턴을 참조한다.</p>
+
+            <h4 style="margin:1rem 0 0.8rem;color:var(--step2)">장소 식별자 엔티티</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>엔티티</th><th>설명</th><th>관계</th><th>KRISO KG 참조점</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>국가지점번호</strong></td><td>대한민국 격자 좌표 체계</td><td rowspan="5" style="vertical-align:middle;text-align:center"><code>BELONG_TO</code><br>(상위 장소 포함)</td><td>해상 격자 좌표 &rarr; SeaArea 매핑</td></tr>
+                  <tr><td><strong>도로명주소</strong></td><td>도로명 기반 주소</td><td>항만 시설 주소 &rarr; Port 속성</td></tr>
+                  <tr><td><strong>지번</strong></td><td>필지 기반 주소</td><td>해안 시설 위치 참조</td></tr>
+                  <tr><td><strong>POI</strong></td><td>관심 장소 (건물, 시설)</td><td>VTS 센터, 해경서 위치</td></tr>
+                  <tr><td><strong>해수욕장</strong></td><td>해수욕장 이름/위치</td><td>해양 레저 구역 참조</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin:1.5rem 0 0.8rem;color:var(--step2)">참조 설계 패턴</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">시나리오 기반 질의 설계</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">7개 긴급구조 시나리오별 Cypher 질의 설계. KRISO CQ(Competency Question) 설계 패턴 참조</p>
+              </div>
+              <div style="background:rgba(33,150,243,0.08);border-left:4px solid var(--step2);padding:1rem 1.2rem;border-radius:8px">
+                <strong style="color:var(--step2)">Neo4j LPG 실무 적용</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-secondary)">한국 맥락 Neo4j LPG 실무 사례. BELONG_TO 계층 관계 패턴 &rarr; KRISO 해역 계층에 적용</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.6 표준 패턴 재사용 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.6</span>
+              범용 표준 패턴 재사용 전략
+            </div>
+            <p class="subsection-intro">W3C/OGC 범용 온톨로지에서 패턴을 차용하여 Property Graph로 변환 적용한다.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>표준</th><th>핵심 패턴</th><th>KRISO KG 적용</th><th>예시</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><strong>SSN/SOSA</strong></td>
+                    <td>Sensor &rarr; Observation &rarr; Result</td>
+                    <td>Sensor &rarr; SensorReading 2단계로 단순화</td>
+                    <td><code>(s:Sensor)-[:PRODUCES]-&gt;(r:SensorReading)</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>GeoSPARQL</strong></td>
+                    <td>Feature &rarr; Geometry + spatial functions</td>
+                    <td><code>point()</code> 속성 + <code>point.distance()</code> 함수</td>
+                    <td><code>WHERE point.distance(v.location, p) &lt; 5000</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>OWL-Time</strong></td>
+                    <td>Instant, Interval, Duration</td>
+                    <td><code>datetime()</code> + startTime/endTime 속성 쌍</td>
+                    <td><code>WHERE voy.eta &gt;= datetime("2024-01-01")</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>PROV-O</strong></td>
+                    <td>Entity &rarr; Activity &rarr; Agent</td>
+                    <td><code>DERIVED_FROM</code>, <code>PRODUCED_BY</code> 관계 패턴</td>
+                    <td><code>(result)-[:DERIVED_FROM]-&gt;(rawData)</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.7 재사용 스택도 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.7</span>
+              온톨로지 재사용 4계층 스택
+            </div>
+            <p class="subsection-intro">KRISO KG 온톨로지는 4개 계층의 기존 표준을 재사용하여 상호운용성을 확보한다.</p>
+
+            <div style="max-width:700px;margin:1.5rem auto">
+              <div style="background:linear-gradient(135deg,#1a3a5c,#0d7377);border-radius:12px;padding:1.5rem;text-align:center;color:white;font-weight:700;font-size:1.1rem;margin-bottom:2px">
+                Layer 4: KRISO 도메인 온톨로지<br>
+                <span style="font-weight:400;font-size:0.85rem;opacity:0.8">8 Core Classes + 14 Relations + URN Scheme</span>
+              </div>
+              <div style="text-align:center;color:#555;font-size:1.2rem">&darr;</div>
+              <div style="background:rgba(33,150,243,0.15);border:1px solid rgba(33,150,243,0.3);border-radius:12px;padding:1.2rem;text-align:center;margin-bottom:2px">
+                <strong style="color:var(--step2)">Layer 3: 해사 도메인 표준</strong><br>
+                <span style="font-size:0.9rem;color:#aaa">IHO S-100 &middot; IMO AIS &middot; DCSA &middot; IMO FAL</span>
+              </div>
+              <div style="text-align:center;color:#555;font-size:1.2rem">&darr;</div>
+              <div style="background:rgba(39,174,96,0.12);border:1px solid rgba(39,174,96,0.3);border-radius:12px;padding:1.2rem;text-align:center;margin-bottom:2px">
+                <strong style="color:var(--green)">Layer 2: 범용 도메인 온톨로지</strong><br>
+                <span style="font-size:0.9rem;color:#aaa">W3C SSN/SOSA &middot; OGC GeoSPARQL &middot; W3C OWL-Time &middot; W3C PROV-O</span>
+              </div>
+              <div style="text-align:center;color:#555;font-size:1.2rem">&darr;</div>
+              <div style="background:rgba(156,106,222,0.12);border:1px solid rgba(156,106,222,0.3);border-radius:12px;padding:1.2rem;text-align:center">
+                <strong style="color:var(--purple)">Layer 1: 기반 표준</strong><br>
+                <span style="font-size:0.9rem;color:#aaa">Schema.org &middot; W3C SKOS &middot; W3C DCAT</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 2.8 재사용 판정 결과 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step2)">2.8</span>
+              재사용 판정 결과 요약
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>온톨로지</th><th>판정</th><th>재사용 범위</th><th>비고</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>IHO S-100</strong></td><td style="color:var(--green);font-weight:700">채택</td><td>Feature Type &rarr; Label, Attribute &rarr; Property, <code>s100_featureCode</code> 메타데이터 보존</td><td>S-101(ENC), S-127(VTS) 우선 매핑</td></tr>
+                  <tr><td><strong>IMO AIS</strong></td><td style="color:var(--green);font-weight:700">채택</td><td>Type 1/5/18/24 전체 필드 &rarr; Vessel + AISRecord</td><td>선종코드 한글 변환 테이블 필요</td></tr>
+                  <tr><td><strong>MAKG</strong></td><td style="color:var(--ocean);font-weight:700">참조</td><td>Case·Ship·Law 3개 엔티티 개념 참고, CRISPE 프롬프트 프레임워크 채택</td><td>사고 도메인 특화 — 해상교통/시험시설은 KRISO 독자 설계</td></tr>
+                  <tr><td><strong>오재용·김혜진</strong></td><td style="color:var(--green);font-weight:700">부분 채택</td><td>VHF/CCTV 그래프 모델 10개 관계 중 6개 채택, Kafka→Neo4j 아키텍처 참조</td><td>KRISO 내부 논문 — 직접 연계 가능</td></tr>
+                  <tr><td><strong>Li et al.</strong></td><td style="color:var(--ocean);font-weight:700">참조</td><td>AIS 선종 코드 매핑, DCPA/TCPA 충돌 위험도, Sliding Window 이벤트 탐지</td><td>ELT transform 단계 알고리즘 참조</td></tr>
+                  <tr><td><strong>Kim &amp; Lee</strong></td><td style="color:var(--ocean);font-weight:700">참조</td><td>시나리오 기반 Cypher 질의 설계 패턴, BELONG_TO 계층 관계</td><td>CQ 설계 방법론 참고</td></tr>
+                  <tr><td><strong>SSN/SOSA</strong></td><td style="color:var(--green);font-weight:700">패턴 채택</td><td>Sensor &rarr; Observation 패턴 &rarr; 2단계로 단순화</td><td>PG 변환 시 3단계 &rarr; 2단계</td></tr>
+                  <tr><td><strong>GeoSPARQL</strong></td><td style="color:var(--green);font-weight:700">패턴 채택</td><td>공간 함수 패턴 &rarr; Neo4j <code>point()</code></td><td>Neo4j 네이티브 공간 인덱스 활용</td></tr>
+                  <tr><td><strong>OWL-Time</strong></td><td style="color:var(--green);font-weight:700">패턴 채택</td><td>시간 표현 패턴 &rarr; Neo4j <code>datetime()</code></td><td>UTC 기준 통일</td></tr>
+                  <tr><td><strong>PROV-O</strong></td><td style="color:var(--green);font-weight:700">패턴 채택</td><td>데이터 계보 관계 패턴 차용</td><td>core/kg/lineage 모듈과 연계</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.2);border-radius:12px;padding:1.2rem 1.5rem;margin-top:1.5rem">
+              <strong style="color:var(--step2)">Step 2 결론</strong>
+              <p style="margin:0.5rem 0 0;font-size:0.95rem;color:#ccc">
+                &bull; <strong>직접 채택</strong>: S-100 FC 매핑, AIS 필드 매핑, 공간/시간/계보 패턴 &mdash; KG 스키마에 직접 반영<br>
+                &bull; <strong>부분 채택</strong>: 오재용·김혜진 VHF/CCTV 그래프 모델 10개 관계 중 6개 &mdash; KRISO 내부 연구 직접 연계<br>
+                &bull; <strong>참조 활용</strong>: MAKG 사고 엔티티 + CRISPE 프롬프트, Li et al. AIS 이벤트 탐지, PIKG CQ 설계 패턴<br>
+                &bull; <strong>KRISO 독자 설계</strong>: TestFacility &rarr; TestScenario &rarr; TestCondition &rarr; MeasurementRecord 4단계 체인, 시험시설 8종
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STEP 3 ==================== -->
+    <div class="step-section" id="step3">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-number" style="background:var(--step3)">03</div>
+        <div class="step-header-text">
+          <h2>핵심 용어 열거 (Key Term Enumeration)</h2>
+          <div class="step-subtitle">14+ 클래스, 관계, 속성 목록 도출</div>
+        </div>
+        <span class="step-status-badge complete">완료</span>
+        <svg class="step-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+          <!-- 3.1 용어 수집 소스 종합 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step3)">3.1</span>
+              용어 수집 소스 종합
+            </div>
+            <p class="subsection-intro">6개 소스에서 수집한 용어를 3계층(P0 Core / P1 Extended / P2 Future)으로 분류한다. <strong>1차년도 DevKG는 P0+P1 범위</strong>로 구축한다.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>소스</th><th>엔티티</th><th>관계</th><th>활용</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>maritime_ontology.py</strong></td><td>155개</td><td>93개</td><td>기존 정의 기반, 3계층 재분류</td></tr>
+                  <tr><td><strong>CQ1-CQ5 Cypher</strong></td><td>+4 신규</td><td>+7 신규</td><td>TestScenario, MeasurementRecord, VoyageEvent, AISRecord</td></tr>
+                  <tr><td><strong>논문 4편</strong></td><td>+5 신규</td><td>+8 신규</td><td>VHFRecord, CCTVRecord, VTSOperator, MaritimeEvent 등</td></tr>
+                  <tr><td><strong>Neo4j 스키마</strong></td><td>검증용</td><td>+1 (OWNED_BY)</td><td>제약조건·인덱스 속성 보완</td></tr>
+                  <tr><td><strong>샘플 데이터</strong></td><td>검증용</td><td>&mdash;</td><td>누락 속성 보완 (nameEn, seaAreaType 등)</td></tr>
+                  <tr><td><strong>프로젝트 시스템</strong></td><td>&mdash;</td><td>&mdash;</td><td>_kg_project 속성 + KG_ 레이블 자동 부여</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px">
+              <div style="background:var(--teal-dim);border:1px solid rgba(13,115,119,0.3);border-radius:12px;padding:18px;text-align:center">
+                <div style="font-size:2rem;font-weight:800;color:var(--teal)">~30</div>
+                <div style="font-size:0.78rem;font-weight:700;color:var(--teal);margin-bottom:4px">P0 CORE</div>
+                <div style="font-size:0.72rem;color:var(--text-muted)">CQ1-CQ5 필수<br>즉시 구현</div>
+              </div>
+              <div style="background:var(--amber-dim);border:1px solid rgba(240,165,0,0.3);border-radius:12px;padding:18px;text-align:center">
+                <div style="font-size:2rem;font-weight:800;color:var(--amber)">~50</div>
+                <div style="font-size:0.78rem;font-weight:700;color:var(--amber);margin-bottom:4px">P1 EXTENDED</div>
+                <div style="font-size:0.72rem;color:var(--text-muted)">1차년도 후반<br>VHF/CCTV 포함</div>
+              </div>
+              <div style="background:var(--purple-dim);border:1px solid rgba(156,106,222,0.3);border-radius:12px;padding:18px;text-align:center">
+                <div style="font-size:2rem;font-weight:800;color:var(--teal)">~75</div>
+                <div style="font-size:0.78rem;font-weight:700;color:var(--purple);margin-bottom:4px">P2 FUTURE</div>
+                <div style="font-size:0.72rem;color:var(--text-muted)">2차년도 이후<br>RBAC, 멀티모달 표현</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 3.2 P0 Core 엔티티 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step3)">3.2</span>
+              P0 Core 엔티티 (CQ 필수, 즉시 구현)
+            </div>
+            <p class="subsection-intro">CQ1~CQ5 검증 질의를 통과하기 위해 반드시 필요한 엔티티. DevKG PoC 적재 대상.</p>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge core">물리 엔티티</span>
+                <span>선박, 항만, 해역, 센서</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>설명</th><th>CQ 참조</th><th>출처</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Vessel</strong></td><td>모든 수상 선박 (상선, 어선, 군함, 자율운항선)</td><td>CQ1-5</td><td>기존</td></tr>
+                    <tr><td><strong>Port</strong></td><td>항만 시설 (무역항, 연안항, 어항)</td><td>CQ1,3</td><td>기존</td></tr>
+                    <tr><td><strong>Berth</strong></td><td>항만 내 접안 위치</td><td>CQ1</td><td>기존+오재용</td></tr>
+                    <tr><td><strong>Anchorage</strong></td><td>지정 정박 구역</td><td>CQ1</td><td>기존+오재용</td></tr>
+                    <tr><td><strong>SeaArea</strong></td><td>명명/규제 해역 (VTS, TSS, EEZ)</td><td>CQ1,3</td><td>기존</td></tr>
+                    <tr><td><strong>Waterway</strong></td><td>항로, 해협, 수로</td><td>CQ1</td><td>기존</td></tr>
+                    <tr><td><strong>GeoPoint</strong></td><td>단일 위경도 좌표</td><td>CQ1,2</td><td>기존</td></tr>
+                    <tr><td><strong>Sensor</strong></td><td>관측 장비 (AIS, 레이더, 기상)</td><td>CQ4</td><td>기존</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge core">시간 엔티티</span>
+                <span>항해, 이벤트, 기상</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>설명</th><th>CQ 참조</th><th>출처</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Voyage</strong></td><td>출발항 → 도착항 완전 항해</td><td>CQ2,4</td><td>기존</td></tr>
+                    <tr><td><strong>VoyageEvent</strong> <span class="priority-core">NEW</span></td><td>항해 중 이산 이벤트 (속력변화, 침로변화, 시운전)</td><td>CQ2</td><td>CQ2+Li et al.</td></tr>
+                    <tr><td><strong>TrackSegment</strong></td><td>연속 AIS 궤적 구간</td><td>CQ1,2</td><td>기존</td></tr>
+                    <tr><td><strong>AISRecord</strong> <span class="priority-core">NEW</span></td><td>단일 AIS 위치 보고 (위치, 속력, 침로, 선수각)</td><td>CQ1,2</td><td>오재용+IMO AIS</td></tr>
+                    <tr><td><strong>WeatherCondition</strong></td><td>관측/예보 기상 상태</td><td>CQ4</td><td>기존+Li et al.</td></tr>
+                    <tr><td><strong>SensorReading</strong></td><td>시계열 센서 측정값</td><td>CQ4</td><td>기존</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge core">KRISO 시험시설</span>
+                <span>시험 4단계 체인</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>설명</th><th>CQ 참조</th><th>출처</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>TestFacility</strong></td><td>KRISO 물리적 시험시설 (8종)</td><td>CQ2,4,5</td><td>기존</td></tr>
+                    <tr><td><strong>Experiment</strong></td><td>시험 캠페인 (1회 실험 단위)</td><td>CQ2,4,5</td><td>기존</td></tr>
+                    <tr><td><strong>TestScenario</strong> <span class="priority-core">NEW</span></td><td>실험 내 시험 시나리오</td><td>CQ1,2,5</td><td>CQ 도출</td></tr>
+                    <tr><td><strong>TestCondition</strong></td><td>환경/운영 시험 조건</td><td>CQ4,5</td><td>기존</td></tr>
+                    <tr><td><strong>MeasurementRecord</strong> <span class="priority-core">NEW</span></td><td>타입별 계측 결과 (저항, 추진, 캐비테이션)</td><td>CQ1,2,4</td><td>CQ 도출</td></tr>
+                    <tr><td><strong>ModelShip</strong></td><td>축척 모형선</td><td>CQ2,4</td><td>기존</td></tr>
+                    <tr><td><strong>ExperimentalDataset</strong></td><td>실험 산출 데이터셋</td><td>CQ4</td><td>기존</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="relation-path" style="margin-top:12px">
+                <span class="rp-node">TestFacility</span>
+                <span class="rp-arrow"> &rarr;</span><span class="rp-rel">[HOSTS]</span><span class="rp-arrow">&rarr; </span>
+                <span class="rp-node">TestScenario</span>
+                <span class="rp-arrow"> &rarr;</span><span class="rp-rel">[APPLIES]</span><span class="rp-arrow">&rarr; </span>
+                <span class="rp-node">TestCondition</span>
+                <span class="rp-arrow"> &rarr;</span><span class="rp-rel">[PRODUCES]</span><span class="rp-arrow">&rarr; </span>
+                <span class="rp-node">MeasurementRecord</span>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge core">정보/규정</span>
+                <span>규정, 문서, 조직</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>설명</th><th>CQ 참조</th><th>출처</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Regulation</strong></td><td>해사 규정/협약 (COLREGS(국제해상충돌예방규칙), SOLAS, MARPOL)</td><td>CQ3</td><td>기존+MAKG</td></tr>
+                    <tr><td><strong>Document</strong></td><td>문서 (보고서, 통지, 매니페스트)</td><td>CQ3</td><td>기존</td></tr>
+                    <tr><td><strong>Organization</strong></td><td>법인/기관 (해운사, 정부, 연구소)</td><td>CQ5</td><td>기존+MAKG</td></tr>
+                    <tr><td><strong>AIModel</strong></td><td>ML/AI 추론 모델</td><td>CQ5</td><td>기존</td></tr>
+                    <tr><td><strong>Workflow</strong></td><td>데이터 처리/분석 워크플로우</td><td>CQ5</td><td>기존</td></tr>
+                    <tr><td><strong>WorkflowNode</strong></td><td>워크플로우 내 개별 처리 단계</td><td>&mdash;</td><td>기존</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style="background:var(--teal-dim);border:1px solid rgba(13,115,119,0.3);border-radius:12px;padding:1rem 1.5rem;margin-top:1rem">
+              <strong style="color:var(--teal)">P0 Core 합계: 27개 엔티티</strong>
+              <span style="font-size:0.85rem;color:var(--text-secondary);margin-left:12px">CQ1~CQ5 전체 통과에 필요한 최소 집합</span>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 3.3 P1 Extended 엔티티 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step3)">3.3</span>
+              P1 Extended 엔티티 (1차년도 후반)
+            </div>
+            <p class="subsection-intro">CQ 검증 후 1차년도 내 확장 대상. VHF/CCTV 멀티모달, 사고/이벤트, 하위 타입 세분화.</p>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge extended">멀티모달 데이터</span>
+                <span>오재용·김혜진 논문 기반</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>설명</th><th>출처</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>VHFRecord</strong> <span class="priority-core">NEW</span></td><td>VHF 교신 기록 (송신자, 수신자, 내용)</td><td>오재용 Table 2</td></tr>
+                    <tr><td><strong>CCTVRecord</strong> <span class="priority-core">NEW</span></td><td>CCTV 관측 기록 (위치, 장비, 시간)</td><td>오재용 Table 2</td></tr>
+                    <tr><td><strong>VTSOperator</strong> <span class="priority-core">NEW</span></td><td>VTS 관제사 (교신 주체)</td><td>오재용 Table 2</td></tr>
+                    <tr><td><strong>AISData</strong></td><td>AIS 위치 보고 시계열 배치</td><td>기존</td></tr>
+                    <tr><td><strong>SatelliteImage</strong></td><td>위성 영상 (광학/SAR)</td><td>기존</td></tr>
+                    <tr><td><strong>RadarImage</strong></td><td>육상/선박 레이더 영상</td><td>기존</td></tr>
+                    <tr><td><strong>VideoClip</strong></td><td>CCTV/드론 영상 클립</td><td>기존</td></tr>
+                    <tr><td><strong>MaritimeChart</strong></td><td>전자해도 (ENC) 데이터</td><td>기존</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge extended">이벤트/사고</span>
+                <span>MaritimeEvent 계층</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>설명</th><th>출처</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>MaritimeEvent</strong> <span class="priority-core">NEW</span></td><td>해사 이벤트 통합 (사고+입출항+VTS)</td><td>MAKG 매핑</td></tr>
+                    <tr><td><strong>Incident</strong></td><td>해양 사건/사고</td><td>기존</td></tr>
+                    <tr><td><strong>Collision</strong></td><td>선박 충돌</td><td>기존</td></tr>
+                    <tr><td><strong>Grounding</strong></td><td>좌초</td><td>기존</td></tr>
+                    <tr><td><strong>Pollution</strong></td><td>해양 오염 (유출)</td><td>기존</td></tr>
+                    <tr><td><strong>Distress</strong></td><td>조난 (SAR 필요)</td><td>기존</td></tr>
+                    <tr><td><strong>PortCall</strong></td><td>선박의 항만 방문</td><td>기존</td></tr>
+                    <tr><td><strong>Activity</strong></td><td>선박 운영 활동 (양하, 급유 등)</td><td>기존</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge extended">선박 하위 타입</span>
+                <span>AIS 선종코드 기반</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>AIS 코드</th><th>설명</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>CargoShip</strong></td><td>70-79</td><td>화물선</td></tr>
+                    <tr><td><strong>Tanker</strong></td><td>80-89</td><td>유조선</td></tr>
+                    <tr><td><strong>PassengerShip</strong></td><td>60-69</td><td>여객선 (페리, 크루즈)</td></tr>
+                    <tr><td><strong>FishingVessel</strong></td><td>30</td><td>어선</td></tr>
+                    <tr><td><strong>NavalVessel</strong></td><td>35</td><td>군함/해경선</td></tr>
+                    <tr><td><strong>AutonomousVessel</strong></td><td>&mdash;</td><td>자율운항선 (MASS)</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge extended">시험시설 하위 타입</span>
+                <span>KRISO 8종</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>설명</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>TowingTank</strong></td><td>예인수조 (저항/추진 시험)</td></tr>
+                    <tr><td><strong>OceanEngineeringBasin</strong></td><td>해양공학수조 (내항성능 시험)</td></tr>
+                    <tr><td><strong>IceTank</strong></td><td>빙해수조 (빙해 성능 시험)</td></tr>
+                    <tr><td><strong>DeepOceanBasin</strong></td><td>심해공학수조</td></tr>
+                    <tr><td><strong>CavitationTunnel</strong></td><td>캐비테이션 터널 (대형/중형/고속)</td></tr>
+                    <tr><td><strong>WaveEnergyTestSite</strong></td><td>파력발전 실해역 시험장</td></tr>
+                    <tr><td><strong>HyperbaricChamber</strong></td><td>고압 챔버</td></tr>
+                    <tr><td><strong>BridgeSimulator</strong></td><td>선교 시뮬레이터</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge extended">규정 하위 타입 + 데이터소스</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>엔티티</th><th>설명</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>COLREG</strong></td><td>COLREGS(국제해상충돌예방규칙) 조문</td></tr>
+                    <tr><td><strong>SOLAS</strong></td><td>해상인명안전협약</td></tr>
+                    <tr><td><strong>MARPOL</strong></td><td>선박오염방지협약</td></tr>
+                    <tr><td><strong>IMDGCode</strong></td><td>위험물운송규칙</td></tr>
+                    <tr><td><strong>AccidentReport</strong></td><td>사고조사보고서</td></tr>
+                    <tr><td><strong>InspectionReport</strong></td><td>PSC/FSC 검사보고서</td></tr>
+                    <tr><td><strong>NavigationalWarning</strong></td><td>항행경보 (NAVTEX)</td></tr>
+                    <tr><td><strong>DataSource</strong></td><td>외부 데이터 제공원/피드</td></tr>
+                    <tr><td><strong>APIEndpoint</strong></td><td>REST/gRPC 수집 엔드포인트</td></tr>
+                    <tr><td><strong>StreamSource</strong></td><td>실시간 스트림 (Kafka, MQTT)</td></tr>
+                    <tr><td><strong>FileSource</strong></td><td>배치 파일 소스</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style="background:var(--amber-dim);border:1px solid rgba(240,165,0,0.3);border-radius:12px;padding:1rem 1.5rem;margin-top:1rem">
+              <strong style="color:var(--amber)">P1 Extended 합계: ~47개 엔티티</strong>
+              <span style="font-size:0.85rem;color:var(--text-secondary);margin-left:12px">1차년도 후반 확장 (VHF/CCTV + 하위 타입 + 이벤트 계층)</span>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 3.4 P2 Future 엔티티 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step3)">3.4</span>
+              P2 Future 엔티티 (2차년도 이후)
+            </div>
+            <p class="subsection-intro">2차년도(2029-2030) 플랫폼 고도화 시 추가. 관측 융합, 서비스 레이어, RBAC, 멀티모달 표현.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>그룹</th><th>엔티티</th><th>수량</th><th>비고</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Observation 계층</strong></td><td>Observation, SARObservation, OpticalObservation, CCTVObservation, AISObservation, RadarObservation, WeatherObservation</td><td>7</td><td>관측 데이터 통합 타입</td></tr>
+                  <tr><td><strong>Agent 확장</strong></td><td>Person, CrewMember, Inspector, GovernmentAgency, ShippingCompany, ResearchInstitute, ClassificationSociety</td><td>7</td><td>Crew/Person은 MaritimeAccidentKG에서 우선 구현</td></tr>
+                  <tr><td><strong>플랫폼 리소스</strong></td><td>WorkflowExecution, DataPipeline, AIAgent, MCPTool, MCPResource, Service, QueryService, AnalysisService, AlertService, PredictionService</td><td>10</td><td>플랫폼 자체 메타데이터</td></tr>
+                  <tr><td><strong>물리 확장</strong></td><td>Terminal, PortFacility, TSS, Channel, EEZ, TerritorialSea, CoastalRegion, AISTransceiver, Radar, CCTVCamera, WeatherStation, Cargo, DangerousGoods, BulkCargo, ContainerCargo</td><td>15</td><td>Cargo는 제외 결정 → P2로 이동</td></tr>
+                  <tr><td><strong>멀티모달 표현</strong></td><td>VisualEmbedding, TrajectoryEmbedding, TextEmbedding, FusedEmbedding</td><td>4</td><td>벡터 임베딩 엔티티</td></tr>
+                  <tr><td><strong>RBAC</strong></td><td>User, Role, DataClass, Permission</td><td>4</td><td>Keycloak 전환 후 통합</td></tr>
+                  <tr><td><strong>기타</strong></td><td>IllegalFishing, Loitering, Loading, Unloading, Bunkering, Anchoring, OceanEnvironment, CargoManifest</td><td>8</td><td>세부 활동/환경 타입</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="background:var(--purple-dim);border:1px solid rgba(156,106,222,0.3);border-radius:12px;padding:1rem 1.5rem;margin-top:1rem">
+              <strong style="color:var(--purple)">P2 Future 합계: ~55개 엔티티</strong>
+              <span style="font-size:0.85rem;color:var(--text-secondary);margin-left:12px">2차년도 플랫폼 고도화 시 점진적 추가</span>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 3.5 관계 타입 목록 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step3)">3.5</span>
+              관계 타입 목록 (3계층)
+            </div>
+            <p class="subsection-intro">108개 관계 타입을 3계층으로 분류. P0 관계는 CQ Cypher 질의에 직접 사용된다.</p>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge core">P0 CORE 관계</span>
+                <span>CQ 필수 — 28개</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>관계</th><th>From</th><th>To</th><th>CQ</th><th>출처</th></tr></thead>
+                  <tbody>
+                    <tr><td><code>LOCATED_AT</code> (위치)</td><td>Vessel (선박)</td><td>SeaArea (해역)</td><td>CQ1</td><td>기존</td></tr>
+                    <tr><td><code>DOCKED_AT</code> (접안)</td><td>Vessel (선박)</td><td>Berth (선석)</td><td>CQ1</td><td>기존</td></tr>
+                    <tr><td><code>ANCHORED_AT</code> (정박)</td><td>Vessel (선박)</td><td>Anchorage (정박지)</td><td>CQ1</td><td>기존</td></tr>
+                    <tr><td><code>ANCHOR_AT</code> (정박 (오재용))</td><td>Vessel (선박)</td><td>Anchorage (정박지)</td><td>&mdash;</td><td>오재용</td></tr>
+                    <tr><td><code>BERTH_TO</code> (접안 (오재용))</td><td>Vessel (선박)</td><td>Berth (선석)</td><td>&mdash;</td><td>오재용</td></tr>
+                    <tr><td><code>HAS_FACILITY</code> (시설보유)</td><td>Port (항만)</td><td>PortFacility (항만시설)</td><td>CQ1</td><td>기존</td></tr>
+                    <tr><td><code>CONNECTED_VIA</code> (항로연결)</td><td>Port (항만)</td><td>Waterway (항로)</td><td>CQ1</td><td>기존</td></tr>
+                    <tr><td><code>CONNECTS</code> (해역연결)</td><td>Waterway (항로)</td><td>SeaArea (해역)</td><td>CQ1</td><td>기존</td></tr>
+                    <tr><td><code>ON_VOYAGE</code> (항해중)</td><td>Vessel (선박)</td><td>Voyage (항해)</td><td>CQ2</td><td>기존</td></tr>
+                    <tr><td><code>FROM_PORT</code> (출발항)</td><td>Voyage (항해)</td><td>Port (항만)</td><td>CQ2</td><td>기존</td></tr>
+                    <tr><td><code>TO_PORT</code> (도착항)</td><td>Voyage (항해)</td><td>Port (항만)</td><td>CQ2</td><td>기존</td></tr>
+                    <tr><td><code>CONSISTS_OF</code> (구간구성)</td><td>Voyage (항해)</td><td>TrackSegment (궤적구간)</td><td>CQ2</td><td>기존</td></tr>
+                    <tr><td><code>PARTICIPATED_IN</code> (이벤트참여) <span class="priority-core">NEW</span></td><td>Vessel (선박)</td><td>VoyageEvent (항해이벤트)</td><td>CQ2</td><td>CQ 도출</td></tr>
+                    <tr><td><code>PRODUCES</code> (산출)</td><td>Sensor (센서) / TestScenario (시험시나리오)</td><td>SensorReading (센서측정) / MeasurementRecord (계측기록)</td><td>CQ4,5</td><td>기존+확장</td></tr>
+                    <tr><td><code>APPLIES_TO</code> (적용대상)</td><td>Regulation (규정)</td><td>Vessel (선박) / SeaArea (해역)</td><td>CQ3</td><td>기존+확장</td></tr>
+                    <tr><td><code>HAS_VTS_ZONE</code> (VTS관할) <span class="priority-core">NEW</span></td><td>Port (항만)</td><td>SeaArea (해역)</td><td>CQ3</td><td>CQ 도출</td></tr>
+                    <tr><td><code>TESTED_IN</code> (시험대상) <span class="priority-core">NEW</span></td><td>Vessel (선박)</td><td>TestScenario (시험시나리오)</td><td>CQ1,2</td><td>CQ 도출</td></tr>
+                    <tr><td><code>HOSTS</code> (시험수행) <span class="priority-core">NEW</span></td><td>TestFacility (시험시설)</td><td>TestScenario (시험시나리오)</td><td>CQ5</td><td>CQ 도출</td></tr>
+                    <tr><td><code>APPLIES</code> (조건적용) <span class="priority-core">NEW</span></td><td>TestScenario (시험시나리오)</td><td>TestCondition (시험조건)</td><td>CQ5</td><td>CQ 도출</td></tr>
+                    <tr><td><code>CONDUCTED_AT</code> (실험장소)</td><td>Experiment (실험)</td><td>TestFacility (시험시설)</td><td>CQ2,5</td><td>기존</td></tr>
+                    <tr><td><code>TESTED</code> (모형시험)</td><td>Experiment (실험)</td><td>ModelShip (모형선)</td><td>CQ2</td><td>기존</td></tr>
+                    <tr><td><code>PRODUCED</code> (데이터산출)</td><td>Experiment (실험)</td><td>ExperimentalDataset (실험데이터셋)</td><td>CQ4</td><td>기존</td></tr>
+                    <tr><td><code>UNDER_CONDITION</code> (시험조건)</td><td>Experiment (실험)</td><td>TestCondition (시험조건)</td><td>CQ4</td><td>기존</td></tr>
+                    <tr><td><code>MODEL_OF</code> (모형대응)</td><td>ModelShip (모형선)</td><td>Vessel (선박)</td><td>CQ2</td><td>기존</td></tr>
+                    <tr><td><code>OWNED_BY</code> (소유) <span class="priority-core">NEW</span></td><td>Vessel (선박)</td><td>Organization (기관)</td><td>&mdash;</td><td>샘플 데이터</td></tr>
+                    <tr><td><code>USES_MODEL</code> (모델사용)</td><td>WorkflowNode (워크플로우노드)</td><td>AIModel (AI모델)</td><td>CQ5</td><td>기존</td></tr>
+                    <tr><td><code>CONTAINS_NODE</code> (노드포함)</td><td>Workflow (워크플로우)</td><td>WorkflowNode (워크플로우노드)</td><td>CQ5</td><td>기존</td></tr>
+                    <tr><td><code>AFFECTS</code> (영향)</td><td>WeatherCondition (기상)</td><td>SeaArea (해역)</td><td>CQ4</td><td>기존</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge extended">P1 EXTENDED 관계</span>
+                <span>1차년도 후반 — 18개</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>관계</th><th>From</th><th>To</th><th>출처</th></tr></thead>
+                  <tbody>
+                    <tr><td><code>TRANSMITTED_BY</code> (송신선박) <span class="priority-core">NEW</span></td><td>VHFRecord (VHF기록)</td><td>Vessel (선박)</td><td>오재용</td></tr>
+                    <tr><td><code>INTENDED_FOR</code> (수신대상) <span class="priority-core">NEW</span></td><td>VHFRecord (VHF기록)</td><td>Vessel (선박) / VTS</td><td>오재용</td></tr>
+                    <tr><td><code>ARRIVED_AT</code> (입항) <span class="priority-core">NEW</span></td><td>Vessel (선박)</td><td>Port (항만)</td><td>오재용</td></tr>
+                    <tr><td><code>DEPARTED_FROM</code> (출항) <span class="priority-core">NEW</span></td><td>Vessel (선박)</td><td>Port (항만)</td><td>오재용</td></tr>
+                    <tr><td><code>COMMUNICATE_WITH</code> (교신) <span class="priority-core">NEW</span></td><td>VTSOperator (VTS관제사)</td><td>Vessel (선박)</td><td>오재용</td></tr>
+                    <tr><td><code>BELONG_TO</code> (상위해역) <span class="priority-core">NEW</span></td><td>SeaArea (해역)</td><td>SeaArea (해역)</td><td>PIKG</td></tr>
+                    <tr><td><code>INVOLVES</code> (관련선박)</td><td>Incident (사고)</td><td>Vessel (선박)</td><td>기존</td></tr>
+                    <tr><td><code>CAUSED_BY</code> (원인기상)</td><td>Incident (사고)</td><td>WeatherCondition (기상)</td><td>기존</td></tr>
+                    <tr><td><code>OCCURRED_AT</code> (발생위치)</td><td>Incident (사고)</td><td>GeoPoint (좌표)</td><td>기존</td></tr>
+                    <tr><td><code>VIOLATED</code> (규정위반)</td><td>Incident (사고)</td><td>Regulation (규정)</td><td>기존</td></tr>
+                    <tr><td><code>DESCRIBES</code> (사고기술)</td><td>Document (문서)</td><td>Incident (사고)</td><td>기존</td></tr>
+                    <tr><td><code>ISSUED_BY</code> (발행기관)</td><td>Document (문서)</td><td>Organization (기관)</td><td>기존</td></tr>
+                    <tr><td><code>ENFORCED_BY</code> (집행기관)</td><td>Regulation (규정)</td><td>Organization (기관)</td><td>기존</td></tr>
+                    <tr><td><code>CARRIES</code> (화물적재)</td><td>Vessel (선박)</td><td>Cargo (화물)</td><td>기존</td></tr>
+                    <tr><td><code>PERFORMS</code> (활동수행)</td><td>Vessel (선박)</td><td>Activity (활동)</td><td>기존</td></tr>
+                    <tr><td><code>PROVIDED_BY</code> (제공기관)</td><td>DataSource (데이터소스)</td><td>Organization (기관)</td><td>기존</td></tr>
+                    <tr><td><code>AIS_TRACK_OF</code> (AIS궤적)</td><td>AISData (AIS데이터)</td><td>Vessel (선박)</td><td>기존</td></tr>
+                    <tr><td><code>OBSERVED_IN_AREA</code> (관측해역)</td><td>AISData (AIS데이터)</td><td>SeaArea (해역)</td><td>기존</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tier-section">
+              <div class="tier-header">
+                <span class="tier-badge future">P2 FUTURE 관계</span>
+                <span>2차년도 — 62개</span>
+              </div>
+              <p style="font-size:0.85rem;color:var(--text-muted);margin:8px 0">관측(Observation) 8개, 크로스모달 2개, 서비스/리니지 8개, 플랫폼 15개, 멀티모달 14개, KRISO 실험 확장 8개, RBAC 5개, 기타 2개 — 상세 목록은 <code>maritime_ontology.py</code> 참조</p>
+            </div>
+
+            <div style="background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.2);border-radius:12px;padding:1rem 1.5rem;margin-top:1rem">
+              <strong style="color:var(--step3)">관계 합계</strong>
+              <span style="font-size:0.85rem;color:var(--text-secondary);margin-left:12px">P0: 28개 + P1: 18개 + P2: 62개 = <strong>108개</strong></span>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 3.6 핵심 속성 목록 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step3)">3.6</span>
+              P0 핵심 속성 목록 (신규/확장)
+            </div>
+            <p class="subsection-intro">기존 속성 외에 CQ와 논문에서 도출된 <strong>신규/확장 속성 25개</strong>. 기존 속성은 Step 5에서 전체 정의.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>엔티티</th><th>속성</th><th>타입</th><th>출처</th><th>설명</th></tr></thead>
+                <tbody>
+                  <tr><td rowspan="5"><strong>AISRecord</strong></td><td>location</td><td>POINT</td><td>IMO AIS</td><td>위경도 좌표</td></tr>
+                  <tr><td>speed</td><td>FLOAT</td><td>IMO AIS</td><td>대지속력 (knots)</td></tr>
+                  <tr><td>course</td><td>FLOAT</td><td>IMO AIS</td><td>대지침로 (degrees)</td></tr>
+                  <tr><td>heading</td><td>FLOAT</td><td>IMO AIS</td><td>선수각 (degrees)</td></tr>
+                  <tr><td>navStatus</td><td>STRING</td><td>IMO AIS</td><td>항해 상태 코드</td></tr>
+                  <tr><td rowspan="3"><strong>MeasurementRecord</strong></td><td>resistanceCoefficient</td><td>FLOAT</td><td>CQ1</td><td>저항 계수</td></tr>
+                  <tr><td>parameterType</td><td>STRING</td><td>CQ2</td><td>계측 파라미터 유형</td></tr>
+                  <tr><td>resistanceIncrease</td><td>FLOAT</td><td>CQ4</td><td>저항 증가량 (%)</td></tr>
+                  <tr><td rowspan="3"><strong>VoyageEvent</strong></td><td>eventType</td><td>STRING</td><td>Li et al.</td><td>이벤트 유형 (속력변화/침로변화/정지)</td></tr>
+                  <tr><td>actualEHP</td><td>FLOAT</td><td>CQ2</td><td>실측 유효마력</td></tr>
+                  <tr><td>hasPerformanceData</td><td>BOOLEAN</td><td>CQ2</td><td>성능 데이터 보유 여부</td></tr>
+                  <tr><td rowspan="2"><strong>Regulation</strong></td><td>framework</td><td>STRING</td><td>CQ3</td><td>규정 체계 (COLREGS/SOLAS/MARPOL)</td></tr>
+                  <tr><td>articleNumber</td><td>STRING</td><td>CQ3</td><td>조문 번호</td></tr>
+                  <tr><td rowspan="3"><strong>TestCondition</strong></td><td>cavitationType</td><td>STRING</td><td>CQ5</td><td>캐비테이션 유형</td></tr>
+                  <tr><td>pressure</td><td>FLOAT</td><td>CQ5</td><td>압력 (Pa)</td></tr>
+                  <tr><td>propellerRPM</td><td>FLOAT</td><td>CQ5</td><td>프로펠러 회전수</td></tr>
+                  <tr><td><strong>TestScenario</strong></td><td>scenarioId</td><td>STRING</td><td>CQ5</td><td>시나리오 고유 식별자</td></tr>
+                  <tr><td rowspan="4"><strong>TrackSegment</strong></td><td>startPoint</td><td>POINT</td><td>샘플 데이터</td><td>구간 시작점</td></tr>
+                  <tr><td>endPoint</td><td>POINT</td><td>샘플 데이터</td><td>구간 종료점</td></tr>
+                  <tr><td>distance</td><td>FLOAT</td><td>샘플 데이터</td><td>구간 거리 (NM)</td></tr>
+                  <tr><td>avgSpeed</td><td>FLOAT</td><td>샘플 데이터</td><td>구간 평균 속력</td></tr>
+                  <tr><td><strong>TrackSegment</strong></td><td>anomaly</td><td>BOOLEAN</td><td>인덱스</td><td>이상행동 감지 플래그</td></tr>
+                  <tr><td><strong>SeaArea</strong></td><td>seaAreaType</td><td>STRING</td><td>샘플 데이터</td><td>해역 유형 (coastal_sea, strait 등)</td></tr>
+                  <tr><td><strong>Organization</strong></td><td>orgType</td><td>STRING</td><td>샘플 데이터</td><td>기관 유형 (정부, 해운사, 연구소)</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 3.7 설계 결정 사항 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--slate)">D</span>
+              Step 3 설계 결정 기록
+            </div>
+            <p class="subsection-intro">Step 3 진행 중 확정된 설계 결정 사항.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>결정 사항</th><th>선택</th><th>근거</th></tr></thead>
+                <tbody>
+                  <tr><td>D1</td><td>엔티티 분류 방식</td><td><strong>3계층 (P0/P1/P2)</strong></td><td>전체 155+ 엔티티를 보존하되 구현 우선순위 명시</td></tr>
+                  <tr><td>D2</td><td>VHF/CCTV 엔티티 시기</td><td><strong>P1 (1차년도 포함)</strong></td><td>오재용·김혜진 KRISO 책임연구원 논문 기반, 직접 연계 가능</td></tr>
+                  <tr><td>D3</td><td>MAKG Crew/Cargo 포함 여부</td><td><strong>둘 다 제외</strong></td><td>1차년도는 해상교통+시험시설 집중. 사고 분석은 MaritimeAccidentKG에서 별도</td></tr>
+                  <tr><td>D4</td><td>신규 엔티티</td><td><strong>9개 추가</strong></td><td>TestScenario, MeasurementRecord, VoyageEvent, AISRecord (P0) + VHFRecord, CCTVRecord, VTSOperator, MaritimeEvent, OceanEnvironment (P1/P2)</td></tr>
+                  <tr><td>D5</td><td>신규 관계</td><td><strong>15개 추가</strong></td><td>CQ 도출 7개 + 오재용 논문 6개 + PIKG 1개 + 샘플 데이터 1개</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STEP 4 ==================== -->
+    <div class="step-section" id="step4">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-number" style="background:var(--step4)">04</div>
+        <div class="step-header-text">
+          <h2>클래스 계층 정의 (Class Hierarchy)</h2>
+          <div class="step-subtitle">8개 핵심 클래스 + URN 식별 체계</div>
+        </div>
+        <span class="step-status-badge pending">준비 중</span>
+        <svg class="step-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+          <div class="placeholder-body">
+            <div class="placeholder-icon">&#128736;</div>
+            <h3>Step 4: 클래스 계층 정의</h3>
+            <p>핵심 엔티티의 상하위 관계를 정의하고 URN 기반 고유 식별 체계를 적용합니다.</p>
+            <ul class="placeholder-items">
+              <li>8개 핵심 클래스 계층 구조 (L1~L5)</li>
+              <li>URN 식별 체계: urn:kriso:kg:{type}:{subtype}:{id}</li>
+              <li>클래스 간 상속/구현 관계</li>
+              <li>Neo4j 레이블 매핑 전략</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STEP 5 ==================== -->
+    <div class="step-section" id="step5">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-number" style="background:var(--step5)">05</div>
+        <div class="step-header-text">
+          <h2>속성 정의 (Attribute Definition)</h2>
+          <div class="step-subtitle">Domain/Range 타입, 필수/선택 구분</div>
+        </div>
+        <span class="step-status-badge pending">준비 중</span>
+        <svg class="step-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+          <div class="placeholder-body">
+            <div class="placeholder-icon">&#128203;</div>
+            <h3>Step 5: 속성 정의</h3>
+            <p>각 클래스의 속성(Property)에 대한 Domain, Range, 필수/선택 여부를 정의합니다.</p>
+            <ul class="placeholder-items">
+              <li>노드 속성: 타입(string/int/float/datetime), 필수 여부</li>
+              <li>관계 속성: 가중치, 타임스탬프, 메타데이터</li>
+              <li>Cypher 명명 규칙 (camelCase) 적용</li>
+              <li>인덱스 대상 속성 식별</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STEP 6 ==================== -->
+    <div class="step-section" id="step6">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-number" style="background:var(--step6)">06</div>
+        <div class="step-header-text">
+          <h2>제약조건 정의 (Constraint Definition)</h2>
+          <div class="step-subtitle">SHACL shapes, Cardinality, 값 범위 규칙</div>
+        </div>
+        <span class="step-status-badge pending">준비 중</span>
+        <svg class="step-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+          <div class="placeholder-body">
+            <div class="placeholder-icon">&#128274;</div>
+            <h3>Step 6: 제약조건 정의</h3>
+            <p>데이터 무결성을 보장하기 위한 SHACL 검증 규칙과 Neo4j 제약조건을 정의합니다.</p>
+            <ul class="placeholder-items">
+              <li>SHACL shapes 정의 (사전 검증)</li>
+              <li>Cardinality 제약 (1:N, M:N 관계)</li>
+              <li>값 범위/패턴 규칙 (MMSI 9자리 등)</li>
+              <li>Neo4j UNIQUE/EXISTS 제약조건</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STEP 7 ==================== -->
+    <div class="step-section" id="step7">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-number" style="background:var(--step7)">07</div>
+        <div class="step-header-text">
+          <h2>인스턴스 생성 및 검증 (Instance &amp; Validation)</h2>
+          <div class="step-subtitle">샘플 데이터 적재, Q1~Q10 검증</div>
+        </div>
+        <span class="step-status-badge pending">준비 중</span>
+        <svg class="step-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+          <div class="placeholder-body">
+            <div class="placeholder-icon">&#9989;</div>
+            <h3>Step 7: 인스턴스 생성 및 검증</h3>
+            <p>샘플 데이터를 Neo4j에 적재하고 CQ 10개를 실행하여 온톨로지를 최종 검증합니다.</p>
+            <ul class="placeholder-items">
+              <li>PoC 데이터 적재: Vessel 500, Port 3, TestDataset 100</li>
+              <li>CQ1~CQ5 기본 검증 질의 실행</li>
+              <li>Q6~Q10 심화 검증 질의 실행</li>
+              <li>성능 합격 기준 달성 확인</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-left">
+    <strong>KRISO</strong> &middot; 한국해양과학기술원 부설 선박해양플랜트연구소<br>
+    대화형 해사서비스 설계 플랫폼 (IMSP) &mdash; DevKG 온톨로지 설계 문서
+  </div>
+  <div class="footer-right">
+    Stanford 7-Step Ontology Design Methodology<br>
+    &copy; 2026 인사이트마이닝. Internal Use Only.
+  </div>
+</footer>
+
+<!-- Back to Top -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832l-3.71 3.938a.75.75 0 01-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"/></svg>
+</button>
+
+<script>
+/* ===== View Management ===== */
+var currentView = 'landing';
+
+function setView(view) {
+  currentView = view;
+  document.body.className = view === 'landing' ? 'view-landing' : 'view-detail';
+}
+
+function enterProject(projectId) {
+  if (projectId === 'devkg') {
+    setView('detail');
+    window.location.hash = 'devkg';
+    window.scrollTo({ top: 0 });
+  }
+}
+
+function exitProject() {
+  setView('landing');
+  window.location.hash = 'landing';
+  window.scrollTo({ top: 0 });
+}
+
+/* Handle hash on load */
+function handleHash() {
+  var hash = window.location.hash.replace('#', '');
+  if (hash && hash !== 'landing') {
+    setView('detail');
+  } else {
+    setView('landing');
+  }
+}
+
+/* Accordion toggle */
+function toggleStep(header) {
+  var body = header.nextElementSibling;
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+/* Sidebar active link tracking */
+function updateActiveLink() {
+  var sections = document.querySelectorAll('.step-section');
+  var links = document.querySelectorAll('.sidebar-nav a');
+  var current = '';
+  sections.forEach(function(section) {
+    var top = section.getBoundingClientRect().top;
+    if (top < 200) current = section.id;
+  });
+  links.forEach(function(link) {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) {
+      link.classList.add('active');
+    }
+  });
+}
+
+/* Back to top visibility */
+function updateBackToTop() {
+  var btn = document.getElementById('backToTop');
+  if (window.scrollY > 400) {
+    btn.classList.add('visible');
+  } else {
+    btn.classList.remove('visible');
+  }
+}
+
+/* Mobile sidebar close */
+function closeMobileSidebar() {
+  if (window.innerWidth <= 900) {
+    document.querySelector('.sidebar').classList.remove('open');
+  }
+}
+
+window.addEventListener('scroll', function() {
+  if (currentView === 'detail') {
+    updateActiveLink();
+    updateBackToTop();
+  }
+}, { passive: true });
+
+window.addEventListener('hashchange', handleHash);
+
+/* Initialize */
+handleHash();
+</script>
+
+</body>
+</html>
