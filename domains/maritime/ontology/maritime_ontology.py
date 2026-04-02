@@ -45,6 +45,7 @@ ENTITY_LABELS: dict[str, str] = {
     "WeatherStation": "Meteorological observation station",
     # ----- SpatialEntity group -----
     "SeaArea": "Named or regulated sea region",
+    "OceanEnvironment": "Ocean environmental condition (wave, current, temperature)",
     "EEZ": "Exclusive Economic Zone (200 NM from baseline)",
     "TerritorialSea": "Territorial sea (12 NM from baseline)",
     "CoastalRegion": "Coastal administrative or geographic region",
@@ -66,6 +67,8 @@ ENTITY_LABELS: dict[str, str] = {
     "Bunkering": "Fuel bunkering activity",
     "Anchoring": "Activity of anchoring at an anchorage",
     "Loitering": "Abnormal loitering behaviour detected from AIS",
+    "VoyageEvent": "A discrete event during a voyage (speed change, course change, sea trial)",
+    "AISRecord": "Single AIS position report (location, speed, course, heading)",
     # ----- InformationEntity group -----
     "Regulation": "Maritime regulation, convention, or rule",
     "COLREG": "Convention on the International Regulations for Preventing Collisions at Sea",
@@ -86,6 +89,7 @@ ENTITY_LABELS: dict[str, str] = {
     "AnalysisService": "Service performing analytical computations",
     "AlertService": "Service generating alerts and notifications",
     "PredictionService": "Service producing predictive outputs (ETA, risk)",
+    "MaritimeEvent": "Unified maritime event (accident, port entry/departure, VTS event)",
     # ----- Observation group -----
     "Observation": "Base type for all observation data",
     "SARObservation": "Synthetic Aperture Radar satellite observation",
@@ -101,6 +105,7 @@ ENTITY_LABELS: dict[str, str] = {
     "ResearchInstitute": "Research institute or university",
     "ClassificationSociety": "Ship classification society (KR, DNV, LR, etc.)",
     "Person": "An individual person",
+    "VTSOperator": "Vessel Traffic Service operator (VTS controller)",
     "CrewMember": "Person serving as crew aboard a vessel",
     "Inspector": "Person conducting inspections",
     # ----- PlatformResource group -----
@@ -114,6 +119,8 @@ ENTITY_LABELS: dict[str, str] = {
     "MCPResource": "Resource exposed via MCP (schema, data view, etc.)",
     # ----- MultimodalData group -----
     "AISData": "AIS position report time-series data batch",
+    "VHFRecord": "VHF radio communication record (sender, receiver, content)",
+    "CCTVRecord": "CCTV observation record (location, equipment, timestamp)",
     "SatelliteImage": "Satellite imagery (optical or SAR) raster data",
     "RadarImage": "Shore-based or vessel radar image capture",
     "SensorReading": "Time-series sensor measurement (IoT, weather station)",
@@ -126,6 +133,8 @@ ENTITY_LABELS: dict[str, str] = {
     "FusedEmbedding": "Fused multi-modal embedding vector",
     # ----- KRISO group -----
     "Experiment": "KRISO experimental test campaign",
+    "TestScenario": "A specific test scenario within an experiment at KRISO",
+    "MeasurementRecord": "Typed measurement result (resistance, propulsion, cavitation)",
     "TestFacility": "Physical test facility at KRISO",
     "TowingTank": "Towing tank facility for resistance/propulsion tests",
     "OceanEngineeringBasin": "Ocean engineering basin for seakeeping tests",
@@ -249,6 +258,34 @@ RELATIONSHIP_TYPES: list[dict[str, Any]] = [
         "description": "Vessel performs an operational activity",
         "properties": ["startTime", "endTime"],
     },
+    {
+        "type": "PARTICIPATED_IN",
+        "from_label": "Vessel",
+        "to_label": "VoyageEvent",
+        "description": "Vessel participated in a voyage event",
+        "properties": ["timestamp"],
+    },
+    {
+        "type": "ARRIVED_AT",
+        "from_label": "Vessel",
+        "to_label": "Port",
+        "description": "Vessel arrived at a port",
+        "properties": ["timestamp"],
+    },
+    {
+        "type": "DEPARTED_FROM",
+        "from_label": "Vessel",
+        "to_label": "Port",
+        "description": "Vessel departed from a port",
+        "properties": ["timestamp"],
+    },
+    {
+        "type": "OWNED_BY",
+        "from_label": "Vessel",
+        "to_label": "Organization",
+        "description": "Vessel is owned by an organization",
+        "properties": [],
+    },
     # --- Observational ---
     {
         "type": "PRODUCES",
@@ -337,6 +374,13 @@ RELATIONSHIP_TYPES: list[dict[str, Any]] = [
         "properties": [],
     },
     {
+        "type": "BELONG_TO",
+        "from_label": "SeaArea",
+        "to_label": "SeaArea",
+        "description": "Sea area belongs to a parent sea area (hierarchy)",
+        "properties": [],
+    },
+    {
         "type": "OCCURRED_AT",
         "from_label": "Incident",
         "to_label": "GeoPoint",
@@ -363,6 +407,13 @@ RELATIONSHIP_TYPES: list[dict[str, Any]] = [
         "from_label": "Regulation",
         "to_label": "Organization",
         "description": "Regulation is enforced by an organisation",
+        "properties": [],
+    },
+    {
+        "type": "HAS_VTS_ZONE",
+        "from_label": "Port",
+        "to_label": "SeaArea",
+        "description": "Port has a VTS-controlled sea area zone",
         "properties": [],
     },
     {
@@ -527,6 +578,34 @@ RELATIONSHIP_TYPES: list[dict[str, Any]] = [
         "from_label": "Experiment",
         "to_label": "AISData",
         "description": "Experiment uses AIS data for validation or correlation",
+        "properties": [],
+    },
+    {
+        "type": "TESTED_IN",
+        "from_label": "Vessel",
+        "to_label": "TestScenario",
+        "description": "Vessel was tested in a test scenario",
+        "properties": [],
+    },
+    {
+        "type": "HOSTS",
+        "from_label": "TestFacility",
+        "to_label": "TestScenario",
+        "description": "Test facility hosts a test scenario",
+        "properties": [],
+    },
+    {
+        "type": "APPLIES",
+        "from_label": "TestScenario",
+        "to_label": "TestCondition",
+        "description": "Test scenario applies specific test conditions",
+        "properties": [],
+    },
+    {
+        "type": "PRODUCES",
+        "from_label": "TestScenario",
+        "to_label": "MeasurementRecord",
+        "description": "Test scenario produces measurement records",
         "properties": [],
     },
     # --- Platform ---
@@ -720,6 +799,27 @@ RELATIONSHIP_TYPES: list[dict[str, Any]] = [
         "description": "Fused embedding incorporates satellite image",
         "properties": [],
     },
+    {
+        "type": "TRANSMITTED_BY",
+        "from_label": "VHFRecord",
+        "to_label": "Vessel",
+        "description": "VHF record was transmitted by a vessel",
+        "properties": ["timestamp"],
+    },
+    {
+        "type": "INTENDED_FOR",
+        "from_label": "VHFRecord",
+        "to_label": "Vessel",
+        "description": "VHF record was intended for a vessel or VTS",
+        "properties": [],
+    },
+    {
+        "type": "COMMUNICATE_WITH",
+        "from_label": "VTSOperator",
+        "to_label": "Vessel",
+        "description": "VTS operator communicates with a vessel",
+        "properties": ["timestamp", "channel"],
+    },
     # --- RBAC (Access Control) ---
     {
         "type": "HAS_ROLE",
@@ -766,7 +866,7 @@ RELATIONSHIP_TYPES: list[dict[str, Any]] = [
 
 PROPERTY_DEFINITIONS: dict[str, dict[str, str]] = {
     "Vessel": {
-        "mmsi": "INTEGER",
+        "mmsi": "STRING",
         "imo": "INTEGER",
         "name": "STRING",
         "callSign": "STRING",
@@ -1077,5 +1177,71 @@ PROPERTY_DEFINITIONS: dict[str, dict[str, str]] = {
         "fps": "FLOAT",
         "storagePath": "STRING",
         "visualEmbedding": "LIST<FLOAT>",
+    },
+    "TestScenario": {
+        "scenarioId": "STRING",
+        "scenarioType": "STRING",
+        "description": "STRING",
+        "date": "DATE",
+        "status": "STRING",
+    },
+    "MeasurementRecord": {
+        "recordId": "STRING",
+        "measurementType": "STRING",
+        "resistanceCoefficient": "FLOAT",
+        "effectiveHorsePower": "FLOAT",
+        "speed": "FLOAT",
+        "timestamp": "DATETIME",
+    },
+    "VoyageEvent": {
+        "eventType": "STRING",
+        "timestamp": "DATETIME",
+        "location": "POINT",
+        "description": "STRING",
+    },
+    "AISRecord": {
+        "location": "POINT",
+        "speed": "FLOAT",
+        "course": "FLOAT",
+        "heading": "FLOAT",
+        "navStatus": "STRING",
+        "timestamp": "DATETIME",
+    },
+    "VHFRecord": {
+        "recordId": "STRING",
+        "channel": "INTEGER",
+        "content": "STRING",
+        "timestamp": "DATETIME",
+    },
+    "CCTVRecord": {
+        "recordId": "STRING",
+        "cameraId": "STRING",
+        "location": "POINT",
+        "startTime": "DATETIME",
+        "endTime": "DATETIME",
+    },
+    "VTSOperator": {
+        "operatorId": "STRING",
+        "name": "STRING",
+        "station": "STRING",
+        "callSign": "STRING",
+    },
+    "MaritimeEvent": {
+        "eventId": "STRING",
+        "eventType": "STRING",
+        "date": "DATETIME",
+        "location": "POINT",
+        "severity": "STRING",
+        "description": "STRING",
+    },
+    "OceanEnvironment": {
+        "envId": "STRING",
+        "waveHeight": "FLOAT",
+        "wavePeriod": "FLOAT",
+        "currentSpeed": "FLOAT",
+        "currentDirection": "FLOAT",
+        "temperature": "FLOAT",
+        "salinity": "FLOAT",
+        "timestamp": "DATETIME",
     },
 }

@@ -240,17 +240,19 @@ QDRANT_PORT=6333
 - `docs/strategy_5year_IMSP.md` — 5개년 전략서 (1,479줄)
 - `docs/architecture_flux_platform.md` — 아키텍처 설계 초안
 - `docs/meeting_20260318_KRISO.md` — KRISO 미팅 정리
-- `docs/ontology/stanford_7step_ontology.html` — DevKG 온톨로지 설계 (Stanford 7-Step, Step 1-3 완료)
+- `docs/ontology/stanford_7step_ontology.html` — DevKG 온톨로지 설계 (Stanford 7-Step, Step 1-3 완료, Vercel 배포)
 
 ## 주의사항
 
 1. `.env` 파일은 git에 포함하지 않음
-2. 온톨로지는 KRISO 요구 기반 **Stanford 7-Step 재설계 진행중** (Step 1-3 완료, P0 27개+P1 47개+P2 55개 = 129개 엔티티)
-3. `domains/maritime/`은 현재 flux-n8n에서 복사한 상태, 재설계 전 참조용
+2. 온톨로지 Stanford 7-Step 설계 Step 1-3 완료, 코드 동기화 완료 (136 엔티티, 95 관계, 38 속성 블록)
+3. `domains/maritime/` — maritime_ontology.py에 9개 신규 엔티티 + 13개 신규 관계 반영 완료
 4. `agent/`, `rag/` 이식 및 구현 완료 (4 LLM, MCP 3 transport, 하이브리드 RAG, VectorStore 3종)
 5. Suredata Lab과 역할 분담: 우리가 전체 개발, 납품은 KG 파트만
-6. JWT → Keycloak 전환 예정, 현재 코드는 JWT 기반
+6. JWT + Keycloak OIDC 듀얼 모드 인증 구현 완료 (RS256+JWKS + HS256 fallback)
 7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
-8. Activepieces → VueFlow + Argo Workflow 전환 예정
-9. 테스트 4,189개 통과 (unit + harness), 125개 skipped (실제 Neo4j 필요), 커버리지 92%
+8. Activepieces 제거 완료, Argo Workflow (K8s only) 전환
+9. 테스트 4,425개 통과 (unit + harness), 80개 skipped (실제 Neo4j 필요), 커버리지 ~92%
 10. 멀티 프로젝트 KG 관리 구현 완료 — X-KG-Project 헤더 기반 레이블 격리 (KG_DevKG, KG_ProdKG 등)
+11. S-100 ENC 매핑 스캐폴드 구현 (domains/maritime/s100/)
+12. 온톨로지 설계 문서 Vercel 배포: https://imsp-ontology-docs.vercel.app

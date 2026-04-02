@@ -96,6 +96,11 @@ def load_maritime_ontology() -> Ontology:
 
             rel_properties[prop_name] = PropertyDefinition(type=prop_type)
 
+        # Skip duplicate link type names (same Neo4j rel type can connect
+        # different node pairs; the ontology core uses name as unique key).
+        if ontology.get_link_type(rel["type"]) is not None:
+            continue
+
         ontology.define_link_type(
             LinkTypeDefinition(
                 name=rel["type"],
