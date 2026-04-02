@@ -500,6 +500,82 @@ tbody tr:hover { background: rgba(33,150,243,0.03); }
 .cy-var { color: #c9d1d9; }
 .cy-alias { color: #d2a8ff; }
 
+/* ===== STEP VERIFICATION CQ ===== */
+.step-verify-section {
+  margin-top: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+.step-verify-header {
+  padding: 16px 22px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border-light);
+  background: linear-gradient(135deg, rgba(13,115,119,0.06), rgba(33,150,243,0.06));
+}
+.step-verify-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.step-verify-title {
+  font-size: 0.88rem; font-weight: 700; color: var(--text);
+}
+.step-verify-subtitle {
+  font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;
+}
+.step-verify-body {
+  padding: 0;
+}
+.step-verify-item {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.step-verify-item:last-child { border-bottom: none; }
+.step-verify-id {
+  font-size: 0.68rem; font-weight: 800; color: #fff;
+  padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+  flex-shrink: 0; margin-top: 2px;
+}
+.step-verify-content { flex: 1; }
+.step-verify-q {
+  font-size: 0.88rem; font-weight: 600; color: var(--text);
+  line-height: 1.5; margin-bottom: 6px;
+}
+.step-verify-target {
+  font-size: 0.75rem; color: var(--text-muted);
+  display: flex; align-items: center; gap: 6px;
+}
+.step-verify-target::before {
+  content: "\25B6"; font-size: 0.55rem; color: var(--teal);
+}
+.step-verify-framework-box {
+  margin: 1.5rem 0;
+  padding: 1.2rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(13,115,119,0.2);
+  background: rgba(13,115,119,0.04);
+}
+.step-verify-framework-box h4 {
+  font-size: 0.85rem; color: var(--teal); margin-bottom: 0.8rem;
+}
+.step-verify-framework-box table {
+  width: 100%; font-size: 0.78rem; border-collapse: collapse;
+}
+.step-verify-framework-box th {
+  text-align: left; padding: 6px 10px; font-weight: 700;
+  color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase;
+  letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+}
+.step-verify-framework-box td {
+  padding: 6px 10px; border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+.step-verify-framework-box td:first-child { font-weight: 600; color: var(--text); }
+
 /* ===== TIER CARDS ===== */
 .tier-section {
   margin-bottom: 24px;
@@ -1332,6 +1408,26 @@ tbody tr:hover { background: rgba(33,150,243,0.03); }
               Competency Questions (CQ) &mdash; 핵심 5개
             </div>
             <p class="subsection-intro">Stanford 7-Step에서 CQ는 온톨로지가 <strong>반드시 답할 수 있어야 하는 질문</strong>이다. 이 질문들이 Step 3(핵심 용어), Step 4(클래스 계층), Step 5(속성)를 이끈다.</p>
+
+            <!-- CQ Framework Box -->
+            <div class="step-verify-framework-box">
+              <h4>&#128270; 단계별 CQ 체계 (Step-level CQ Framework)</h4>
+              <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:1rem">
+                <strong>마스터 CQ</strong>(CQ1~CQ5)는 온톨로지의 최종 목표를 정의한다. 각 단계는 자기 산출물이 마스터 CQ를 향해 올바르게 진행되고 있는지 검증하는 <strong>단계 CQ(Step-CQ)</strong>를 가진다.
+              </p>
+              <table>
+                <thead><tr><th>Step</th><th>산출물</th><th>단계 CQ 검증 질문</th></tr></thead>
+                <tbody>
+                  <tr><td>Step 1</td><td>목적 &middot; 범위 &middot; 마스터CQ</td><td>CQ1~CQ5 정의 (이 섹션) &#10003;</td></tr>
+                  <tr><td>Step 2</td><td>재사용 분석</td><td>S2-CQ1~3: 재사용 요소가 CQ를 커버하는가?</td></tr>
+                  <tr><td>Step 3</td><td>핵심 용어 목록</td><td>S3-CQ1~3: P0 엔티티/관계로 CQ Cypher가 돌아가는가?</td></tr>
+                  <tr><td>Step 4</td><td>클래스 계층</td><td>S4-CQ1~3: IS_A 계층이 CQ 필터링을 지원하는가?</td></tr>
+                  <tr><td>Step 5</td><td>속성 정의</td><td>S5-CQ1~3: WHERE/RETURN 속성이 모두 정의되었는가?</td></tr>
+                  <tr><td>Step 6</td><td>제약조건</td><td>S6-CQ1~3: SHACL이 잘못된 데이터를 차단하는가?</td></tr>
+                  <tr><td>Step 7</td><td>인스턴스 (골든 시드)</td><td>S7-CQ1~3: 골든 데이터로 CQ 실행 시 정답이 나오는가?</td></tr>
+                </tbody>
+              </table>
+            </div>
 
             <!-- CQ1 -->
             <div class="cq-card">
@@ -2184,6 +2280,40 @@ tbody tr:hover { background: rgba(33,150,243,0.03); }
               </table>
             </div>
 
+            <!-- Step 2 검증 CQ -->
+            <div class="step-verify-section" style="margin-top:2rem;margin-bottom:2rem">
+              <div class="step-verify-header">
+                <div class="step-verify-icon" style="background:var(--step2)">&#10003;</div>
+                <div>
+                  <div class="step-verify-title">Step 2 검증 CQ &mdash; 재사용 완전성</div>
+                  <div class="step-verify-subtitle">재사용한 온톨로지 요소가 마스터 CQ를 실제로 커버하는지 검증</div>
+                </div>
+              </div>
+              <div class="step-verify-body">
+                <div class="step-verify-item">
+                  <span class="step-verify-id" style="background:var(--step2)">S2-CQ1</span>
+                  <div class="step-verify-content">
+                    <div class="step-verify-q">S-100 Feature Catalogue 속성 중 P0 노드에 직접 매핑되는 것은 몇 개인가?</div>
+                    <div class="step-verify-target">검증 대상: S-100 재사용률 &mdash; FC 구성요소(Feature Type, Attribute, Role) &rarr; KG Label/Property 대응 완전성</div>
+                  </div>
+                </div>
+                <div class="step-verify-item">
+                  <span class="step-verify-id" style="background:var(--step2)">S2-CQ2</span>
+                  <div class="step-verify-content">
+                    <div class="step-verify-q">AIS 메시지 타입 1/5/18/24의 필드가 Vessel &middot; AISRecord 속성과 1:1 대응되는가?</div>
+                    <div class="step-verify-target">검증 대상: AIS 매핑 완전성 &mdash; 누락 필드 없이 IMO 표준 필드가 KG 속성으로 변환되는지 확인</div>
+                  </div>
+                </div>
+                <div class="step-verify-item">
+                  <span class="step-verify-id" style="background:var(--step2)">S2-CQ3</span>
+                  <div class="step-verify-content">
+                    <div class="step-verify-q">MAKG 8개 엔티티 중 P0와 겹치는 것은? 차이나는 것의 제외 근거는?</div>
+                    <div class="step-verify-target">검증 대상: MAKG 정합성 &mdash; Case/Ship/Law 채택, Crew/Cargo 제외 판정의 근거 추적성</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div style="background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.2);border-radius:12px;padding:1.2rem 1.5rem;margin-top:1.5rem">
               <strong style="color:var(--step2)">Step 2 결론</strong>
               <p style="margin:0.5rem 0 0;font-size:0.95rem;color:#ccc">
@@ -2656,6 +2786,42 @@ tbody tr:hover { background: rgba(33,150,243,0.03); }
                   <tr><td><strong>Organization</strong></td><td>orgType</td><td>STRING</td><td>샘플 데이터</td><td>기관 유형 (정부, 해운사, 연구소)</td></tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Step 3 검증 CQ -->
+          <div class="subsection">
+            <div class="step-verify-section">
+              <div class="step-verify-header">
+                <div class="step-verify-icon" style="background:var(--step3)">&#10003;</div>
+                <div>
+                  <div class="step-verify-title">Step 3 검증 CQ &mdash; 용어 완전성</div>
+                  <div class="step-verify-subtitle">열거된 엔티티/관계가 마스터 CQ Cypher를 실행하기에 충분한지 검증</div>
+                </div>
+              </div>
+              <div class="step-verify-body">
+                <div class="step-verify-item">
+                  <span class="step-verify-id" style="background:var(--step3)">S3-CQ1</span>
+                  <div class="step-verify-content">
+                    <div class="step-verify-q">P0 엔티티 27개 + 관계 28개만으로 CQ1~CQ5 Cypher가 문법적으로 유효한가?</div>
+                    <div class="step-verify-target">검증 대상: 용어 완전성 &mdash; 각 CQ 검증 Cypher의 노드 라벨과 관계 타입이 P0 목록에 모두 존재하는지 매칭</div>
+                  </div>
+                </div>
+                <div class="step-verify-item">
+                  <span class="step-verify-id" style="background:var(--step3)">S3-CQ2</span>
+                  <div class="step-verify-content">
+                    <div class="step-verify-q">P1 확장 없이 누락되는 CQ 경로(패턴)가 있는가?</div>
+                    <div class="step-verify-target">검증 대상: P0/P1 경계 검증 &mdash; P0만으로 답할 수 없는 CQ가 있다면 해당 엔티티를 P0로 승격해야 하는지 판단</div>
+                  </div>
+                </div>
+                <div class="step-verify-item">
+                  <span class="step-verify-id" style="background:var(--step3)">S3-CQ3</span>
+                  <div class="step-verify-content">
+                    <div class="step-verify-q">신규 엔티티 4개(VoyageEvent, AISRecord, TestScenario, MeasurementRecord)가 없으면 어떤 CQ가 깨지는가?</div>
+                    <div class="step-verify-target">검증 대상: 신규 엔티티 필요성 &mdash; 4개 NEW 엔티티 각각이 커버하는 CQ를 역추적하여 추가 근거 확인</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
