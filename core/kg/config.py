@@ -50,7 +50,7 @@ class PostgresConfig:
 class RedisConfig:
     """Redis connection configuration."""
 
-    url: str = "redis://localhost:6379/1"  # DB 1 (DB 0 = Activepieces)
+    url: str = "redis://localhost:6379/1"  # DB 1 (DB 0 reserved for application services)
 
 
 @dataclass(frozen=True)

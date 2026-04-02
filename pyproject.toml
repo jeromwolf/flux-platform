@@ -50,6 +50,17 @@ dev = [
 qdrant = [
     "qdrant-client>=1.12.0,<2.0",
 ]
+reranker = [
+    "sentence-transformers>=2.2.0",
+    "flashrank>=0.2.0",
+]
+documents = [
+    "python-docx>=1.1.0",
+    "python-pptx>=0.6.23",
+]
+all = [
+    "maritime-kg[dev,qdrant,reranker,documents]",
+]
 
 [build-system]
 requires = ["setuptools>=64"]
@@ -57,7 +68,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["kg*", "maritime*", "agent*", "rag*", "gateway*"]
+include = ["kg*", "maritime*", "agent*", "rag*", "gateway*", "core*", "domains*"]
 
 [tool.pytest.ini_options]
 pythonpath = [".", "core", "domains"]

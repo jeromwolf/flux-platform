@@ -12,6 +12,18 @@ from agent.tools.registry import ToolRegistry
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Ontology constants — populated from maritime_ontology at import time
+# ---------------------------------------------------------------------------
+
+try:
+    from domains.maritime.ontology.maritime_ontology import ENTITY_LABELS, RELATIONSHIP_TYPES
+    _ONTOLOGY_LABELS: list[str] = sorted(ENTITY_LABELS.keys())
+    _ONTOLOGY_REL_TYPES: list[str] = sorted({r["type"] for r in RELATIONSHIP_TYPES})
+except ImportError:
+    _ONTOLOGY_LABELS = ["Vessel", "Port", "Route", "Cargo", "Document"]
+    _ONTOLOGY_REL_TYPES = ["DOCKED_AT", "SAILED_TO", "CARRIES", "PART_OF"]
+
+# ---------------------------------------------------------------------------
 # Schema cache (module-level, shared across all MCPServer instances)
 # ---------------------------------------------------------------------------
 
@@ -271,12 +283,8 @@ class MCPServer:
 
         # stub 데이터 (Neo4j 폴백 + maritime 온톨로지 등 정적 리소스)
         stub_contents: dict[str, Any] = {
-            "kg://schema/node-labels": {
-                "labels": ["Vessel", "Port", "Route", "Cargo", "Document"]
-            },
-            "kg://schema/relationship-types": {
-                "types": ["DOCKED_AT", "SAILED_TO", "CARRIES", "PART_OF"]
-            },
+            "kg://schema/node-labels": {"labels": _ONTOLOGY_LABELS},
+            "kg://schema/relationship-types": {"types": _ONTOLOGY_REL_TYPES},
             "maritime://ontology/vessel-types": {
                 "types": [
                     "cargo_ship", "tanker", "container_ship",

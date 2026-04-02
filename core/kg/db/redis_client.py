@@ -1,6 +1,6 @@
 """Redis client management for IMSP services.
 
-Uses DB 1 for rate limiting (DB 0 is Activepieces/BullMQ).
+Uses DB 1 for rate limiting (DB 0 reserved for application services).
 """
 from __future__ import annotations
 

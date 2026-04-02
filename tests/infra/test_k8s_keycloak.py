@@ -289,15 +289,15 @@ class TestKeycloakRealm:
             "bruteForceProtected 가 true 가 아닙니다"
         )
 
-    def test_realm_has_three_roles(self, realm_data: dict[str, Any]) -> None:
-        """TC-K28: realm 역할이 정확히 3개(admin, researcher, viewer)다."""
+    def test_realm_has_four_roles(self, realm_data: dict[str, Any]) -> None:
+        """TC-K28: realm 역할이 정확히 4개(admin, researcher, developer, viewer)다."""
         roles = realm_data["roles"]["realm"]
-        assert len(roles) == 3, f"realm 역할 수 불일치: 예상 3, 실제 {len(roles)}"
+        assert len(roles) == 4, f"realm 역할 수 불일치: 예상 4, 실제 {len(roles)}"
 
     def test_realm_role_names(self, realm_data: dict[str, Any]) -> None:
-        """TC-K29: realm 역할 이름이 admin·researcher·viewer 이다."""
+        """TC-K29: realm 역할 이름이 admin·researcher·developer·viewer 이다."""
         role_names = {r["name"] for r in realm_data["roles"]["realm"]}
-        expected = {"admin", "researcher", "viewer"}
+        expected = {"admin", "researcher", "developer", "viewer"}
         assert role_names == expected, f"역할 이름 불일치: {role_names!r}"
 
     def test_realm_has_two_clients(self, realm_data: dict[str, Any]) -> None:

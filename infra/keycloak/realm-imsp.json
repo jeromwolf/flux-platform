@@ -29,6 +29,11 @@
         "composite": false
       },
       {
+        "name": "developer",
+        "description": "Developer with API access for integration and testing",
+        "composite": false
+      },
+      {
         "name": "viewer",
         "description": "Read-only viewer",
         "composite": false

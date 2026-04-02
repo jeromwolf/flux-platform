@@ -36,6 +36,7 @@ def _resolve_api_key_identity(api_key: str) -> dict:
     return {
         "sub": "api-key-user",
         "role": "viewer",
+        "roles": [],
         "auth_method": "api-key",
     }
 
@@ -95,7 +96,7 @@ def get_current_user(
         config: Application configuration (injected by FastAPI).
 
     Returns:
-        Dict with user info: ``{"sub": str, "role": str, "auth_method": str}``
+        Dict with user info: ``{"sub": str, "role": str, "roles": list[str], "auth_method": str}``
 
     Raises:
         HTTPException: 401 if neither JWT nor API key is valid in production.
@@ -110,12 +111,13 @@ def get_current_user(
                 "APP_API_KEY is set but ENV=development. "
                 "Auth is bypassed in development mode. Set ENV=production to enforce auth."
             )
-        return {"sub": "dev-user", "role": "admin", "auth_method": "dev-bypass"}
+        return {"sub": "dev-user", "role": "admin", "roles": [], "auth_method": "dev-bypass"}
 
     if jwt_payload is not None:
         return {
             "sub": jwt_payload.sub,
             "role": jwt_payload.role,
+            "roles": jwt_payload.roles,
             "auth_method": "jwt",
         }
 

@@ -260,6 +260,7 @@ class TestUnifiedAuth:
         result = get_current_user(jwt_payload=None, api_key=None, config=dev_config)
         assert result["sub"] == "dev-user"
         assert result["role"] == "admin"
+        assert result["roles"] == []
         assert result["auth_method"] == "dev-bypass"
 
     def test_jwt_takes_priority(self):
@@ -270,6 +271,7 @@ class TestUnifiedAuth:
         result = get_current_user(jwt_payload=jwt, api_key="some-key", config=prod_config)
         assert result["sub"] == "jwt-user"
         assert result["role"] == "researcher"
+        assert result["roles"] == []
         assert result["auth_method"] == "jwt"
 
     def test_api_key_fallback(self):
@@ -279,6 +281,7 @@ class TestUnifiedAuth:
         result = get_current_user(jwt_payload=None, api_key="valid-key", config=prod_config)
         assert result["sub"] == "api-key-user"
         assert result["role"] == "viewer"  # unregistered keys default to viewer
+        assert result["roles"] == []
         assert result["auth_method"] == "api-key"
 
     def test_no_auth_raises_401(self):
@@ -300,3 +303,4 @@ class TestUnifiedAuth:
         result = get_current_user(jwt_payload=jwt, api_key=None, config=prod_config)
         assert result["auth_method"] == "jwt"
         assert result["sub"] == "jwt-only-user"
+        assert result["roles"] == []
