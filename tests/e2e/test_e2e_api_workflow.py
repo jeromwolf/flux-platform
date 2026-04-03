@@ -25,6 +25,7 @@ from httpx import ASGITransport
 
 pytestmark = [
     pytest.mark.integration,
+    pytest.mark.e2e,
     pytest.mark.asyncio,
     pytest.mark.skipif(
         not os.environ.get("NEO4J_TEST_URI"),

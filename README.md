@@ -71,7 +71,7 @@ cd ui && npm run dev
 ## 테스트
 
 ```bash
-# 전체 테스트 (4,425 passed, 80 skipped)
+# 전체 테스트 (4,430+ passed, 80 skipped)
 PYTHONPATH=. python3 -m pytest tests/ -v
 
 # 단위 테스트만 (Neo4j 불필요)
@@ -79,7 +79,26 @@ PYTHONPATH=. python3 -m pytest tests/ -m unit -v
 
 # 통합 테스트 (Neo4j 필요)
 PYTHONPATH=. python3 -m pytest tests/ -m integration -v
+
+# E2E Mock Harness (서비스 불필요, 112 tests)
+PYTHONPATH=. python3 -m pytest tests/e2e/ -m unit -v
+
+# E2E Real Neo4j (Docker Neo4j 필요, 10 tests)
+NEO4J_TEST_URI=bolt://localhost:7687 NEO4J_TEST_PASSWORD=fluxrag2026 \
+  PYTHONPATH=. python3 -m pytest tests/e2e/ -m "integration or e2e" -v
+
+# Playwright 브라우저 E2E (35 tests)
+cd ui && npx playwright test
+cd ui && npx playwright test --ui   # 디버그 UI 모드
 ```
+
+### E2E 3-Tier 구조
+
+| Tier | 유형 | 테스트 수 | 필요 서비스 |
+|------|------|----------|------------|
+| A | Mock Harness (Python) | 112 | 없음 |
+| B | Real Neo4j (Python) | 10 | Neo4j |
+| C | Playwright (Browser) | 35 | 없음 (API mock) |
 
 ## 기술 스택
 
@@ -115,7 +134,7 @@ flux-platform/
 ├── gateway/       # API Gateway (프록시, WS, Keycloak 미들웨어)
 ├── ui/            # Vue 3 프론트엔드
 ├── infra/         # Docker, K8s, CI/CD, Keycloak
-├── tests/         # 테스트 (4,425+)
+├── tests/         # 테스트 (4,430+ unit/harness + 35 Playwright)
 ├── docs/          # 전략서, 온톨로지 설계
 └── scripts/       # 유틸리티 스크립트
 ```

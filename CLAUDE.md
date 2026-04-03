@@ -188,6 +188,16 @@ PYTHONPATH=. python3 -m pytest tests/ -m integration -v
 # 전체 테스트
 PYTHONPATH=. python3 -m pytest tests/ -v
 
+# E2E Mock Harness 테스트 (서비스 불필요)
+PYTHONPATH=. python3 -m pytest tests/e2e/ -m unit -v
+
+# E2E Real Neo4j 테스트 (Neo4j 필요)
+NEO4J_TEST_URI=bolt://localhost:7687 NEO4J_TEST_PASSWORD=fluxrag2026 \
+  PYTHONPATH=. python3 -m pytest tests/e2e/ -m "integration or e2e" -v
+
+# Playwright 브라우저 E2E 테스트
+cd ui && npx playwright test
+
 # 서버 실행 (Gateway + UI)
 PYTHONPATH=. python3 -m gateway --port 7749 --debug
 cd ui && npm run dev
@@ -252,7 +262,8 @@ QDRANT_PORT=6333
 6. JWT + Keycloak OIDC 듀얼 모드 인증 구현 완료 (RS256+JWKS + HS256 fallback)
 7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
 8. Activepieces 제거 완료, Argo Workflow (K8s only) 전환
-9. 테스트 4,425개 통과 (unit + harness), 80개 skipped (실제 Neo4j 필요), 커버리지 ~92%
+9. 테스트 4,430+ 통과 (unit + harness), 80 skipped (실제 Neo4j 필요), 커버리지 ~92%
+13. E2E 3-Tier 테스트 구축 완료: Mock Harness 112개 + Real Neo4j 10개 + Playwright 브라우저 35개
 10. 멀티 프로젝트 KG 관리 구현 완료 — X-KG-Project 헤더 기반 레이블 격리 (KG_DevKG, KG_ProdKG 등)
 11. S-100 ENC 매핑 스캐폴드 구현 (domains/maritime/s100/)
 12. 온톨로지 설계 문서 Vercel 배포: https://imsp-ontology-docs.vercel.app

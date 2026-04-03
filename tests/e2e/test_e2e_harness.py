@@ -7,16 +7,10 @@ the expected Neo4j responses for the complete workflow.
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
 
 import pytest
-import pytest_asyncio
-import httpx
-from httpx import ASGITransport
 
 from tests.helpers.mock_neo4j import (
-    FakeNode,
-    FakeRelationship,
     MockNeo4jSession,
     MockNeo4jResult,
     make_neo4j_node,
@@ -26,54 +20,12 @@ from tests.helpers.mock_neo4j import (
     build_rel_record,
     count_record,
 )
+from tests.e2e.conftest import _reset
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.asyncio,
 ]
-
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-
-@pytest_asyncio.fixture
-async def harness():
-    """Async HTTPX client backed by MockNeo4jSession."""
-    from kg.config import AppConfig, Neo4jConfig, reset, set_config
-    from kg.api.app import create_app
-    from kg.api.deps import get_async_neo4j_session
-
-    config = AppConfig(env="development", neo4j=Neo4jConfig(uri="bolt://mock:7687"))
-
-    with patch("kg.api.app.get_config", return_value=config), \
-         patch("kg.api.app.set_config"):
-        app = create_app(config=config)
-
-    session = MockNeo4jSession()
-
-    async def _override():
-        yield session
-
-    app.dependency_overrides[get_async_neo4j_session] = _override
-
-    transport = ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
-        yield ac, session
-
-    reset()
-
-
-# ---------------------------------------------------------------------------
-# Helper
-# ---------------------------------------------------------------------------
-
-
-def _reset(session: MockNeo4jSession, side_effects: list[Any]) -> None:
-    """Replace session side-effects and reset the call index."""
-    session._side_effects = side_effects
-    session._call_index = 0
 
 
 # ===========================================================================
@@ -86,7 +38,7 @@ class TestMaritimeGraphWorkflowHarness:
 
     async def test_full_maritime_graph_lifecycle(self, harness: Any) -> None:
         """End-to-end lifecycle for a small maritime knowledge graph (harness)."""
-        client, session = harness
+        client, session, _app = harness
 
         # -- Step 1: Create 5 nodes ----------------------------------------
         node_specs = [
@@ -348,7 +300,7 @@ class TestSearchWorkflowHarness:
 
     async def test_search_and_query_flow(self, harness: Any) -> None:
         """Create 10 diverse nodes and verify listing, search, and Cypher queries."""
-        client, session = harness
+        client, session, _app = harness
 
         # -- Step 1: Create 10 diverse _Test nodes --------------------------
         diverse_specs = [
@@ -477,7 +429,7 @@ class TestCypherWorkflowHarness:
 
     async def test_cypher_validate_explain_execute(self, harness: Any) -> None:
         """Validate, explain, and execute a Cypher query; test invalid/dangerous cases."""
-        client, session = harness
+        client, session, _app = harness
 
         # -- Create a node so the query has data ----------------------------
         node = make_neo4j_node(
@@ -555,7 +507,7 @@ class TestNodeRelationshipEdgeCasesHarness:
 
     async def test_edge_cases(self, harness: Any) -> None:
         """Comprehensive edge-case coverage for node and relationship endpoints."""
-        client, session = harness
+        client, session, _app = harness
 
         # -- 1. Korean characters in properties -----------------------------
         korean_node = make_neo4j_node(
@@ -790,7 +742,7 @@ class TestHealthAndSchemaHarness:
 
     async def test_health_schema_consistency(self, harness: Any) -> None:
         """Verify health and schema endpoints with _Test label nodes."""
-        client, session = harness
+        client, session, _app = harness
 
         # -- 1. GET /api/v1/health -> status ok -----------------------------
         _reset(session, [MockNeo4jResult([{"n": 1}])])
