@@ -251,6 +251,9 @@ QDRANT_PORT=6333
 - `docs/architecture_flux_platform.md` — 아키텍처 설계 초안
 - `docs/meeting_20260318_KRISO.md` — KRISO 미팅 정리
 - `docs/ontology/stanford_7step_ontology.html` — DevKG 온톨로지 설계 (Stanford 7-Step, Step 1-3 완료, Vercel 배포)
+- `docs/ontology/step1_purpose_definition.md` — Step 1: 목적 정의 (CQ1-CQ5, 도메인 범위, 조인 키)
+- `docs/ontology/step2_reuse_evaluation.md` — Step 2: 재사용 분석 (S-100, AIS, MAKG 등 10종 판정)
+- `docs/ontology/step3_key_term_enumeration.md` — Step 3: 핵심 용어 열거 (P0/P1/P2 3계층, 108 관계)
 
 ## 주의사항
 
