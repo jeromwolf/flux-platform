@@ -321,8 +321,13 @@ body {
   border: 1px solid var(--border);
 }
 table {
-  width: 100%; border-collapse: collapse;
+  min-width: 100%; border-collapse: collapse;
   font-size: 0.82rem;
+  table-layout: auto;
+}
+table code {
+  white-space: nowrap;
+  font-size: 0.72rem;
 }
 thead th {
   background: var(--navy);
