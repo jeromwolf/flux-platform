@@ -254,11 +254,12 @@ QDRANT_PORT=6333
 - `docs/ontology/step1_purpose_definition.md` — Step 1: 목적 정의 (CQ1-CQ5, 도메인 범위, 조인 키)
 - `docs/ontology/step2_reuse_evaluation.md` — Step 2: 재사용 분석 (S-100, AIS, MAKG 등 10종 판정)
 - `docs/ontology/step3_key_term_enumeration.md` — Step 3: 핵심 용어 열거 (P0/P1/P2 3계층, 108 관계)
+- `docs/ontology/step4_class_hierarchy.md` — Step 4: 클래스 계층 정의 (L1-L5, URN, 멀티레이블, S4-CQ1~3)
 
 ## 주의사항
 
 1. `.env` 파일은 git에 포함하지 않음
-2. 온톨로지 Stanford 7-Step 설계 Step 1-3 완료, 코드 동기화 완료 (136 엔티티, 95 관계, 38 속성 블록)
+2. 온톨로지 Stanford 7-Step 설계 Step 1-4 완료, 코드 동기화 완료 (147 엔티티(136+11 추상), 108 관계, 38 속성 블록, L1-L5 계층 + URN + 멀티레이블)
 3. `domains/maritime/` — maritime_ontology.py에 9개 신규 엔티티 + 13개 신규 관계 반영 완료
 4. `agent/`, `rag/` 이식 및 구현 완료 (4 LLM, MCP 3 transport, 하이브리드 RAG, VectorStore 3종)
 5. Suredata Lab과 역할 분담: 우리가 전체 개발, 납품은 KG 파트만
@@ -269,4 +270,4 @@ QDRANT_PORT=6333
 13. E2E 3-Tier 테스트 구축 완료: Mock Harness 112개 + Real Neo4j 10개 + Playwright 브라우저 35개
 10. 멀티 프로젝트 KG 관리 구현 완료 — X-KG-Project 헤더 기반 레이블 격리 (KG_DevKG, KG_ProdKG 등)
 11. S-100 ENC 매핑 스캐폴드 구현 (domains/maritime/s100/)
-12. 온톨로지 설계 문서 Vercel 배포: https://imsp-ontology-docs.vercel.app
+12. 온톨로지 설계 문서 Vercel 배포: https://imsp-ontology-docs.vercel.app (Step 1-4 완료)

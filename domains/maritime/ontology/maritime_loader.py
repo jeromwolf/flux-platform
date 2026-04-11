@@ -13,7 +13,7 @@ from kg.ontology.core import (
     PropertyDefinition,
     PropertyType,
 )
-from maritime.ontology.maritime_ontology import (
+from .maritime_ontology import (
     ENTITY_LABELS,
     PROPERTY_DEFINITIONS,
     RELATIONSHIP_TYPES,

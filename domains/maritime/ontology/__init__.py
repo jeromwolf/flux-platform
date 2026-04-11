@@ -1,7 +1,7 @@
 """Maritime domain ontology definitions."""
 
-from maritime.ontology.maritime_loader import load_maritime_ontology
-from maritime.ontology.maritime_ontology import (
+from .maritime_loader import load_maritime_ontology
+from .maritime_ontology import (
     ENTITY_LABELS,
     PROPERTY_DEFINITIONS,
     RELATIONSHIP_TYPES,

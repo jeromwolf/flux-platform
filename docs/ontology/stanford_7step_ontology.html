@@ -77,7 +77,7 @@ body {
   height: 4px; background: var(--border);
 }
 .progress-bar-fixed .fill {
-  height: 100%; width: 42.86%; /* 3/7 */
+  height: 100%; width: 57.14%; /* 4/7 */
   background: linear-gradient(90deg, var(--teal), var(--teal-light));
   border-radius: 0 2px 2px 0;
   transition: width 0.6s ease;
@@ -121,7 +121,7 @@ body {
   border-radius: 3px; overflow: hidden;
 }
 .sidebar-progress .bar-fill {
-  height: 100%; width: 42.86%;
+  height: 100%; width: 57.14%;
   background: linear-gradient(90deg, var(--teal), var(--teal-light));
   border-radius: 3px;
 }
@@ -1048,13 +1048,13 @@ tbody tr:hover { background: rgba(33,150,243,0.03); }
         <div class="kg-card-progress">
           <div class="kg-card-progress-label">
             <span>7-Step Progress</span>
-            <strong>3 / 7</strong>
+            <strong>4 / 7</strong>
           </div>
           <div class="kg-step-bar">
             <div class="step-seg done" style="background:var(--step1)"></div>
             <div class="step-seg done" style="background:var(--step2)"></div>
             <div class="step-seg done" style="background:var(--step3)"></div>
-            <div class="step-seg"></div>
+            <div class="step-seg done" style="background:var(--step4)"></div>
             <div class="step-seg"></div>
             <div class="step-seg"></div>
             <div class="step-seg"></div>
@@ -1208,7 +1208,7 @@ tbody tr:hover { background: rgba(33,150,243,0.03); }
   <div class="sidebar-progress">
     <div class="label">Overall Progress</div>
     <div class="bar"><div class="bar-fill"></div></div>
-    <div class="frac"><strong>3</strong> / 7 Steps Complete</div>
+    <div class="frac"><strong>4</strong> / 7 Steps Complete</div>
   </div>
   <div class="sidebar-nav">
     <a href="#step1" class="active" onclick="closeMobileSidebar()">
@@ -1229,7 +1229,7 @@ tbody tr:hover { background: rgba(33,150,243,0.03); }
     <a href="#step4" onclick="closeMobileSidebar()">
       <span class="step-dot" style="background:var(--step4)">4</span>
       <span class="step-label">클래스 계층</span>
-      <span class="step-status wip">준비 중</span>
+      <span class="step-status done">완료</span>
     </a>
     <a href="#step5" onclick="closeMobileSidebar()">
       <span class="step-dot" style="background:var(--step5)">5</span>
@@ -2858,24 +2858,391 @@ tbody tr:hover { background: rgba(33,150,243,0.03); }
         <div class="step-number" style="background:var(--step4)">04</div>
         <div class="step-header-text">
           <h2>클래스 계층 정의 (Class Hierarchy)</h2>
-          <div class="step-subtitle">8개 핵심 클래스 + URN 식별 체계</div>
+          <div class="step-subtitle">6개 L1 추상 루트 + 147개 계층 엔티티 + URN 식별 체계</div>
         </div>
-        <span class="step-status-badge pending">준비 중</span>
+        <span class="step-status-badge complete">완료</span>
         <svg class="step-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
       </div>
       <div class="step-body">
         <div class="step-body-inner">
-          <div class="placeholder-body">
-            <div class="placeholder-icon">&#128736;</div>
-            <h3>Step 4: 클래스 계층 정의</h3>
-            <p>핵심 엔티티의 상하위 관계를 정의하고 URN 기반 고유 식별 체계를 적용합니다.</p>
-            <ul class="placeholder-items">
-              <li>8개 핵심 클래스 계층 구조 (L1~L5)</li>
-              <li>URN 식별 체계: urn:kriso:kg:{type}:{subtype}:{id}</li>
-              <li>클래스 간 상속/구현 관계</li>
-              <li>Neo4j 레이블 매핑 전략</li>
-            </ul>
+
+          <!-- 4.1 계층 설계 원칙 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.1</span>
+              계층 설계 원칙
+            </div>
+            <p class="subsection-intro">Step 3에서 열거된 <strong>136개 엔티티</strong>를 5단계(L1~L5) 계층으로 조직한다. 6개 추상 L1 루트와 5개 L2 추상 그룹핑을 도입하여 총 <strong>147개 엔티티</strong>(136 기존 + 11 추상)로 구성한다.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Level</th><th>의미</th><th>수량</th><th>예시</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:700;color:var(--step4)">L1</td><td>온톨로지 범주 (추상)</td><td>6</td><td>PhysicalEntity, TemporalEntity, ObservationEntity</td></tr>
+                  <tr><td style="font-weight:700;color:var(--step4)">L2</td><td>핵심 도메인 클래스 + 추상 그룹</td><td>~30</td><td>Vessel, Port, Voyage, Regulation, MultimodalData</td></tr>
+                  <tr><td style="font-weight:700;color:var(--step4)">L3</td><td>하위 타입</td><td>~60</td><td>CargoShip, TowingTank, Collision, AISData</td></tr>
+                  <tr><td style="font-weight:700;color:var(--step4)">L4</td><td>세부 특화</td><td>~20</td><td>LargeCavitationTunnel, Resistance, WorkflowNode</td></tr>
+                  <tr><td style="font-weight:700;color:var(--step4)">합계</td><td colspan="3"><strong>147개</strong> (136 기존 엔티티 + 11 추상 타입)</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="principles-grid">
+              <div class="principle-card">
+                <h4>단일 상속</h4>
+                <p>각 엔티티는 하나의 부모만 가진다. 다중 분류는 Neo4j 멀티레이블로 표현.</p>
+              </div>
+              <div class="principle-card">
+                <h4>멀티레이블 스태킹</h4>
+                <p>모든 상위 레이블을 노드에 부여. <code style="font-family:var(--font-mono);font-size:0.72rem;background:var(--coral-dim);color:var(--coral);padding:1px 6px;border-radius:3px">:KG_DevKG:PhysicalEntity:Vessel:CargoShip</code></p>
+              </div>
+              <div class="principle-card">
+                <h4>추상 타입</h4>
+                <p>11개 추상 타입은 직접 인스턴스화되지 않고, 다형성 질의를 위한 레이블로만 사용.</p>
+              </div>
+              <div class="principle-card">
+                <h4>최대 5단계</h4>
+                <p>L5를 상한으로 하여 Cypher 질의 복잡도와 레이블 스택 크기를 제한.</p>
+              </div>
+            </div>
           </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 4.2 L1 추상 루트 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.2</span>
+              L1 추상 루트 (6개)
+            </div>
+            <p class="subsection-intro">모든 엔티티가 속하는 6개 근본 범주. 직접 인스턴스화되지 않으며, 다형성 질의 시 레이블로만 사용된다.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>L1 루트</th><th>설명</th><th>URN 접두사</th><th>하위 엔티티 수</th></tr></thead>
+                <tbody>
+                  <tr><td><strong style="color:var(--step4)">PhysicalEntity</strong></td><td>물리적 개체 (선박, 항만, 센서, 시험시설)</td><td><code>physical</code></td><td>~50</td></tr>
+                  <tr><td><strong style="color:var(--step4)">SpatialEntity</strong></td><td>공간 개체 (해역, 좌표, 환경)</td><td><code>spatial</code></td><td>~6</td></tr>
+                  <tr><td><strong style="color:var(--step4)">TemporalEntity</strong></td><td>시간 개체 (항해, 이벤트, 실험)</td><td><code>temporal</code></td><td>~25</td></tr>
+                  <tr><td><strong style="color:var(--step4)">InformationEntity</strong></td><td>정보 개체 (규정, 문서, 서비스)</td><td><code>info</code></td><td>~30</td></tr>
+                  <tr><td><strong style="color:var(--step4)">ObservationEntity</strong></td><td>관측 개체 (센서, AIS, 멀티모달)</td><td><code>obs</code></td><td>~30</td></tr>
+                  <tr><td><strong style="color:var(--step4)">AgentEntity</strong></td><td>행위자 (조직, 개인, AI)</td><td><code>agent</code></td><td>~15</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 4.3 PhysicalEntity 계층 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.3</span>
+              PhysicalEntity 계층
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>L2</th><th>L3</th><th>L4</th><th>P계층</th><th>Neo4j 레이블</th></tr></thead>
+                <tbody>
+                  <tr><td rowspan="6"><strong>Vessel</strong></td><td>CargoShip</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:Vessel:CargoShip</code></td></tr>
+                  <tr><td>Tanker</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:Vessel:Tanker</code></td></tr>
+                  <tr><td>PassengerShip</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:Vessel:PassengerShip</code></td></tr>
+                  <tr><td>FishingVessel</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:Vessel:FishingVessel</code></td></tr>
+                  <tr><td>NavalVessel</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:Vessel:NavalVessel</code></td></tr>
+                  <tr><td>AutonomousVessel</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:Vessel:AutonomousVessel</code></td></tr>
+                  <tr><td rowspan="3"><strong>Port</strong></td><td>TradePort</td><td>—</td><td>P2</td><td><code>:PhysicalEntity:Port:TradePort</code></td></tr>
+                  <tr><td>CoastalPort</td><td>—</td><td>P2</td><td><code>:PhysicalEntity:Port:CoastalPort</code></td></tr>
+                  <tr><td>FishingPort</td><td>—</td><td>P2</td><td><code>:PhysicalEntity:Port:FishingPort</code></td></tr>
+                  <tr><td rowspan="4"><strong>PortInfrastructure</strong> <em>(abstract)</em></td><td>PortFacility</td><td>—</td><td>P2</td><td><code>:PhysicalEntity:PortInfrastructure:PortFacility</code></td></tr>
+                  <tr><td>Berth</td><td>—</td><td>P0</td><td><code>:PhysicalEntity:PortInfrastructure:Berth</code></td></tr>
+                  <tr><td>Anchorage</td><td>—</td><td>P0</td><td><code>:PhysicalEntity:PortInfrastructure:Anchorage</code></td></tr>
+                  <tr><td>Terminal</td><td>—</td><td>P2</td><td><code>:PhysicalEntity:PortInfrastructure:Terminal</code></td></tr>
+                  <tr><td rowspan="11"><strong>TestFacility</strong></td><td>TowingTank</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:TestFacility:TowingTank</code></td></tr>
+                  <tr><td>OceanEngineeringBasin</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:TestFacility:OceanEngineeringBasin</code></td></tr>
+                  <tr><td>IceTank</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:TestFacility:IceTank</code></td></tr>
+                  <tr><td>DeepOceanBasin</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:TestFacility:DeepOceanBasin</code></td></tr>
+                  <tr><td rowspan="3">CavitationTunnel</td><td>LargeCavitationTunnel</td><td>impl</td><td><code>:PhysicalEntity:TestFacility:CavitationTunnel:LargeCavitationTunnel</code></td></tr>
+                  <tr><td>MediumCavitationTunnel</td><td>impl</td><td><code>:PhysicalEntity:TestFacility:CavitationTunnel:MediumCavitationTunnel</code></td></tr>
+                  <tr><td>HighSpeedCavitationTunnel</td><td>impl</td><td><code>:PhysicalEntity:TestFacility:CavitationTunnel:HighSpeedCavitationTunnel</code></td></tr>
+                  <tr><td>WaveEnergyTestSite</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:TestFacility:WaveEnergyTestSite</code></td></tr>
+                  <tr><td>HyperbaricChamber</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:TestFacility:HyperbaricChamber</code></td></tr>
+                  <tr><td>BridgeSimulator</td><td>—</td><td>P1</td><td><code>:PhysicalEntity:TestFacility:BridgeSimulator</code></td></tr>
+                  <tr style="display:none"></tr>
+                  <tr><td><strong>Waterway</strong></td><td>TSS, Channel</td><td>—</td><td>P0/P2</td><td><code>:PhysicalEntity:Waterway:TSS</code></td></tr>
+                  <tr><td><strong>Sensor</strong></td><td>AISTransceiver, Radar, CCTVCamera, WeatherStation</td><td>—</td><td>P0/P2</td><td><code>:PhysicalEntity:Sensor:AISTransceiver</code></td></tr>
+                  <tr><td><strong>Cargo</strong></td><td>DangerousGoods, BulkCargo, ContainerCargo</td><td>—</td><td>P2</td><td><code>:PhysicalEntity:Cargo:DangerousGoods</code></td></tr>
+                  <tr><td><strong>ModelShip</strong></td><td>—</td><td>—</td><td>P0</td><td><code>:PhysicalEntity:ModelShip</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 4.4 나머지 L1 계층 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.4</span>
+              SpatialEntity · TemporalEntity · InformationEntity 계층
+            </div>
+
+            <p class="subsection-intro"><strong>SpatialEntity</strong></p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>L2</th><th>L3</th><th>P계층</th><th>Neo4j 레이블</th></tr></thead>
+                <tbody>
+                  <tr><td rowspan="3"><strong>SeaArea</strong></td><td>EEZ</td><td>P2</td><td><code>:SpatialEntity:SeaArea:EEZ</code></td></tr>
+                  <tr><td>TerritorialSea</td><td>P2</td><td><code>:SpatialEntity:SeaArea:TerritorialSea</code></td></tr>
+                  <tr><td>CoastalRegion</td><td>P2</td><td><code>:SpatialEntity:SeaArea:CoastalRegion</code></td></tr>
+                  <tr><td><strong>GeoPoint</strong></td><td>—</td><td>P0</td><td><code>:SpatialEntity:GeoPoint</code></td></tr>
+                  <tr><td><strong>OceanEnvironment</strong></td><td>—</td><td>P2</td><td><code>:SpatialEntity:OceanEnvironment</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="subsection-intro" style="margin-top:24px"><strong>TemporalEntity</strong></p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>L2</th><th>L3</th><th>L4</th><th>P계층</th></tr></thead>
+                <tbody>
+                  <tr><td rowspan="3"><strong>Voyage</strong></td><td>VoyageEvent</td><td>—</td><td>P0</td></tr>
+                  <tr><td>TrackSegment</td><td>—</td><td>P0</td></tr>
+                  <tr><td>PortCall</td><td>—</td><td>P1</td></tr>
+                  <tr><td rowspan="5"><strong>MaritimeEvent</strong></td><td rowspan="5">Incident</td><td>Collision</td><td>P1</td></tr>
+                  <tr><td>Grounding</td><td>P1</td></tr>
+                  <tr><td>Pollution</td><td>P1</td></tr>
+                  <tr><td>Distress</td><td>P1</td></tr>
+                  <tr><td>IllegalFishing</td><td>P2</td></tr>
+                  <tr><td rowspan="5"><strong>Activity</strong></td><td>Loading</td><td>—</td><td>P2</td></tr>
+                  <tr><td>Unloading</td><td>—</td><td>P2</td></tr>
+                  <tr><td>Bunkering</td><td>—</td><td>P2</td></tr>
+                  <tr><td>Anchoring</td><td>—</td><td>P2</td></tr>
+                  <tr><td>Loitering</td><td>—</td><td>P2</td></tr>
+                  <tr><td><strong>WeatherCondition</strong></td><td>—</td><td>—</td><td>P0</td></tr>
+                  <tr><td rowspan="2"><strong>Experiment</strong></td><td>TestScenario</td><td>—</td><td>P0</td></tr>
+                  <tr><td>TestCondition</td><td>—</td><td>P0</td></tr>
+                  <tr><td><strong>ExperimentalDataset</strong></td><td>—</td><td>—</td><td>P0</td></tr>
+                  <tr><td><strong>AISRecord</strong></td><td>—</td><td>—</td><td>P0</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="subsection-intro" style="margin-top:24px"><strong>InformationEntity</strong></p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>L2</th><th>L3</th><th>L4</th><th>P계층</th></tr></thead>
+                <tbody>
+                  <tr><td rowspan="4"><strong>Regulation</strong></td><td>COLREG</td><td>—</td><td>P1</td></tr>
+                  <tr><td>SOLAS</td><td>—</td><td>P1</td></tr>
+                  <tr><td>MARPOL</td><td>—</td><td>P1</td></tr>
+                  <tr><td>IMDGCode</td><td>—</td><td>P1</td></tr>
+                  <tr><td rowspan="4"><strong>Document</strong></td><td>AccidentReport</td><td>—</td><td>P1</td></tr>
+                  <tr><td>InspectionReport</td><td>—</td><td>P1</td></tr>
+                  <tr><td>NavigationalWarning</td><td>—</td><td>P1</td></tr>
+                  <tr><td>CargoManifest</td><td>—</td><td>P2</td></tr>
+                  <tr><td rowspan="3"><strong>DataSource</strong></td><td>APIEndpoint</td><td>—</td><td>P1</td></tr>
+                  <tr><td>StreamSource</td><td>—</td><td>P1</td></tr>
+                  <tr><td>FileSource</td><td>—</td><td>P1</td></tr>
+                  <tr><td rowspan="5"><strong>PlatformResource</strong> <em>(abstract)</em></td><td>Workflow</td><td>WorkflowNode, WorkflowExecution</td><td>P0/P2</td></tr>
+                  <tr><td>AIModel</td><td>—</td><td>P0</td></tr>
+                  <tr><td>DataPipeline</td><td>—</td><td>P2</td></tr>
+                  <tr><td>MCPTool</td><td>—</td><td>P2</td></tr>
+                  <tr><td>MCPResource</td><td>—</td><td>P2</td></tr>
+                  <tr><td rowspan="4"><strong>Service</strong></td><td>QueryService</td><td>—</td><td>P2</td></tr>
+                  <tr><td>AnalysisService</td><td>—</td><td>P2</td></tr>
+                  <tr><td>AlertService</td><td>—</td><td>P2</td></tr>
+                  <tr><td>PredictionService</td><td>—</td><td>P2</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 4.5 ObservationEntity / AgentEntity -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.5</span>
+              ObservationEntity · AgentEntity 계층
+            </div>
+
+            <p class="subsection-intro"><strong>ObservationEntity</strong></p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>L2</th><th>L3</th><th>L4</th><th>P계층</th></tr></thead>
+                <tbody>
+                  <tr><td rowspan="6"><strong>Observation</strong> <em>(abstract)</em></td><td>SARObservation</td><td>—</td><td>P2</td></tr>
+                  <tr><td>OpticalObservation</td><td>—</td><td>P2</td></tr>
+                  <tr><td>CCTVObservation</td><td>—</td><td>P2</td></tr>
+                  <tr><td>AISObservation</td><td>—</td><td>P2</td></tr>
+                  <tr><td>RadarObservation</td><td>—</td><td>P2</td></tr>
+                  <tr><td>WeatherObservation</td><td>—</td><td>P2</td></tr>
+                  <tr><td><strong>SensorReading</strong></td><td>—</td><td>—</td><td>P0</td></tr>
+                  <tr><td rowspan="7"><strong>MultimodalData</strong> <em>(abstract)</em></td><td>AISData</td><td>—</td><td>P1</td></tr>
+                  <tr><td>VHFRecord</td><td>—</td><td>P1</td></tr>
+                  <tr><td>CCTVRecord</td><td>—</td><td>P1</td></tr>
+                  <tr><td>SatelliteImage</td><td>—</td><td>P1</td></tr>
+                  <tr><td>RadarImage</td><td>—</td><td>P1</td></tr>
+                  <tr><td>MaritimeChart</td><td>—</td><td>P1</td></tr>
+                  <tr><td>VideoClip</td><td>—</td><td>P1</td></tr>
+                  <tr><td rowspan="7"><strong>MeasurementRecord</strong></td><td rowspan="6">Measurement</td><td>Resistance</td><td>impl</td></tr>
+                  <tr><td>Propulsion</td><td>impl</td></tr>
+                  <tr><td>Maneuvering</td><td>impl</td></tr>
+                  <tr><td>Seakeeping</td><td>impl</td></tr>
+                  <tr><td>IcePerformance</td><td>impl</td></tr>
+                  <tr><td>StructuralResponse</td><td>impl</td></tr>
+                  <tr style="display:none"></tr>
+                  <tr><td rowspan="4"><strong>MultimodalRepresentation</strong> <em>(abstract)</em></td><td>VisualEmbedding</td><td>—</td><td>P2</td></tr>
+                  <tr><td>TrajectoryEmbedding</td><td>—</td><td>P2</td></tr>
+                  <tr><td>TextEmbedding</td><td>—</td><td>P2</td></tr>
+                  <tr><td>FusedEmbedding</td><td>—</td><td>P2</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="subsection-intro" style="margin-top:24px"><strong>AgentEntity</strong></p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>L2</th><th>L3</th><th>P계층</th></tr></thead>
+                <tbody>
+                  <tr><td rowspan="4"><strong>Organization</strong></td><td>GovernmentAgency</td><td>P2</td></tr>
+                  <tr><td>ShippingCompany</td><td>P2</td></tr>
+                  <tr><td>ResearchInstitute</td><td>P2</td></tr>
+                  <tr><td>ClassificationSociety</td><td>P2</td></tr>
+                  <tr><td rowspan="2"><strong>Person</strong></td><td>CrewMember</td><td>P2</td></tr>
+                  <tr><td>Inspector</td><td>P2</td></tr>
+                  <tr><td><strong>VTSOperator</strong></td><td>—</td><td>P1</td></tr>
+                  <tr><td><strong>AIAgent</strong></td><td>—</td><td>P2</td></tr>
+                  <tr><td rowspan="4"><strong>AccessControl</strong> <em>(abstract)</em></td><td>User</td><td>P2</td></tr>
+                  <tr><td>Role</td><td>P2</td></tr>
+                  <tr><td>DataClass</td><td>P2</td></tr>
+                  <tr><td>Permission</td><td>P2</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 4.6 URN 식별 체계 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.6</span>
+              URN 식별 체계
+            </div>
+            <p class="subsection-intro">모든 KG 노드에 <code style="font-family:var(--font-mono);font-size:0.74rem;background:var(--coral-dim);color:var(--coral);padding:1px 6px;border-radius:3px">urn:kriso:kg:{l1}:{leaf_type}:{id}</code> 형식의 글로벌 고유 식별자를 부여한다.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>엔티티</th><th>URN 예시</th><th>ID 소스</th></tr></thead>
+                <tbody>
+                  <tr><td>Vessel</td><td><code>urn:kriso:kg:physical:vessel:440123456</code></td><td>MMSI (9자리)</td></tr>
+                  <tr><td>Port</td><td><code>urn:kriso:kg:physical:port:KRPUS</code></td><td>UNLOCODE</td></tr>
+                  <tr><td>SeaArea</td><td><code>urn:kriso:kg:spatial:seaarea:KR-VTS-BUSAN</code></td><td>커스텀</td></tr>
+                  <tr><td>Voyage</td><td><code>urn:kriso:kg:temporal:voyage:VOY-2026-001234</code></td><td>순번</td></tr>
+                  <tr><td>CargoShip</td><td><code>urn:kriso:kg:physical:cargoship:440987654</code></td><td>MMSI</td></tr>
+                  <tr><td>Collision</td><td><code>urn:kriso:kg:temporal:collision:INC-2026-0042</code></td><td>순번</td></tr>
+                  <tr><td>TowingTank</td><td><code>urn:kriso:kg:physical:towingtank:KRISO-TT-001</code></td><td>KRISO 내부</td></tr>
+                  <tr><td>Organization</td><td><code>urn:kriso:kg:agent:organization:KRISO</code></td><td>슬러그</td></tr>
+                  <tr><td>Regulation</td><td><code>urn:kriso:kg:info:regulation:COLREGS-1972</code></td><td>협약명</td></tr>
+                  <tr><td>AISRecord</td><td><code>urn:kriso:kg:temporal:aisrecord:AIS-440123456-1712838400</code></td><td>복합</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 4.7 Neo4j 멀티레이블 매핑 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.7</span>
+              Neo4j 멀티레이블 매핑
+            </div>
+            <p class="subsection-intro">패턴: <code style="font-family:var(--font-mono);font-size:0.74rem;background:var(--coral-dim);color:var(--coral);padding:1px 6px;border-radius:3px">:{KG_Project}:{L1}:{L2}:...:{Leaf}</code></p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>엔티티</th><th>Neo4j 레이블</th></tr></thead>
+                <tbody>
+                  <tr><td>CargoShip</td><td><code>:KG_DevKG:PhysicalEntity:Vessel:CargoShip</code></td></tr>
+                  <tr><td>Berth</td><td><code>:KG_DevKG:PhysicalEntity:PortInfrastructure:Berth</code></td></tr>
+                  <tr><td>LargeCavitationTunnel</td><td><code>:KG_DevKG:PhysicalEntity:TestFacility:CavitationTunnel:LargeCavitationTunnel</code></td></tr>
+                  <tr><td>Collision</td><td><code>:KG_DevKG:TemporalEntity:MaritimeEvent:Incident:Collision</code></td></tr>
+                  <tr><td>VoyageEvent</td><td><code>:KG_DevKG:TemporalEntity:Voyage:VoyageEvent</code></td></tr>
+                  <tr><td>COLREG</td><td><code>:KG_DevKG:InformationEntity:Regulation:COLREG</code></td></tr>
+                  <tr><td>WorkflowNode</td><td><code>:KG_DevKG:InformationEntity:PlatformResource:Workflow:WorkflowNode</code></td></tr>
+                  <tr><td>Resistance</td><td><code>:KG_DevKG:ObservationEntity:MeasurementRecord:Measurement:Resistance</code></td></tr>
+                  <tr><td>VTSOperator</td><td><code>:KG_DevKG:AgentEntity:VTSOperator</code></td></tr>
+                  <tr><td>User</td><td><code>:KG_DevKG:AgentEntity:AccessControl:User</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="subsection-intro" style="margin-top:20px"><strong>다형성 질의 패턴</strong></p>
+            <pre style="background:var(--navy);color:#e2e8f0;padding:16px 20px;border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.78rem;overflow-x:auto;line-height:1.6"><span style="color:#7dd3fc">-- 모든 선박 (하위 타입 포함)</span>
+MATCH (v:<span style="color:#fbbf24">Vessel</span>:<span style="color:#34d399">KG_DevKG</span>) RETURN v
+
+<span style="color:#7dd3fc">-- 모든 관측 데이터</span>
+MATCH (o:<span style="color:#fbbf24">ObservationEntity</span>:<span style="color:#34d399">KG_DevKG</span>) RETURN o
+
+<span style="color:#7dd3fc">-- KRISO 시험 체인 + 계층 검증</span>
+MATCH (tf:<span style="color:#fbbf24">TestFacility</span>)-[:HOSTS]-&gt;(ts:<span style="color:#fbbf24">TestScenario</span>)
+      -[:APPLIES]-&gt;(tc)-[:PRODUCES]-&gt;(mr:<span style="color:#fbbf24">MeasurementRecord</span>)
+WHERE mr:<span style="color:#fbbf24">ObservationEntity</span>
+RETURN tf.name, labels(mr)</pre>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 4.8 검증 CQ -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.8</span>
+              Step 4 검증 CQ (S4-CQ1~3)
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>검증 질문</th><th>통과 기준</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:700;color:var(--step4)">S4-CQ1</td><td>IS_A 계층이 다형성 CQ 필터링을 지원하는가?</td><td><code>MATCH (v:Vessel)</code>가 CargoShip, Tanker 등 모든 하위 타입 반환</td></tr>
+                  <tr><td style="font-weight:700;color:var(--step4)">S4-CQ2</td><td>KRISO 4단계 시험 체인을 계층과 함께 질의 가능한가?</td><td>MeasurementRecord가 <code>:ObservationEntity</code> 레이블 보유, 관측 집계에 포함</td></tr>
+                  <tr><td style="font-weight:700;color:var(--step4)">S4-CQ3</td><td>URN 식별 체계가 고유하고 역방향 검색 가능한가?</td><td>URN 중복 0, 누락 0, 정방향 검색 정확히 1개 반환</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- 4.9 설계 결정 기록 -->
+          <div class="subsection">
+            <div class="subsection-title">
+              <span class="sec-icon" style="background:var(--step4)">4.9</span>
+              설계 결정 기록
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>결정 사항</th><th>선택</th><th>근거</th></tr></thead>
+                <tbody>
+                  <tr><td>D6</td><td>L1 루트 수</td><td><strong>6개 추상 루트</strong></td><td>6개 근본적 온톨로지 범주. 각 레이블로 다형성 질의 지원</td></tr>
+                  <tr><td>D7</td><td>L2 추상 그룹</td><td><strong>5개 추가</strong></td><td>PortInfrastructure, PlatformResource, MultimodalData, MultimodalRepresentation, AccessControl</td></tr>
+                  <tr><td>D8</td><td>MeasurementRecord 배치</td><td><strong>ObservationEntity 하위</strong></td><td>계측 데이터는 시간 이벤트가 아닌 관측 결과. W3C SSN/SOSA 패턴</td></tr>
+                  <tr><td>D9</td><td>레이블 매핑</td><td><strong>전체 상위 스태킹</strong></td><td>모든 수준 다형성 질의. KG_Project와 독립적 공존</td></tr>
+                  <tr><td>D10</td><td>속성 상속</td><td><strong>추가만 허용</strong></td><td>타입 충돌 방지. parent_type 시맨틱스 일치</td></tr>
+                  <tr><td>D11</td><td>URN 체계</td><td><strong>urn:kriso:kg:{l1}:{leaf}:{id}</strong></td><td>전역 고유, 역방향 검색 가능, L1으로 라우팅</td></tr>
+                  <tr><td>D12</td><td>구현 전용 엔티티</td><td><strong>L4로 포함</strong></td><td>코드-온톨로지 일치 유지 (LargeCavitationTunnel 등)</td></tr>
+                  <tr><td>D13</td><td>MaritimeEvent 배치</td><td><strong>TemporalEntity 하위</strong></td><td>이벤트는 시간적 개체. InformationEntity 그룹 주석은 Step 4 계층으로 대체</td></tr>
+                  <tr><td>D14</td><td>AISRecord 배치</td><td><strong>TemporalEntity 하위</strong></td><td>시간 순서 위치 보고. ObservationEntity의 AISObservation과 분리 (P0 vs P2)</td></tr>
+                  <tr><td>D15</td><td>IS_A 관계 구체화</td><td><strong>멀티레이블만</strong></td><td>별도 IS_A 관계 불필요. 저장 공간 절약</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

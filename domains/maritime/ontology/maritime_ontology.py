@@ -7,14 +7,14 @@ consumed by schema-init scripts, documentation generators, and LLM
 prompt builders without any additional dependencies.
 """
 
-from typing import Any
+from typing import Any, Dict, Optional, Set
 
 # =========================================================================
 # 1. ENTITY LABELS
 # =========================================================================
 # Each key is the Neo4j label; the value is a human-readable description.
 
-ENTITY_LABELS: dict[str, str] = {
+ENTITY_LABELS: Dict[str, str] = {
     # ----- PhysicalEntity group -----
     "Vessel": "Any watercraft or ship operating at sea",
     "CargoShip": "Vessel designed for transporting goods",
@@ -166,12 +166,237 @@ ENTITY_LABELS: dict[str, str] = {
 
 
 # =========================================================================
+# 1b. CLASS HIERARCHY (Step 4 — Stanford 7-Step)
+# =========================================================================
+# Single source of truth for the IS_A hierarchy.  Each key maps to its
+# immediate parent type (None for L1 abstract roots).  The hierarchy is
+# consumed by OWL exporters, Neo4j multi-label stacking, and validation.
+#
+# Level guide:
+#   L1 — 6 abstract ontological roots (never instantiated alone)
+#   L2 — Core domain classes + 5 abstract groupings
+#   L3 — Domain subtypes
+#   L4 — Specialisations
+#   L5 — Deepest leaf types (rare)
+
+ABSTRACT_TYPES: Set[str] = {
+    # L1 abstract roots
+    "PhysicalEntity",
+    "SpatialEntity",
+    "TemporalEntity",
+    "InformationEntity",
+    "ObservationEntity",
+    "AgentEntity",
+    # L2 abstract groupings
+    "PortInfrastructure",
+    "PlatformResource",
+    "MultimodalData",
+    "MultimodalRepresentation",
+    "AccessControl",
+    # L3 abstract base (parent of SAR/Optical/CCTV/AIS/Radar/Weather observations)
+    "Observation",
+}
+
+CLASS_HIERARCHY: Dict[str, Optional[str]] = {
+    # ── L1 Abstract Roots ───────────────────────────────────────────────
+    "PhysicalEntity": None,
+    "SpatialEntity": None,
+    "TemporalEntity": None,
+    "InformationEntity": None,
+    "ObservationEntity": None,
+    "AgentEntity": None,
+
+    # ── PhysicalEntity branch ───────────────────────────────────────────
+    # L2
+    "Vessel": "PhysicalEntity",
+    "Port": "PhysicalEntity",
+    "PortInfrastructure": "PhysicalEntity",      # abstract grouping
+    "Waterway": "PhysicalEntity",
+    "Sensor": "PhysicalEntity",
+    "Cargo": "PhysicalEntity",
+    "TestFacility": "PhysicalEntity",
+    "ModelShip": "PhysicalEntity",
+    # L3 — Vessel subtypes
+    "CargoShip": "Vessel",
+    "Tanker": "Vessel",
+    "PassengerShip": "Vessel",
+    "FishingVessel": "Vessel",
+    "NavalVessel": "Vessel",
+    "AutonomousVessel": "Vessel",
+    # L3 — Port subtypes
+    "TradePort": "Port",
+    "CoastalPort": "Port",
+    "FishingPort": "Port",
+    # L3 — PortInfrastructure
+    "PortFacility": "PortInfrastructure",
+    "Berth": "PortInfrastructure",
+    "Anchorage": "PortInfrastructure",
+    "Terminal": "PortInfrastructure",
+    # L3 — Waterway subtypes
+    "TSS": "Waterway",
+    "Channel": "Waterway",
+    # L3 — Sensor subtypes
+    "AISTransceiver": "Sensor",
+    "Radar": "Sensor",
+    "CCTVCamera": "Sensor",
+    "WeatherStation": "Sensor",
+    # L3 — Cargo subtypes
+    "DangerousGoods": "Cargo",
+    "BulkCargo": "Cargo",
+    "ContainerCargo": "Cargo",
+    # L3 — TestFacility subtypes
+    "TowingTank": "TestFacility",
+    "OceanEngineeringBasin": "TestFacility",
+    "IceTank": "TestFacility",
+    "DeepOceanBasin": "TestFacility",
+    "CavitationTunnel": "TestFacility",
+    "WaveEnergyTestSite": "TestFacility",
+    "HyperbaricChamber": "TestFacility",
+    "BridgeSimulator": "TestFacility",
+    # L4 — CavitationTunnel subtypes
+    "LargeCavitationTunnel": "CavitationTunnel",
+    "MediumCavitationTunnel": "CavitationTunnel",
+    "HighSpeedCavitationTunnel": "CavitationTunnel",
+
+    # ── SpatialEntity branch ────────────────────────────────────────────
+    "SeaArea": "SpatialEntity",
+    "GeoPoint": "SpatialEntity",
+    "OceanEnvironment": "SpatialEntity",
+    # L3 — SeaArea subtypes
+    "EEZ": "SeaArea",
+    "TerritorialSea": "SeaArea",
+    "CoastalRegion": "SeaArea",
+
+    # ── TemporalEntity branch ───────────────────────────────────────────
+    "Voyage": "TemporalEntity",
+    "MaritimeEvent": "TemporalEntity",
+    "Activity": "TemporalEntity",
+    "WeatherCondition": "TemporalEntity",
+    "Experiment": "TemporalEntity",
+    "ExperimentalDataset": "TemporalEntity",
+    "AISRecord": "TemporalEntity",
+    # L3 — Voyage children
+    "VoyageEvent": "Voyage",
+    "TrackSegment": "Voyage",
+    "PortCall": "Voyage",
+    # L3 — MaritimeEvent → Incident
+    "Incident": "MaritimeEvent",
+    # L4 — Incident subtypes
+    "Collision": "Incident",
+    "Grounding": "Incident",
+    "Pollution": "Incident",
+    "Distress": "Incident",
+    "IllegalFishing": "Incident",
+    # L3 — Activity subtypes
+    "Loading": "Activity",
+    "Unloading": "Activity",
+    "Bunkering": "Activity",
+    "Anchoring": "Activity",
+    "Loitering": "Activity",
+    # L3 — Experiment children
+    "TestScenario": "Experiment",
+    "TestCondition": "Experiment",
+
+    # ── InformationEntity branch ────────────────────────────────────────
+    "Regulation": "InformationEntity",
+    "Document": "InformationEntity",
+    "DataSource": "InformationEntity",
+    "PlatformResource": "InformationEntity",      # abstract grouping
+    "Service": "InformationEntity",
+    # L3 — Regulation subtypes
+    "COLREG": "Regulation",
+    "SOLAS": "Regulation",
+    "MARPOL": "Regulation",
+    "IMDGCode": "Regulation",
+    # L3 — Document subtypes
+    "AccidentReport": "Document",
+    "InspectionReport": "Document",
+    "NavigationalWarning": "Document",
+    "CargoManifest": "Document",
+    # L3 — DataSource subtypes
+    "APIEndpoint": "DataSource",
+    "StreamSource": "DataSource",
+    "FileSource": "DataSource",
+    # L3 — PlatformResource children
+    "Workflow": "PlatformResource",
+    "AIModel": "PlatformResource",
+    "DataPipeline": "PlatformResource",
+    "MCPTool": "PlatformResource",
+    "MCPResource": "PlatformResource",
+    # L4 — Workflow children
+    "WorkflowNode": "Workflow",
+    "WorkflowExecution": "Workflow",
+    # L3 — Service subtypes
+    "QueryService": "Service",
+    "AnalysisService": "Service",
+    "AlertService": "Service",
+    "PredictionService": "Service",
+
+    # ── ObservationEntity branch ────────────────────────────────────────
+    "Observation": "ObservationEntity",
+    "SensorReading": "ObservationEntity",
+    "MultimodalData": "ObservationEntity",        # abstract grouping
+    "MeasurementRecord": "ObservationEntity",
+    "MultimodalRepresentation": "ObservationEntity",  # abstract grouping
+    # L3 — Observation subtypes
+    "SARObservation": "Observation",
+    "OpticalObservation": "Observation",
+    "CCTVObservation": "Observation",
+    "AISObservation": "Observation",
+    "RadarObservation": "Observation",
+    "WeatherObservation": "Observation",
+    # L3 — MultimodalData children
+    "AISData": "MultimodalData",
+    "VHFRecord": "MultimodalData",
+    "CCTVRecord": "MultimodalData",
+    "SatelliteImage": "MultimodalData",
+    "RadarImage": "MultimodalData",
+    "MaritimeChart": "MultimodalData",
+    "VideoClip": "MultimodalData",
+    # L3 — MeasurementRecord children
+    "Measurement": "MeasurementRecord",
+    # L4 — Measurement subtypes
+    "Resistance": "Measurement",
+    "Propulsion": "Measurement",
+    "Maneuvering": "Measurement",
+    "Seakeeping": "Measurement",
+    "IcePerformance": "Measurement",
+    "StructuralResponse": "Measurement",
+    # L3 — MultimodalRepresentation children
+    "VisualEmbedding": "MultimodalRepresentation",
+    "TrajectoryEmbedding": "MultimodalRepresentation",
+    "TextEmbedding": "MultimodalRepresentation",
+    "FusedEmbedding": "MultimodalRepresentation",
+
+    # ── AgentEntity branch ──────────────────────────────────────────────
+    "Organization": "AgentEntity",
+    "Person": "AgentEntity",
+    "VTSOperator": "AgentEntity",
+    "AIAgent": "AgentEntity",
+    "AccessControl": "AgentEntity",               # abstract grouping
+    # L3 — Organization subtypes
+    "GovernmentAgency": "Organization",
+    "ShippingCompany": "Organization",
+    "ResearchInstitute": "Organization",
+    "ClassificationSociety": "Organization",
+    # L3 — Person subtypes
+    "CrewMember": "Person",
+    "Inspector": "Person",
+    # L3 — AccessControl children
+    "User": "AccessControl",
+    "Role": "AccessControl",
+    "DataClass": "AccessControl",
+    "Permission": "AccessControl",
+}
+
+
+# =========================================================================
 # 2. RELATIONSHIP TYPES
 # =========================================================================
 # Each entry describes one relationship type with its direction, end-labels,
 # a description, and notable properties carried on the relationship.
 
-RELATIONSHIP_TYPES: list[dict[str, Any]] = [
+RELATIONSHIP_TYPES: list = [
     # --- Physical ---
     {
         "type": "LOCATED_AT",
@@ -864,7 +1089,7 @@ RELATIONSHIP_TYPES: list[dict[str, Any]] = [
 # =========================================================================
 # For key entity types, the dict maps property-name -> expected type string.
 
-PROPERTY_DEFINITIONS: dict[str, dict[str, str]] = {
+PROPERTY_DEFINITIONS: Dict[str, Dict[str, str]] = {
     "Vessel": {
         "mmsi": "STRING",
         "imo": "INTEGER",
