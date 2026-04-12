@@ -42,6 +42,11 @@ def _ensure_result_limit(query: str, limit: int = _DEFAULT_RESULT_LIMIT) -> str:
     The check ignores inline Cypher comments (``//``) so that a ``LIMIT``
     mentioned only inside a comment does not suppress the guard.
 
+    LIMIT is only appended to read queries that contain a RETURN clause.
+    Write queries (CREATE, MERGE, SET, DELETE, REMOVE, FOREACH) and queries
+    ending with WITH do not return rows, so appending LIMIT would produce
+    a ``CypherSyntaxError: Query cannot conclude with WITH``.
+
     Args:
         query: The Cypher query string (may or may not end with ``;``).
         limit: The maximum row count to append.
@@ -50,9 +55,10 @@ def _ensure_result_limit(query: str, limit: int = _DEFAULT_RESULT_LIMIT) -> str:
         The (possibly modified) query string without a trailing semicolon.
     """
     q = query.strip().rstrip(";")
-    # Strip inline comments before checking for LIMIT keyword
+    # Strip inline comments before checking for keywords
     uncommented = re.sub(r"//[^\n]*", "", q)
-    if "LIMIT" not in uncommented.upper():
+    upper = uncommented.upper()
+    if "LIMIT" not in upper and "RETURN" in upper:
         q = f"{q}\nLIMIT {limit}"
     return q
 

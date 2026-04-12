@@ -234,8 +234,26 @@ async def search(
             "RETURN n, r, m"
         )
 
-    result = await session.run(cypher, {"query": q, "limit": limit})
-    records = [record async for record in result]
+    try:
+        result = await session.run(cypher, {"query": q, "limit": limit})
+        records = [record async for record in result]
+    except Exception as e:
+        if not branches:
+            raise
+        # Fulltext index not available — fallback to CONTAINS
+        logger.warning("Fulltext search failed, falling back to CONTAINS: %s", e)
+        fallback_cypher = (
+            f"MATCH (n:{project.label}) "
+            "WHERE n.name CONTAINS $query "
+            "   OR n.title CONTAINS $query "
+            "   OR n.nameEn CONTAINS $query "
+            "   OR n.description CONTAINS $query "
+            "WITH n LIMIT $limit "
+            "OPTIONAL MATCH (n)-[r]-(m) "
+            "RETURN n, r, m"
+        )
+        result = await session.run(fallback_cypher, {"query": q, "limit": limit})
+        records = [record async for record in result]
     nodes, edges = _collect_graph(records)
 
     return GraphResponse(

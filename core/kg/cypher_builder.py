@@ -278,12 +278,15 @@ class CypherBuilder:
 
     @staticmethod
     def _inject_project_label(clause: str, label: str) -> str:
-        """Inject project label into node patterns within a MATCH/OPTIONAL MATCH clause.
+        """Inject project label into node patterns within MATCH/OPTIONAL MATCH clauses only.
 
         Transforms:
           MATCH (n:Vessel) -> MATCH (n:Vessel:KG_DevKG)
           MATCH (n) -> MATCH (n:KG_DevKG)
           MATCH (n:Vessel)-[r:DOCKED_AT]->(p:Port) -> MATCH (n:Vessel:KG_DevKG)-[r:DOCKED_AT]->(p:Port:KG_DevKG)
+
+        Does NOT modify CREATE/MERGE/WITH/RETURN clauses to avoid breaking
+        write queries that reference previously declared variables.
         """
         import re
 
@@ -295,8 +298,50 @@ class CypherBuilder:
                 return f"({alias}{labels}:{label}{rest}"
             return f"({alias}:{label}{rest}"
 
-        # Match node patterns: (alias[:Label...])  followed by space, {, or )
-        return re.sub(r'\((\w+)((?::\w+)*)(\s*[\{\)])', _add_label, clause)
+        node_pat = re.compile(r'\((\w+)((?::\w+)*)(\s*[\{\)])')
+
+        # Split query into MATCH/OPTIONAL MATCH segments and other segments.
+        # Only inject labels into MATCH segments.
+        match_pat = re.compile(
+            r'((?:OPTIONAL\s+)?MATCH\b)',
+            re.IGNORECASE,
+        )
+        # Keyword that starts a non-MATCH clause
+        clause_start = re.compile(
+            r'\b(?:CREATE|MERGE|SET|DELETE|DETACH|REMOVE|RETURN|WITH|WHERE|'
+            r'ORDER|SKIP|LIMIT|UNWIND|FOREACH|CALL|UNION)\b',
+            re.IGNORECASE,
+        )
+
+        result_parts: list[str] = []
+        pos = 0
+        text = clause
+
+        while pos < len(text):
+            # Look for next MATCH or OPTIONAL MATCH
+            m = match_pat.search(text, pos)
+            if not m:
+                # No more MATCH — append rest as-is
+                result_parts.append(text[pos:])
+                break
+
+            # Append text before MATCH as-is
+            result_parts.append(text[pos:m.start()])
+
+            # Find the end of this MATCH clause (next clause keyword after MATCH)
+            match_end = m.end()
+            next_clause = clause_start.search(text, match_end)
+            if next_clause:
+                match_segment = text[m.start():next_clause.start()]
+                pos = next_clause.start()
+            else:
+                match_segment = text[m.start():]
+                pos = len(text)
+
+            # Inject labels only within this MATCH segment
+            result_parts.append(node_pat.sub(_add_label, match_segment))
+
+        return "".join(result_parts)
 
     def return_(self, clause: str) -> CypherBuilder:
         """Set the RETURN clause.

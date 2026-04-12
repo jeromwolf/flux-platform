@@ -49,7 +49,7 @@ class TestEnsureResultLimit:
     """Tests for _ensure_result_limit() pure helper."""
 
     def test_appends_limit_when_absent(self):
-        """LIMIT is appended when the query has no LIMIT clause."""
+        """LIMIT is appended when the query has RETURN but no LIMIT clause."""
         q = "MATCH (n:Vessel) RETURN n"
         result = _ensure_result_limit(q, limit=100)
         assert "LIMIT 100" in result
@@ -84,6 +84,30 @@ class TestEnsureResultLimit:
         q = "MATCH (n) RETURN n"
         result = _ensure_result_limit(q)
         assert f"LIMIT {_DEFAULT_RESULT_LIMIT}" in result
+
+    def test_write_query_create_no_limit_appended(self):
+        """CREATE query without RETURN must not have LIMIT appended."""
+        q = "CREATE (n:Vessel {name: 'MV Test'})"
+        result = _ensure_result_limit(q, limit=100)
+        assert "LIMIT" not in result.upper()
+
+    def test_write_query_merge_no_limit_appended(self):
+        """MERGE query without RETURN must not have LIMIT appended."""
+        q = "MERGE (n:Port {code: 'BUSAP'}) SET n.updated = true"
+        result = _ensure_result_limit(q, limit=100)
+        assert "LIMIT" not in result.upper()
+
+    def test_query_ending_with_with_no_limit_appended(self):
+        """Query ending with WITH (no RETURN) must not have LIMIT appended."""
+        q = "MATCH (n:Vessel) WITH n.name AS name"
+        result = _ensure_result_limit(q, limit=100)
+        assert "LIMIT" not in result.upper()
+
+    def test_write_query_with_return_gets_limit(self):
+        """MERGE ... RETURN query (write + read) should still get LIMIT."""
+        q = "MERGE (n:Vessel {name: 'MV Test'}) RETURN n"
+        result = _ensure_result_limit(q, limit=100)
+        assert "LIMIT 100" in result
 
 
 # ---------------------------------------------------------------------------

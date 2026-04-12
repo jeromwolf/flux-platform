@@ -267,9 +267,10 @@ QDRANT_PORT=6333
 6. JWT + Keycloak OIDC 듀얼 모드 인증 구현 완료 (RS256+JWKS + HS256 fallback, base64 fallback 제거됨)
 7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
 8. Activepieces 제거 완료, Argo Workflow (K8s only) 전환
-9. 테스트 4,520+ 통과 (unit + harness), 90 skipped (실제 Neo4j 필요), 커버리지 ~92%
+9. 테스트 4,522+ 통과 (unit 4,447 + integration 75), 커버리지 ~92%
 10. E2E 3-Tier 테스트 구축 완료: Mock Harness 112개 + Real Neo4j 10개 + Playwright 브라우저 35개
 11. 멀티 프로젝트 KG 관리 구현 완료 — X-KG-Project 헤더 기반 레이블 격리 (KG_DevKG, KG_ProdKG 등)
 12. S-100 ENC 매핑 스캐폴드 구현 (domains/maritime/s100/)
 13. 온톨로지 설계 문서 Vercel 배포: https://imsp-ontology-docs.vercel.app (Step 1-4 완료)
 14. 프로덕션 하드닝 완료: External Secrets, Redis 인증, Cypher 타임아웃, CD 파이프라인, HPA/PDB, AlertManager, Loki 로그, Grafana 대시보드, 운영 Runbook
+15. Cypher LIMIT 자동삽입 RETURN절 한정, _inject_project_label MATCH절 한정, search fulltext fallback 버그 수정

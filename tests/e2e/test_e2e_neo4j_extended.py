@@ -245,6 +245,7 @@ class TestLineageEndpoints:
             nodeId: 'LN-003', entityType: 'Vessel', entityId: 'VES-003',
             createdAt: datetime('2026-03-01T00:00:00Z')
         })
+        WITH a, b, c
         CREATE (b)-[:DERIVED_FROM {
             edgeId: 'E-001', eventType: 'transform', agent: 'etl',
             activity: 'merge', timestamp: datetime('2026-02-01T00:00:00Z')
