@@ -159,7 +159,7 @@ flux-platform/
 - **프론트엔드:** Vue 3 + VueFlow
 - **인증:** Keycloak (OIDC)
 - **컨테이너:** Kubernetes
-- **모니터링:** Prometheus + Zipkin
+- **모니터링:** Prometheus + Grafana + Loki + AlertManager + Zipkin
 - **LLM:** 온프레미스 (A100급, 오픈소스)
 - **워크플로우 실행:** Argo Workflow (DAG)
 - **언어:** Python 3.10+ (백엔드), TypeScript (프론트엔드)
@@ -238,7 +238,8 @@ POSTGRES_USER=imsp
 POSTGRES_PASSWORD=your_password_here
 
 # Redis
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://:imsp-redis-2026@localhost:6379/1
+REDIS_PASSWORD=imsp-redis-2026
 
 # Qdrant
 QDRANT_HOST=localhost
@@ -263,11 +264,12 @@ QDRANT_PORT=6333
 3. `domains/maritime/` — maritime_ontology.py에 9개 신규 엔티티 + 13개 신규 관계 반영 완료
 4. `agent/`, `rag/` 이식 및 구현 완료 (4 LLM, MCP 3 transport, 하이브리드 RAG, VectorStore 3종)
 5. Suredata Lab과 역할 분담: 우리가 전체 개발, 납품은 KG 파트만
-6. JWT + Keycloak OIDC 듀얼 모드 인증 구현 완료 (RS256+JWKS + HS256 fallback)
+6. JWT + Keycloak OIDC 듀얼 모드 인증 구현 완료 (RS256+JWKS + HS256 fallback, base64 fallback 제거됨)
 7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
 8. Activepieces 제거 완료, Argo Workflow (K8s only) 전환
-9. 테스트 4,430+ 통과 (unit + harness), 80 skipped (실제 Neo4j 필요), 커버리지 ~92%
-13. E2E 3-Tier 테스트 구축 완료: Mock Harness 112개 + Real Neo4j 10개 + Playwright 브라우저 35개
-10. 멀티 프로젝트 KG 관리 구현 완료 — X-KG-Project 헤더 기반 레이블 격리 (KG_DevKG, KG_ProdKG 등)
-11. S-100 ENC 매핑 스캐폴드 구현 (domains/maritime/s100/)
-12. 온톨로지 설계 문서 Vercel 배포: https://imsp-ontology-docs.vercel.app (Step 1-4 완료)
+9. 테스트 4,520+ 통과 (unit + harness), 90 skipped (실제 Neo4j 필요), 커버리지 ~92%
+10. E2E 3-Tier 테스트 구축 완료: Mock Harness 112개 + Real Neo4j 10개 + Playwright 브라우저 35개
+11. 멀티 프로젝트 KG 관리 구현 완료 — X-KG-Project 헤더 기반 레이블 격리 (KG_DevKG, KG_ProdKG 등)
+12. S-100 ENC 매핑 스캐폴드 구현 (domains/maritime/s100/)
+13. 온톨로지 설계 문서 Vercel 배포: https://imsp-ontology-docs.vercel.app (Step 1-4 완료)
+14. 프로덕션 하드닝 완료: External Secrets, Redis 인증, Cypher 타임아웃, CD 파이프라인, HPA/PDB, AlertManager, Loki 로그, Grafana 대시보드, 운영 Runbook
