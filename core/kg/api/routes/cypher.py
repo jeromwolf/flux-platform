@@ -25,6 +25,39 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/cypher", tags=["cypher"])
 
 # ---------------------------------------------------------------------------
+# Timeout / result-size guards
+# ---------------------------------------------------------------------------
+
+# Default and ceiling for query timeouts (milliseconds).
+_DEFAULT_CYPHER_TIMEOUT_MS: int = 30_000   # 30 seconds
+_MAX_CYPHER_TIMEOUT_MS: int = 120_000      # 2 minutes
+
+# Auto-appended LIMIT when the query has none.
+_DEFAULT_RESULT_LIMIT: int = 10_000
+
+
+def _ensure_result_limit(query: str, limit: int = _DEFAULT_RESULT_LIMIT) -> str:
+    """Append a LIMIT clause to *query* if one is not already present.
+
+    The check ignores inline Cypher comments (``//``) so that a ``LIMIT``
+    mentioned only inside a comment does not suppress the guard.
+
+    Args:
+        query: The Cypher query string (may or may not end with ``;``).
+        limit: The maximum row count to append.
+
+    Returns:
+        The (possibly modified) query string without a trailing semicolon.
+    """
+    q = query.strip().rstrip(";")
+    # Strip inline comments before checking for LIMIT keyword
+    uncommented = re.sub(r"//[^\n]*", "", q)
+    if "LIMIT" not in uncommented.upper():
+        q = f"{q}\nLIMIT {limit}"
+    return q
+
+
+# ---------------------------------------------------------------------------
 # Danger detection
 # ---------------------------------------------------------------------------
 
@@ -168,8 +201,15 @@ async def execute_cypher(
     if dangerous:
         raise HTTPException(status_code=403, detail=reason)
 
+    # Clamp caller-supplied timeout to the server-side ceiling.
+    timeout_ms = min(body.timeout_ms, _MAX_CYPHER_TIMEOUT_MS)
+    timeout_s = timeout_ms / 1000.0
+
     # Inject project scoping into MATCH patterns to enforce project isolation.
     body_cypher = CypherBuilder._inject_project_label(body.cypher, project.label)
+
+    # Auto-append LIMIT if absent to prevent unbounded result sets.
+    body_cypher = _ensure_result_limit(body_cypher, body.limit)
 
     params = {
         **body.parameters,
@@ -179,7 +219,7 @@ async def execute_cypher(
 
     start_ms = time.monotonic()
     try:
-        result = await session.run(body_cypher, params)
+        result = await session.run(body_cypher, params, timeout=timeout_s)
         records = [record async for record in result]
     except Exception as exc:
         logger.exception("Cypher execution failed")

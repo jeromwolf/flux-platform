@@ -24,6 +24,10 @@ router = APIRouter(tags=["query"])
 # Module-level pipeline singleton (stateless, safe to share).
 _pipeline = TextToCypherPipeline()
 
+# NL query execution timeout (seconds).  NL-generated queries are typically
+# simpler than raw Cypher, so a lower ceiling is appropriate.
+_NL_QUERY_TIMEOUT_S: float = 30.0
+
 
 @router.post("/query", response_model=NLQueryResponse)
 async def natural_language_query(
@@ -74,7 +78,7 @@ async def natural_language_query(
             if "LIMIT" not in cypher.upper():
                 cypher += f"\nLIMIT {body.limit}"
 
-            result = await session.run(cypher, params)
+            result = await session.run(cypher, params, timeout=_NL_QUERY_TIMEOUT_S)
             records = [record async for record in result]
             rows: list[dict[str, Any]] = []
             for record in records:

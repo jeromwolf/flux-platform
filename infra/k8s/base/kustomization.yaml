@@ -6,7 +6,8 @@ namespace: imsp
 resources:
   - namespace.yaml
   - configmap.yaml
-  - secret.yaml
+  - external-secret.yaml
+  - secret-store.yaml
   - api-deployment.yaml
   - api-service.yaml
   - neo4j-statefulset.yaml
@@ -28,6 +29,9 @@ resources:
   - zipkin-deployment.yaml
   - network-policies.yaml
   - neo4j-backup-cronjob.yaml
+  - postgresql-backup-cronjob.yaml
+  - hpa.yaml
+  - pdb.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: imsp-platform

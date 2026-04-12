@@ -1,0 +1,43 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kg-api-pdb
+  namespace: imsp
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: imsp-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway-pdb
+  namespace: imsp
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: imsp-gateway
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: neo4j-pdb
+  namespace: imsp
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: neo4j
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgresql-pdb
+  namespace: imsp
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: postgresql

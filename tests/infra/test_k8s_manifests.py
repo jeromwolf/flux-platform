@@ -223,10 +223,10 @@ class TestNetworkPolicies:
         assert "port: 8080" in content, "port 8080 not found in gateway ingress policy"
 
     def test_network_policy_count(self) -> None:
-        """TC-NP03: network-policies.yaml contains exactly 11 NetworkPolicy resources."""
+        """TC-NP03: network-policies.yaml contains ingress + egress NetworkPolicy resources."""
         content = _read(K8S_BASE / "network-policies.yaml")
         count = content.count("kind: NetworkPolicy")
-        assert count == 11, f"Expected 11 NetworkPolicy resources, found {count}"
+        assert count == 14, f"Expected 14 NetworkPolicy resources, found {count}"
 
     def test_kustomization_has_network_policies(self) -> None:
         """TC-NP04: kustomization.yaml lists network-policies.yaml."""

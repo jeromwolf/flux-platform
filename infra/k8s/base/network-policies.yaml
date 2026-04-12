@@ -205,3 +205,89 @@ spec:
         - port: 6334
   policyTypes:
     - Ingress
+---
+# Egress: Default deny all egress, then allow specific
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+  namespace: imsp
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow intra-namespace communication
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: imsp
+---
+# API → Neo4j, PostgreSQL, Redis, Qdrant, Keycloak
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-egress
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: kg-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: imsp
+      ports:
+        - protocol: TCP
+          port: 7687   # Neo4j Bolt
+        - protocol: TCP
+          port: 5432   # PostgreSQL
+        - protocol: TCP
+          port: 6379   # Redis
+        - protocol: TCP
+          port: 6333   # Qdrant
+        - protocol: TCP
+          port: 8080   # Keycloak
+    # DNS
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+---
+# Gateway → API, Keycloak
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-egress
+  namespace: imsp
+spec:
+  podSelector:
+    matchLabels:
+      app: gateway
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: imsp
+      ports:
+        - protocol: TCP
+          port: 8000   # API
+        - protocol: TCP
+          port: 8080   # Keycloak
+    # DNS
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53

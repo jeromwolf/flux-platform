@@ -14,10 +14,17 @@ spec:
     - host: api.imsp.kriso.re.kr
       http:
         paths:
-          - path: /api
+          - path: /auth
             pathType: Prefix
             backend:
               service:
-                name: api
+                name: prod-imsp-keycloak
                 port:
-                  number: 8000
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prod-imsp-gateway
+                port:
+                  number: 8080

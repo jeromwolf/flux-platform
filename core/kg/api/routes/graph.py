@@ -110,7 +110,7 @@ def _collect_graph(records: list[Any]) -> tuple[dict[str, Any], dict[str, Any]]:
 async def subgraph(
     label: str = Query(default="Vessel", description="Node label to query"),  # noqa: B008
     limit: int = Query(  # noqa: B008
-        default=50, ge=1, le=200, description="Maximum nodes to return"
+        default=50, ge=1, le=1000, description="Maximum nodes to return"
     ),
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
     project: KGProjectContext = Depends(get_project_context),  # noqa: B008
@@ -189,7 +189,7 @@ async def neighbors(
 @router.get("/search", response_model=GraphResponse)
 async def search(
     q: str = Query(..., min_length=1, description="Search query string"),  # noqa: B008
-    limit: int = Query(default=30, ge=1, le=100, description="Maximum results"),  # noqa: B008
+    limit: int = Query(default=30, ge=1, le=1000, description="Maximum results"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008
     project: KGProjectContext = Depends(get_project_context),  # noqa: B008
 ) -> GraphResponse:

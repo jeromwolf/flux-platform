@@ -1,18 +1,16 @@
 """Tests for KeycloakMiddleware PyJWT + JWKS upgrade.
 
-Covers fallback decode, JWKS fetching/caching, and signing key extraction
-without any real network calls.
+Covers JWKS fetching/caching, signing key extraction, and secure-only decode behavior.
+The base64 fallback has been removed — these tests verify the new strict behavior.
 
-TC-KJ01: _decode_token_fallback
 TC-KJ02: _fetch_jwks caching and failure
-TC-KJ03: _decode_token JWKS path + fallback integration
+TC-KJ03: _decode_token JWKS path — raises on JWKS unavailable (no fallback)
 TC-KJ04: clear_jwks_cache
 TC-KJ05: _get_signing_key kid matching
 """
 from __future__ import annotations
 
 import base64
-import io
 import json
 import time
 from typing import Any
@@ -35,7 +33,7 @@ def _make_fake_token(
     """Build a syntactically valid JWT without crypto signing.
 
     The signature part is a dummy value — only the header and payload
-    are actually used in fallback-decode tests.
+    are actually used in tests.
 
     Args:
         payload: JWT claims dict.
@@ -68,97 +66,6 @@ def _make_middleware(keycloak_url: str = "") -> KeycloakMiddleware:
         realm="imsp",
         client_id="imsp-api",
     )
-
-
-# ---------------------------------------------------------------------------
-# TC-KJ01: _decode_token_fallback
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.unit
-class TestDecodeTokenFallback:
-    """TC-KJ01: Base64 fallback decode with exp/iat claim validation."""
-
-    # TC-KJ01a: valid token with future exp decodes successfully
-    def test_fallback_decode_valid_token(self):
-        """Fallback succeeds for a token with exp in the future."""
-        now = int(time.time())
-        payload = {
-            "sub": "user-1",
-            "iss": "http://keycloak:8080/realms/imsp",
-            "exp": now + 3600,
-            "iat": now - 10,
-        }
-        token = _make_fake_token(payload)
-        mw = _make_middleware()
-
-        claims = mw._decode_token_fallback(token)
-
-        assert claims["sub"] == "user-1"
-        assert claims["exp"] == payload["exp"]
-
-    # TC-KJ01b: expired token raises ValueError
-    def test_fallback_decode_expired_token(self):
-        """Fallback raises ValueError when exp is in the past."""
-        now = int(time.time())
-        payload = {
-            "sub": "user-expired",
-            "exp": now - 60,  # 1 minute ago
-            "iat": now - 120,
-        }
-        token = _make_fake_token(payload)
-        mw = _make_middleware()
-
-        with pytest.raises(ValueError, match="[Ee]xpired|expired"):
-            mw._decode_token_fallback(token)
-
-    # TC-KJ01c: future iat raises ValueError
-    def test_fallback_decode_future_iat(self):
-        """Fallback raises ValueError when iat is far in the future."""
-        now = int(time.time())
-        payload = {
-            "sub": "user-future",
-            "exp": now + 3600,
-            "iat": now + 600,  # 10 minutes in the future — beyond 60s tolerance
-        }
-        token = _make_fake_token(payload)
-        mw = _make_middleware()
-
-        with pytest.raises(ValueError, match="[Ff]uture|future"):
-            mw._decode_token_fallback(token)
-
-    # TC-KJ01d: missing exp/iat fields are tolerated
-    def test_fallback_decode_no_exp_no_iat_succeeds(self):
-        """Tokens without exp or iat pass fallback decode without error."""
-        payload = {"sub": "user-noexp"}
-        token = _make_fake_token(payload)
-        mw = _make_middleware()
-
-        claims = mw._decode_token_fallback(token)
-        assert claims["sub"] == "user-noexp"
-
-    # TC-KJ01e: malformed token raises ValueError
-    def test_fallback_decode_invalid_format_raises(self):
-        """Fallback raises ValueError for a token that is not three parts."""
-        mw = _make_middleware()
-
-        with pytest.raises(ValueError, match="[Ii]nvalid JWT"):
-            mw._decode_token_fallback("not.a.valid.jwt.token.with.too.many.parts")
-
-    # TC-KJ01f: iat exactly at 60s tolerance boundary passes
-    def test_fallback_decode_iat_at_tolerance_boundary_passes(self):
-        """Token with iat 59s in the future is within the 60s skew tolerance."""
-        now = int(time.time())
-        payload = {
-            "sub": "user-boundary",
-            "exp": now + 3600,
-            "iat": now + 59,  # Just within 60s tolerance
-        }
-        token = _make_fake_token(payload)
-        mw = _make_middleware()
-
-        claims = mw._decode_token_fallback(token)
-        assert claims["sub"] == "user-boundary"
 
 
 # ---------------------------------------------------------------------------
@@ -314,20 +221,20 @@ class TestJwksCacheTTL:
 
 
 # ---------------------------------------------------------------------------
-# TC-KJ03: _decode_token fallback integration
+# TC-KJ03: _decode_token — no fallback; raises ValueError on JWKS unavailable
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
-class TestDecodeTokenIntegration:
-    """TC-KJ03: _decode_token falls back gracefully when JWKS is unavailable."""
+class TestDecodeTokenNoFallback:
+    """TC-KJ03: _decode_token raises ValueError when JWKS is unavailable (no base64 fallback)."""
 
-    # TC-KJ03a: falls back when JWKS fetch fails
-    def test_decode_token_falls_back_on_jwks_failure(self):
-        """When JWKS is unavailable, _decode_token falls back to base64 decode."""
+    # TC-KJ03a: raises ValueError when JWKS fetch fails
+    def test_decode_token_raises_on_jwks_failure(self):
+        """When JWKS is unavailable, _decode_token raises ValueError (no fallback)."""
         now = int(time.time())
         payload = {
-            "sub": "user-fallback",
+            "sub": "user-test",
             "iss": "http://keycloak:8080/realms/imsp",
             "exp": now + 3600,
             "iat": now - 5,
@@ -336,24 +243,32 @@ class TestDecodeTokenIntegration:
         mw = _make_middleware(keycloak_url="http://keycloak:8080")
 
         with patch("urllib.request.urlopen", side_effect=OSError("offline")):
-            claims = mw._decode_token(token)
+            with pytest.raises(ValueError, match="[Ss]ervice unavailable"):
+                mw._decode_token(token)
 
-        assert claims["sub"] == "user-fallback"
-
-    # TC-KJ03b: expired token still rejected even in fallback path
-    def test_decode_token_fallback_rejects_expired(self):
-        """Fallback path raises ValueError for expired tokens."""
-        now = int(time.time())
-        payload = {
-            "sub": "user-exp",
-            "exp": now - 120,
-            "iat": now - 240,
-        }
-        token = _make_fake_token(payload)
+    # TC-KJ03b: raises ValueError when PyJWT is not installed
+    def test_decode_token_raises_when_pyjwt_missing(self):
+        """When PyJWT is not installed, _decode_token raises ValueError (no fallback)."""
+        token = _make_fake_token({"sub": "user-test"})
         mw = _make_middleware(keycloak_url="http://keycloak:8080")
 
-        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
-            with pytest.raises(ValueError, match="[Ee]xpired|expired"):
+        with patch("builtins.__import__", side_effect=ImportError("No module named 'jwt'")):
+            with pytest.raises((ValueError, ImportError)):
+                mw._decode_token(token)
+
+    # TC-KJ03c: raises ValueError when no matching signing key in JWKS
+    def test_decode_token_raises_on_no_matching_key(self):
+        """When JWKS has no matching key, _decode_token raises ValueError."""
+        mw = _make_middleware(keycloak_url="http://keycloak:8080")
+        fake_keys = [{"kid": "other-kid", "kty": "RSA"}]
+        jwks = {"keys": fake_keys}
+        mw._config._jwks_cache = jwks
+        mw._config._jwks_cached_at = time.time()
+
+        token = _make_fake_token({}, header={"alg": "RS256", "typ": "JWT", "kid": "missing-kid"})
+
+        with patch("jwt.get_unverified_header", return_value={"kid": "missing-kid"}):
+            with pytest.raises(ValueError, match="[Nn]o matching signing key|[Vv]erification failed"):
                 mw._decode_token(token)
 
 
@@ -410,29 +325,27 @@ class TestClearJwksCache:
 
 
 # ---------------------------------------------------------------------------
-# TC-KJ05: _get_signing_key kid matching
+# TC-KJ06: _get_signing_key kid matching
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
 class TestGetSigningKey:
-    """TC-KJ05: _get_signing_key returns None for unknown kid."""
+    """TC-KJ06: _get_signing_key returns None for unknown kid."""
 
-    # TC-KJ05a: returns None when no key matches the token kid
+    # TC-KJ06a: returns None when no key matches the token kid
     def test_get_signing_key_no_matching_kid(self):
         """Returns None when the JWKS contains no key for the token's kid."""
         mw = _make_middleware(keycloak_url="http://keycloak:8080")
         jwks = {"keys": [{"kid": "other-kid", "kty": "RSA", "n": "x", "e": "AQAB"}]}
         token = _make_fake_token({}, header={"alg": "RS256", "typ": "JWT", "kid": "missing-kid"})
 
-        # _get_signing_key internally tries jwt.get_unverified_header and
-        # RSAAlgorithm.from_jwk — mock the PyJWT layer just enough
         with patch("jwt.get_unverified_header", return_value={"kid": "missing-kid"}):
             result = mw._get_signing_key(token, jwks)
 
         assert result is None
 
-    # TC-KJ05b: returns None when JWKS keys list is empty
+    # TC-KJ06b: returns None when JWKS keys list is empty
     def test_get_signing_key_empty_jwks(self):
         """Returns None when the JWKS has no keys at all."""
         mw = _make_middleware(keycloak_url="http://keycloak:8080")
@@ -444,7 +357,7 @@ class TestGetSigningKey:
 
         assert result is None
 
-    # TC-KJ05c: returns None gracefully when header parse fails
+    # TC-KJ06c: returns None gracefully when header parse fails
     def test_get_signing_key_returns_none_on_header_error(self):
         """Returns None if JWT header parsing raises an exception."""
         mw = _make_middleware(keycloak_url="http://keycloak:8080")

@@ -17,12 +17,21 @@ spec:
         app: imsp-gateway
         component: gateway
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: imsp-gateway
+                topologyKey: kubernetes.io/hostname
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
       containers:
         - name: gateway
-          image: imsp/gateway:latest
+          image: imsp/gateway:v0.1.0  # Pinned — updated by CD pipeline via kustomize set image
           ports:
             - containerPort: 8080
               protocol: TCP

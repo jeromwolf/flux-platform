@@ -65,7 +65,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DATABASE: imsp
-      REDIS_URL: redis://redis:6379/1
+      REDIS_URL: redis://:${REDIS_PASSWORD:-imsp-redis-2026}@redis:6379/1
       QDRANT_HOST: qdrant
       QDRANT_PORT: "6333"
       QDRANT_COLLECTION: imsp_documents
@@ -102,6 +102,7 @@ services:
     image: quay.io/keycloak/keycloak:24.0.1
     container_name: imsp-keycloak
     restart: unless-stopped
+    # 개발 전용: start-dev는 TLS/hostname 검증 없이 실행됨 (프로덕션 K8s는 keycloak-patch.yaml 참조)
     command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
@@ -168,7 +169,10 @@ services:
     ports:
       - "9411:9411"
     environment:
-      - STORAGE_TYPE=mem
+      # Development: in-memory (traces lost on restart)
+      # Production: set ZIPKIN_STORAGE_TYPE=elasticsearch and deploy ES
+      # See infra/k8s/prod/zipkin-patch.yaml for K8s prod config
+      STORAGE_TYPE: ${ZIPKIN_STORAGE_TYPE:-mem}
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:9411/health || exit 1"]
       interval: 10s
@@ -209,10 +213,13 @@ services:
     image: redis:7.0.7
     container_name: maritime-redis
     restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-imsp-redis-2026}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-imsp-redis-2026}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-imsp-redis-2026}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -249,6 +256,7 @@ services:
       - "9090:9090"
     volumes:
       - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -262,6 +270,64 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
+
+  # ===========================================================================
+  # AlertManager - Alert Routing & Notification
+  # ===========================================================================
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: imsp-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ../alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ===========================================================================
+  # Loki - Log Aggregation
+  # ===========================================================================
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: imsp-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - imsp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ===========================================================================
+  # Promtail - Log Collector (ships container logs to Loki)
+  # ===========================================================================
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: imsp-promtail
+    volumes:
+      - ./loki/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - imsp-network
+    restart: unless-stopped
+    depends_on:
+      - loki
 
   # ===========================================================================
   # Grafana - Monitoring Dashboards
@@ -305,3 +371,9 @@ volumes:
     driver: local
   grafana-data:
     driver: local
+  loki-data:
+    driver: local
+
+networks:
+  imsp-network:
+    driver: bridge

@@ -8,8 +8,10 @@ from pydantic import BaseModel, Field
 
 # Re-export standard response envelope models
 from kg.api.models.responses import (
+    MAX_PAGE_LIMIT,
     PaginatedResponse,
     PaginationInfo,
+    PaginationParams,
     ResponseMeta,
     StandardResponse,
 )
@@ -89,7 +91,7 @@ class NLQueryRequest(BaseModel):
 
     text: str = Field(..., min_length=1, description="Korean natural language query")
     execute: bool = Field(default=True, description="Whether to execute the generated Cypher against Neo4j")
-    limit: int = Field(default=50, ge=1, le=500, description="Maximum number of result rows")
+    limit: int = Field(default=50, ge=1, le=1000, description="Maximum number of result rows")
 
 
 class NLQueryResponse(BaseModel):
@@ -230,6 +232,18 @@ class CypherRequest(BaseModel):
 
     cypher: str = Field(..., min_length=1, description="Cypher query string")
     parameters: dict[str, Any] = Field(default_factory=dict)
+    timeout_ms: int = Field(
+        default=30_000,
+        ge=1_000,
+        le=120_000,
+        description="Query timeout in milliseconds (1s–120s, default 30s)",
+    )
+    limit: int = Field(
+        default=10_000,
+        ge=1,
+        le=50_000,
+        description="Maximum result rows to return; LIMIT is auto-appended if absent",
+    )
 
 
 class CypherResponse(BaseModel):

@@ -87,9 +87,9 @@ class TestKeycloakMiddleware:
 
     @pytest.mark.unit
     def test_decode_jwt_payload(self):
-        """Middleware decodes JWT base64 payload."""
+        """Middleware decodes JWT via JWKS verification."""
+        from unittest.mock import patch, MagicMock
         from gateway.middleware.keycloak import KeycloakMiddleware, KeycloakConfig
-        import base64
 
         middleware = KeycloakMiddleware.__new__(KeycloakMiddleware)
         middleware._config = KeycloakConfig(
@@ -98,27 +98,29 @@ class TestKeycloakMiddleware:
             client_id="imsp-api",
         )
 
-        # Build a fake 3-part JWT
-        header = base64.urlsafe_b64encode(
-            json.dumps({"alg": "RS256"}).encode()
-        ).decode().rstrip("=")
-        payload = base64.urlsafe_b64encode(json.dumps({
+        expected_claims = {
             "sub": "user-123",
             "preferred_username": "admin",
             "iss": "http://localhost:8180/realms/imsp",
             "realm_access": {"roles": ["admin"]},
-        }).encode()).decode().rstrip("=")
-        sig = "fakesig"
-        token = f"{header}.{payload}.{sig}"
+        }
 
-        claims = middleware._decode_token(token)
+        fake_jwks = {"keys": [{"kid": "test-kid", "kty": "RSA"}]}
+        fake_key = MagicMock()
+
+        with patch.object(middleware, "_fetch_jwks", return_value=fake_jwks), \
+             patch.object(middleware, "_get_signing_key", return_value=fake_key), \
+             patch("jwt.decode", return_value=expected_claims):
+            claims = middleware._decode_token("fake.jwt.token")
+
         assert claims["sub"] == "user-123"
         assert claims["preferred_username"] == "admin"
         assert "admin" in claims["realm_access"]["roles"]
 
     @pytest.mark.unit
     def test_invalid_jwt_format(self):
-        """Middleware rejects non-3-part tokens."""
+        """Middleware rejects invalid tokens via JWKS verification."""
+        from unittest.mock import patch, MagicMock
         from gateway.middleware.keycloak import KeycloakMiddleware, KeycloakConfig
 
         middleware = KeycloakMiddleware.__new__(KeycloakMiddleware)
@@ -128,8 +130,15 @@ class TestKeycloakMiddleware:
             client_id="imsp-api",
         )
 
-        with pytest.raises(ValueError, match="Invalid JWT format"):
-            middleware._decode_token("not-a-jwt")
+        import jwt as pyjwt
+        fake_jwks = {"keys": [{"kid": "test-kid", "kty": "RSA"}]}
+        fake_key = MagicMock()
+
+        with patch.object(middleware, "_fetch_jwks", return_value=fake_jwks), \
+             patch.object(middleware, "_get_signing_key", return_value=fake_key), \
+             patch("jwt.decode", side_effect=pyjwt.InvalidTokenError("bad token")):
+            with pytest.raises(ValueError, match="Invalid token"):
+                middleware._decode_token("not-a-jwt")
 
     @pytest.mark.unit
     def test_public_path_detection(self):

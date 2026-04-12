@@ -123,8 +123,16 @@ def _check_memory() -> HealthComponent:
         )
 
 
-def _get_system_info() -> dict[str, Any]:
-    """Gather basic system information."""
+def _get_system_info(env: str = "development") -> dict[str, Any]:
+    """Gather system information, redacted in production/staging environments.
+
+    In production and staging environments only a minimal ``{"status": "healthy"}``
+    dict is returned to avoid leaking host names, OS details, and runtime versions
+    to potential attackers.
+    """
+    if env in ("production", "staging"):
+        return {"status": "healthy"}
+    # Development / testing: full details are safe to expose
     return {
         "python_version": platform.python_version(),
         "platform": platform.platform(),
@@ -167,10 +175,11 @@ async def health(
     else:
         overall = "ok"
 
+    env_value = config.env.value if hasattr(config.env, "value") else str(config.env)
     return DeepHealthResponse(
         status=overall,
         version="0.1.0",
         neo4j_connected=neo4j_ok,
         components=components,
-        system=_get_system_info(),
+        system=_get_system_info(env_value),
     )

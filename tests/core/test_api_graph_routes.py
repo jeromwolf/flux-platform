@@ -366,11 +366,11 @@ class TestSubgraphEndpoint:
         assert body["meta"]["label"] == "Vessel"
 
     def test_subgraph_limit_above_max_returns_422(self, dev_config: AppConfig):
-        """Limit > 200 should fail FastAPI validation (422)."""
+        """Limit > 1000 should fail FastAPI validation (422)."""
         session = MockNeo4jSession()
         client = make_test_app(session, dev_config)
 
-        resp = client.get("/api/v1/subgraph?label=Vessel&limit=999")
+        resp = client.get("/api/v1/subgraph?label=Vessel&limit=1001")
         assert resp.status_code == 422
 
 
@@ -414,11 +414,11 @@ class TestSearchEndpoint:
         assert resp.status_code == 422
 
     def test_search_limit_above_max_returns_422(self, dev_config: AppConfig):
-        """Limit > 100 should fail FastAPI validation (422)."""
+        """Limit > 1000 should fail FastAPI validation (422)."""
         session = MockNeo4jSession()
         client = make_test_app(session, dev_config)
 
-        resp = client.get("/api/v1/search?q=vessel&limit=999")
+        resp = client.get("/api/v1/search?q=vessel&limit=1001")
         assert resp.status_code == 422
 
     def test_search_meta_contains_query(self, dev_config: AppConfig):

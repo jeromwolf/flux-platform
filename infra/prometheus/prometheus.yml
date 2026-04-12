@@ -6,6 +6,15 @@ global:
   evaluation_interval: 15s
   scrape_timeout: 10s
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+rule_files:
+  - "alert_rules.yml"
+
 # Scrape targets
 scrape_configs:
   # Maritime KG API metrics

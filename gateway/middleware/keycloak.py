@@ -52,12 +52,11 @@ _JWKS_CACHE_TTL = 3600  # 1 hour in seconds
 class KeycloakMiddleware(BaseHTTPMiddleware):
     """Validates JWT tokens issued by Keycloak.
 
-    Primary: PyJWT + JWKS cryptographic verification.
-    Fallback: Base64 decode with claim validation when Keycloak is unavailable.
+    Performs cryptographic RS256 JWKS verification only.
+    No fallback — if Keycloak JWKS is unavailable, returns 503.
 
     - Extracts Bearer token from Authorization header
-    - Decodes JWT payload with RS256 JWKS verification (primary)
-    - Falls back to base64 decode with exp/iat validation (dev/offline mode)
+    - Decodes JWT payload with RS256 JWKS verification
     - Sets request.state.user with decoded claims
     """
 
@@ -102,6 +101,17 @@ class KeycloakMiddleware(BaseHTTPMiddleware):
         try:
             claims = self._decode_token(token)
         except ValueError as exc:
+            error_msg = str(exc)
+            if "service unavailable" in error_msg.lower():
+                return JSONResponse(
+                    status_code=503,
+                    content={
+                        "type": "about:blank",
+                        "title": "Service Unavailable",
+                        "status": 503,
+                        "detail": "Authentication service temporarily unavailable",
+                    },
+                )
             return JSONResponse(
                 status_code=401,
                 content={
@@ -120,36 +130,39 @@ class KeycloakMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
     def _decode_token(self, token: str) -> dict[str, Any]:
-        """Decode and validate JWT token.
+        """Decode and validate JWT token using PyJWT + JWKS cryptographic verification.
 
-        Primary: PyJWT + JWKS cryptographic verification.
-        Fallback: Base64 decode with claim validation (dev/offline mode).
+        Raises:
+            ValueError: If the token cannot be cryptographically verified.
         """
-        # Try PyJWT + JWKS first
         try:
             import jwt  # PyJWT
-
-            jwks = self._fetch_jwks()
-            if jwks:
-                signing_key = self._get_signing_key(token, jwks)
-                if signing_key:
-                    claims = jwt.decode(
-                        token,
-                        signing_key,
-                        algorithms=["RS256"],
-                        audience=self._config.client_id,
-                        options={"verify_aud": False},  # Keycloak puts audience in azp, not aud
-                        issuer=self._config.issuer,
-                    )
-                    logger.debug("JWT verified via JWKS for sub=%s", claims.get("sub"))
-                    return claims
         except ImportError:
-            logger.warning("PyJWT not installed — falling back to base64 decode")
-        except Exception as exc:
-            logger.warning("JWKS verification failed: %s — falling back to base64 decode", exc)
+            raise ValueError("Authentication service unavailable: PyJWT not installed")
 
-        # Fallback: base64 decode with basic validation
-        return self._decode_token_fallback(token)
+        jwks = self._fetch_jwks()
+        if not jwks:
+            raise ValueError("Authentication service unavailable: cannot fetch JWKS from Keycloak")
+
+        signing_key = self._get_signing_key(token, jwks)
+        if not signing_key:
+            raise ValueError("Token verification failed: no matching signing key")
+
+        try:
+            claims = jwt.decode(
+                token,
+                signing_key,
+                algorithms=["RS256"],
+                audience=self._config.client_id,
+                options={"verify_aud": False},  # Keycloak puts audience in azp, not aud
+                issuer=self._config.issuer,
+            )
+            logger.debug("JWT verified via JWKS for sub=%s", claims.get("sub"))
+            return claims
+        except jwt.ExpiredSignatureError:
+            raise ValueError("Token expired")
+        except jwt.InvalidTokenError as e:
+            raise ValueError(f"Invalid token: {e}")
 
     def _fetch_jwks(self) -> dict[str, Any] | None:
         """Fetch JWKS from Keycloak (cached with TTL).
@@ -205,61 +218,3 @@ class KeycloakMiddleware(BaseHTTPMiddleware):
         except Exception as exc:
             logger.warning("Failed to extract signing key: %s", exc)
             return None
-
-    def _decode_token_fallback(self, token: str) -> dict[str, Any]:
-        """Fallback: base64 decode without crypto verification.
-
-        Validates exp and iat claims to catch obviously invalid tokens even
-        without cryptographic verification.
-
-        Args:
-            token: Raw JWT string.
-
-        Returns:
-            Decoded JWT payload dict.
-
-        Raises:
-            ValueError: If token format is invalid, expired, or has future iat.
-        """
-        import base64
-        import time
-
-        parts = token.split(".")
-        if len(parts) != 3:
-            raise ValueError("Invalid JWT format")
-
-        payload_b64 = parts[1]
-        padding = 4 - len(payload_b64) % 4
-        if padding != 4:
-            payload_b64 += "=" * padding
-
-        try:
-            payload_bytes = base64.urlsafe_b64decode(payload_b64)
-            claims: dict[str, Any] = json.loads(payload_bytes)
-        except Exception as exc:
-            raise ValueError(f"Failed to decode JWT payload: {exc}") from exc
-
-        # Validate issuer (warn only — don't reject in fallback mode)
-        expected_issuer = self._config.issuer
-        if claims.get("iss") != expected_issuer:
-            logger.warning(
-                "JWT issuer mismatch: expected=%s got=%s",
-                expected_issuer,
-                claims.get("iss"),
-            )
-
-        # Validate expiration
-        now = time.time()
-        exp = claims.get("exp")
-        if exp is not None and now > exp:
-            raise ValueError("Token has expired")
-
-        iat = claims.get("iat")
-        if iat is not None and iat > now + 60:  # 60s clock skew tolerance
-            raise ValueError("Token issued in the future")
-
-        logger.warning(
-            "JWT decoded via base64 fallback (no crypto verification) for sub=%s",
-            claims.get("sub"),
-        )
-        return claims

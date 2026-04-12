@@ -19,7 +19,6 @@ data:
   POSTGRES_HOST: "postgres"
   POSTGRES_PORT: "5432"
   POSTGRES_DATABASE: "imsp"
-  REDIS_URL: "redis://redis:6379/1"
   QDRANT_HOST: "qdrant"
   QDRANT_PORT: "6333"
   QDRANT_COLLECTION: "imsp_documents"

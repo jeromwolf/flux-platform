@@ -14,10 +14,24 @@ import logging
 import os
 import warnings
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+class Environment(str, Enum):
+    """Valid application environment identifiers.
+
+    Using ``str`` mixin so that comparisons like ``config.env == "development"``
+    continue to work without changes to existing call sites.
+    """
+
+    DEVELOPMENT = "development"
+    STAGING = "staging"
+    PRODUCTION = "production"
+    TESTING = "testing"
 
 
 @dataclass(frozen=True)
@@ -58,7 +72,7 @@ class AppConfig:
     """Application-level configuration."""
 
     project_name: str = "maritime-platform"
-    env: str = "development"
+    env: Environment = Environment.DEVELOPMENT
     log_level: str = "INFO"
     neo4j: Neo4jConfig = field(default_factory=Neo4jConfig)
     postgres: PostgresConfig = field(default_factory=PostgresConfig)
@@ -98,9 +112,18 @@ class AppConfig:
         redis = RedisConfig(
             url=os.getenv("REDIS_URL", "redis://localhost:6379/1"),
         )
+        env_str = os.getenv("ENV", cls.env.value if isinstance(cls.env, Environment) else cls.env)
+        try:
+            env = Environment(env_str)
+        except ValueError:
+            valid = ", ".join(e.value for e in Environment)
+            raise ValueError(
+                f"Invalid ENV value '{env_str}'. Must be one of: {valid}"
+            ) from None
+
         return cls(
             project_name=os.getenv("PROJECT_NAME", cls.project_name),
-            env=os.getenv("ENV", cls.env),
+            env=env,
             log_level=os.getenv("LOG_LEVEL", cls.log_level),
             neo4j=neo4j,
             postgres=postgres,

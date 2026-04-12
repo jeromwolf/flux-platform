@@ -1,0 +1,204 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: meta
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="sha-$(echo ${{ github.sha }} | cut -c1-7)"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & Push Core API
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infra/docker/Dockerfile.core
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/kg-api:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/kg-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infra/docker/Dockerfile.gateway
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/gateway:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/gateway:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push UI
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infra/docker/Dockerfile.ui
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/ui:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/ui:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  security-gate:
+    name: Security Gate
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy (CRITICAL — must pass)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+      - name: Python dependency audit
+        run: |
+          pip install pip-audit
+          pip install -e ".[dev]" 2>/dev/null || pip install -e .
+          pip-audit --strict
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-push, security-gate]
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging') ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > $HOME/.kube/config
+
+      - name: Update image tags
+        run: |
+          cd infra/k8s
+          kustomize edit set image \
+            imsp/kg-api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/kg-api:${{ needs.build-and-push.outputs.version }} \
+            imsp/gateway=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/gateway:${{ needs.build-and-push.outputs.version }} \
+            imsp/ui=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/ui:${{ needs.build-and-push.outputs.version }}
+
+      - name: Deploy with Kustomize
+        run: |
+          kubectl apply -k infra/k8s/dev/
+          kubectl -n imsp rollout status deployment/kg-api --timeout=300s
+          kubectl -n imsp rollout status deployment/gateway --timeout=300s
+
+      - name: Health check
+        run: |
+          sleep 10
+          kubectl -n imsp exec deploy/gateway -- curl -sf http://localhost:7749/health || exit 1
+          echo "Staging deployment healthy"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-push, security-gate, deploy-staging]
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production') ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-rc'))
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+
+      - name: Update image tags
+        run: |
+          cd infra/k8s
+          kustomize edit set image \
+            imsp/kg-api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/kg-api:${{ needs.build-and-push.outputs.version }} \
+            imsp/gateway=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/gateway:${{ needs.build-and-push.outputs.version }} \
+            imsp/ui=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/ui:${{ needs.build-and-push.outputs.version }}
+
+      - name: Deploy with Kustomize
+        run: |
+          kubectl apply -k infra/k8s/prod/
+          kubectl -n imsp rollout status deployment/kg-api --timeout=300s
+          kubectl -n imsp rollout status deployment/gateway --timeout=300s
+
+      - name: Health check
+        run: |
+          sleep 15
+          kubectl -n imsp exec deploy/gateway -- curl -sf http://localhost:7749/health || exit 1
+          echo "Production deployment healthy"
+
+      - name: Notify success
+        if: success()
+        run: echo "::notice::Production deployment ${{ needs.build-and-push.outputs.version }} successful"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "::error::Production deployment failed — rolling back"
+          kubectl -n imsp rollout undo deployment/kg-api
+          kubectl -n imsp rollout undo deployment/gateway
+          kubectl -n imsp rollout status deployment/kg-api --timeout=120s
+          kubectl -n imsp rollout status deployment/gateway --timeout=120s

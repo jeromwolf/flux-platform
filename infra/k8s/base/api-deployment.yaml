@@ -21,6 +21,15 @@ spec:
         app.kubernetes.io/component: api
         app.kubernetes.io/part-of: imsp-platform
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: imsp-api
+                topologyKey: kubernetes.io/hostname
       # Run as non-root for security best practices
       securityContext:
         runAsNonRoot: true
@@ -29,7 +38,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: api
-          image: imsp/kg-api:latest
+          image: imsp/kg-api:v0.1.0  # Pinned — updated by CD pipeline via kustomize set image
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

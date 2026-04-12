@@ -52,7 +52,7 @@ def decode_cursor(cursor: str) -> dict:
 
 def get_pagination_params(
     cursor: str | None = Query(None, description="Pagination cursor"),
-    limit: int = Query(50, ge=1, le=500, description="Items per page"),
+    limit: int = Query(50, ge=1, le=1000, description="Items per page"),
 ) -> PaginationParams:
     """FastAPI dependency for pagination parameters.
 

@@ -215,7 +215,7 @@ async def delete_node(
 @router.get("", response_model=NodeListResponse)
 async def list_nodes(
     label: str | None = Query(default=None, description="Filter by node label"),  # noqa: B008
-    limit: int = Query(default=50, ge=1, le=500, description="Maximum nodes to return"),  # noqa: B008
+    limit: int = Query(default=50, ge=1, le=1000, description="Maximum nodes to return"),  # noqa: B008
     offset: int = Query(default=0, ge=0, description="Number of nodes to skip"),  # noqa: B008
     q: str | None = Query(default=None, description="Search query (matches name/title)"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008

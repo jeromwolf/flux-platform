@@ -30,7 +30,7 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
       - run: pip install mypy pydantic types-requests
-      - run: mypy core/kg/ --ignore-missing-imports --no-error-summary || true
+      - run: mypy core/kg/ --ignore-missing-imports --no-error-summary
 
   test:
     name: Python Tests
@@ -170,12 +170,10 @@ jobs:
           scan-ref: '.'
           format: 'table'
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+          exit-code: '1'
 
       - name: Check Python dependencies
         run: |
-          pip install safety
-          safety check --file requirements.txt 2>/dev/null || true
           pip install pip-audit
-          pip-audit --requirement requirements.txt 2>/dev/null || echo "No requirements.txt found, checking pyproject.toml..."
-          pip-audit 2>/dev/null || true
+          pip install -e ".[dev]" 2>/dev/null || pip install -e .
+          pip-audit --strict

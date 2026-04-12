@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from kg.config import AppConfig, Neo4jConfig
+from kg.config import AppConfig, Environment, Neo4jConfig
 
 logger = logging.getLogger(__name__)
 
@@ -111,12 +111,15 @@ def _validate_app_config(config: AppConfig) -> list[ValidationIssue]:
     """Validate top-level AppConfig fields."""
     issues: list[ValidationIssue] = []
 
-    # Environment
-    valid_envs = {"development", "staging", "production", "testing"}
-    if config.env not in valid_envs:
+    # Environment — AppConfig.env is now an Environment enum; validate() at from_env()
+    # already rejects unknown values, but direct AppConfig(..., env="custom") paths
+    # still use the dataclass constructor with a raw string.  Accept both.
+    valid_envs = {e.value for e in Environment}
+    env_val = config.env.value if isinstance(config.env, Environment) else str(config.env)
+    if env_val not in valid_envs:
         issues.append(ValidationIssue(
             field="env",
-            message=f"Unknown environment '{config.env}'",
+            message=f"Unknown environment '{env_val}'",
             severity=ValidationSeverity.WARNING,
             suggestion=f"Use one of: {', '.join(sorted(valid_envs))}",
         ))
@@ -140,7 +143,7 @@ def _validate_app_config(config: AppConfig) -> list[ValidationIssue]:
         ))
 
     # Production warnings
-    if config.env == "production":
+    if config.env == Environment.PRODUCTION or env_val == "production":
         if config.log_level.upper() == "DEBUG":
             issues.append(ValidationIssue(
                 field="log_level",

@@ -269,7 +269,7 @@ async def list_relationships(
         default=None, description="Filter by target node element ID"
     ),
     limit: int = Query(  # noqa: B008
-        default=50, ge=1, le=500, description="Maximum relationships to return"
+        default=50, ge=1, le=1000, description="Maximum relationships to return"
     ),
     offset: int = Query(default=0, ge=0, description="Number to skip"),  # noqa: B008
     session: Any = Depends(get_async_neo4j_session),  # noqa: B008

@@ -411,7 +411,7 @@ async def get_status(
 
 @router.get("/etl/history", response_model=ETLHistoryResponse)
 async def get_history(
-    limit: int = Query(default=20, ge=1, le=100, description="Maximum number of runs to return"),  # noqa: B008
+    limit: int = Query(default=20, ge=1, le=1000, description="Maximum number of runs to return"),  # noqa: B008
 ) -> ETLHistoryResponse:
     """실행 이력을 최신순으로 조회한다.
 

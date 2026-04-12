@@ -7,9 +7,9 @@ Covers the branches not exercised by test_keycloak_jwks.py:
   - public path bypass (no auth required)
   - missing Authorization header → 401
   - non-Bearer Authorization header → 401
-  - valid token (fallback path) → request.state.user set
-  - expired token → 401
-  - request.state.user_id and user_roles populated correctly
+  - JWKS unavailable → 503 Service Unavailable (no base64 fallback)
+  - expired token detected via PyJWT → 401
+  - request.state.user_id and user_roles populated correctly (mocked JWKS path)
 - KeycloakMiddleware constructor: public_paths stored, defaults applied
 
 All tests are @pytest.mark.unit.  No real network calls.
@@ -233,65 +233,151 @@ class TestDispatchMissingAuth:
         response = client.get("/api/data", headers={"Authorization": "Basic dXNlcjpwYXNz"})
         assert response.status_code == 401
 
-    def test_bearer_prefix_only_returns_401(self):
-        """Authorization: Bearer  (empty token) is treated as missing."""
+    def test_bearer_prefix_only_returns_401_or_503(self):
+        """Authorization: Bearer  (empty token) results in 401 or 503."""
         app = _make_app()
         client = TestClient(app, raise_server_exceptions=False)
-        # The header value is just "Bearer " with nothing after
-        # This will attempt to decode an empty token which should fail
+        # Empty token triggers _decode_token which raises ValueError (JWKS unavailable → 503,
+        # or signing key missing → 401)
         response = client.get("/api/data", headers={"Authorization": "Bearer "})
-        # Either 401 from header check or 401 from decode failure
-        assert response.status_code == 401
+        assert response.status_code in (401, 503)
 
 
 # ---------------------------------------------------------------------------
-# dispatch() — valid token sets request.state
+# dispatch() — JWKS unavailable returns 503 (no base64 fallback)
+# ---------------------------------------------------------------------------
+
+
+class TestDispatchJwksUnavailable:
+    """When JWKS is unreachable, middleware returns 503 Service Unavailable."""
+
+    def test_jwks_unavailable_returns_503(self):
+        """When JWKS endpoint is unreachable, dispatch returns 503."""
+        app = _make_app(keycloak_url="http://keycloak:8080")
+        client = TestClient(app, raise_server_exceptions=False)
+        now = int(time.time())
+        token = _make_fake_token({
+            "sub": "user-42",
+            "iss": "http://keycloak:8080/realms/imsp",
+            "exp": now + 3600,
+            "iat": now - 5,
+        })
+        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
+            response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+        assert response.status_code == 503
+        body = response.json()
+        assert body["status"] == 503
+        assert body["title"] == "Service Unavailable"
+
+    def test_jwks_unavailable_body_has_detail(self):
+        """503 response includes a detail field."""
+        app = _make_app(keycloak_url="http://keycloak:8080")
+        client = TestClient(app, raise_server_exceptions=False)
+        now = int(time.time())
+        token = _make_fake_token({"sub": "u", "exp": now + 3600, "iat": now - 5})
+        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
+            response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+        assert response.status_code == 503
+        body = response.json()
+        assert "detail" in body
+
+    def test_no_base64_fallback_when_jwks_fails(self):
+        """Confirms that even a valid-looking token yields 503, not 200, when JWKS is down."""
+        app = _make_app(keycloak_url="http://keycloak:8080")
+        client = TestClient(app, raise_server_exceptions=False)
+        now = int(time.time())
+        token = _make_fake_token({
+            "sub": "attacker",
+            "iss": "http://keycloak:8080/realms/imsp",
+            "exp": now + 3600,
+            "iat": now - 5,
+            "realm_access": {"roles": ["admin"]},
+        })
+        with patch("urllib.request.urlopen", side_effect=OSError("network error")):
+            response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+        # Must NOT be 200 — attacker-crafted tokens must not pass through
+        assert response.status_code != 200
+        assert response.status_code == 503
+
+
+# ---------------------------------------------------------------------------
+# dispatch() — valid token (mocked JWKS + PyJWT path) sets request.state
 # ---------------------------------------------------------------------------
 
 
 class TestDispatchValidToken:
-    """Valid token populates request.state.user, user_id, user_roles."""
+    """Valid cryptographically-verified token populates request.state."""
 
-    def _valid_token(self, sub: str = "user-1", roles: list[str] | None = None) -> str:
+    def _make_mock_signing_key(self):
+        """Return a mock signing key object."""
+        return MagicMock(name="signing_key")
+
+    def test_valid_token_returns_200(self):
+        """Mocked JWKS + signing key causes middleware to pass request through (200)."""
+        app = _make_app(keycloak_url="http://keycloak:8080")
+        client = TestClient(app, raise_server_exceptions=False)
         now = int(time.time())
-        payload: dict[str, Any] = {
-            "sub": sub,
-            "iss": "/realms/imsp",
+        payload = {
+            "sub": "user-42",
+            "iss": "http://keycloak:8080/realms/imsp",
             "exp": now + 3600,
             "iat": now - 5,
         }
-        if roles:
-            payload["realm_access"] = {"roles": roles}
-        return _make_fake_token(payload)
+        token = _make_fake_token(payload)
+        fake_jwks = {"keys": [{"kid": "k1", "kty": "RSA"}]}
+        mock_key = self._make_mock_signing_key()
 
-    def test_valid_token_returns_200(self):
-        """Valid token causes middleware to pass request through (200)."""
-        app = _make_app()
-        client = TestClient(app, raise_server_exceptions=False)
-        token = self._valid_token(sub="user-42")
-        # Force JWKS fetch to fail so fallback path is taken
-        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
+        with patch.object(KeycloakMiddleware, "_fetch_jwks", return_value=fake_jwks), \
+             patch.object(KeycloakMiddleware, "_get_signing_key", return_value=mock_key), \
+             patch("jwt.decode", return_value=payload):
             response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+
         assert response.status_code == 200
 
     def test_valid_token_populates_user_id(self):
         """request.state.user_id is set to the JWT 'sub' claim."""
-        app = _make_app()
+        app = _make_app(keycloak_url="http://keycloak:8080")
         client = TestClient(app, raise_server_exceptions=False)
-        token = self._valid_token(sub="user-42")
-        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
+        now = int(time.time())
+        payload = {
+            "sub": "user-42",
+            "iss": "http://keycloak:8080/realms/imsp",
+            "exp": now + 3600,
+            "iat": now - 5,
+        }
+        token = _make_fake_token(payload)
+        fake_jwks = {"keys": [{"kid": "k1", "kty": "RSA"}]}
+        mock_key = self._make_mock_signing_key()
+
+        with patch.object(KeycloakMiddleware, "_fetch_jwks", return_value=fake_jwks), \
+             patch.object(KeycloakMiddleware, "_get_signing_key", return_value=mock_key), \
+             patch("jwt.decode", return_value=payload):
             response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+
         assert response.status_code == 200
-        data = response.json()
-        assert data["user_id"] == "user-42"
+        assert response.json()["user_id"] == "user-42"
 
     def test_valid_token_populates_roles(self):
         """request.state.user_roles is populated from realm_access.roles."""
-        app = _make_app()
+        app = _make_app(keycloak_url="http://keycloak:8080")
         client = TestClient(app, raise_server_exceptions=False)
-        token = self._valid_token(sub="admin", roles=["admin", "user"])
-        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
+        now = int(time.time())
+        payload = {
+            "sub": "admin",
+            "iss": "http://keycloak:8080/realms/imsp",
+            "exp": now + 3600,
+            "iat": now - 5,
+            "realm_access": {"roles": ["admin", "user"]},
+        }
+        token = _make_fake_token(payload)
+        fake_jwks = {"keys": [{"kid": "k1", "kty": "RSA"}]}
+        mock_key = self._make_mock_signing_key()
+
+        with patch.object(KeycloakMiddleware, "_fetch_jwks", return_value=fake_jwks), \
+             patch.object(KeycloakMiddleware, "_get_signing_key", return_value=mock_key), \
+             patch("jwt.decode", return_value=payload):
             response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+
         assert response.status_code == 200
         data = response.json()
         assert "admin" in data["roles"]
@@ -299,64 +385,71 @@ class TestDispatchValidToken:
 
     def test_valid_token_no_roles_returns_empty_list(self):
         """When JWT has no realm_access, user_roles is empty list."""
-        app = _make_app()
+        app = _make_app(keycloak_url="http://keycloak:8080")
         client = TestClient(app, raise_server_exceptions=False)
-        token = self._valid_token(sub="norole")
-        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
+        now = int(time.time())
+        payload = {
+            "sub": "norole",
+            "iss": "http://keycloak:8080/realms/imsp",
+            "exp": now + 3600,
+            "iat": now - 5,
+        }
+        token = _make_fake_token(payload)
+        fake_jwks = {"keys": [{"kid": "k1", "kty": "RSA"}]}
+        mock_key = self._make_mock_signing_key()
+
+        with patch.object(KeycloakMiddleware, "_fetch_jwks", return_value=fake_jwks), \
+             patch.object(KeycloakMiddleware, "_get_signing_key", return_value=mock_key), \
+             patch("jwt.decode", return_value=payload):
             response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+
         assert response.status_code == 200
         assert response.json()["roles"] == []
 
 
 # ---------------------------------------------------------------------------
-# dispatch() — expired / invalid token returns 401
+# dispatch() — token error paths return 401
 # ---------------------------------------------------------------------------
 
 
 class TestDispatchInvalidToken:
-    """Invalid or expired tokens return 401 with error detail."""
+    """Invalid or expired tokens detected by PyJWT return 401."""
 
     def test_expired_token_returns_401(self):
-        """Expired JWT returns 401 Unauthorized."""
-        now = int(time.time())
-        payload = {
-            "sub": "user-expired",
-            "exp": now - 300,
-            "iat": now - 600,
-        }
-        token = _make_fake_token(payload)
-        app = _make_app()
+        """PyJWT raising ExpiredSignatureError → 401 Unauthorized."""
+        import jwt as pyjwt
+
+        app = _make_app(keycloak_url="http://keycloak:8080")
         client = TestClient(app, raise_server_exceptions=False)
-        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
+        now = int(time.time())
+        token = _make_fake_token({"sub": "user-expired", "exp": now - 300, "iat": now - 600})
+        fake_jwks = {"keys": [{"kid": "k1", "kty": "RSA"}]}
+        mock_key = MagicMock(name="signing_key")
+
+        with patch.object(KeycloakMiddleware, "_fetch_jwks", return_value=fake_jwks), \
+             patch.object(KeycloakMiddleware, "_get_signing_key", return_value=mock_key), \
+             patch("jwt.decode", side_effect=pyjwt.ExpiredSignatureError("expired")):
             response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+
         assert response.status_code == 401
         body = response.json()
         assert "expired" in body.get("detail", "").lower()
 
-    def test_malformed_jwt_returns_401(self):
-        """A token that is not valid JWT format returns 401."""
-        app = _make_app()
-        client = TestClient(app, raise_server_exceptions=False)
-        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
-            response = client.get(
-                "/api/data",
-                headers={"Authorization": "Bearer this.is.not.valid.jwt.format.extra"},
-            )
-        assert response.status_code == 401
+    def test_invalid_token_returns_401(self):
+        """PyJWT raising InvalidTokenError → 401 Unauthorized."""
+        import jwt as pyjwt
 
-    def test_future_iat_returns_401(self):
-        """Token with iat far in the future returns 401."""
-        now = int(time.time())
-        payload = {
-            "sub": "user-future",
-            "exp": now + 3600,
-            "iat": now + 600,  # beyond 60s tolerance
-        }
-        token = _make_fake_token(payload)
-        app = _make_app()
+        app = _make_app(keycloak_url="http://keycloak:8080")
         client = TestClient(app, raise_server_exceptions=False)
-        with patch("urllib.request.urlopen", side_effect=OSError("offline")):
+        token = _make_fake_token({"sub": "attacker"})
+        fake_jwks = {"keys": [{"kid": "k1", "kty": "RSA"}]}
+        mock_key = MagicMock(name="signing_key")
+
+        with patch.object(KeycloakMiddleware, "_fetch_jwks", return_value=fake_jwks), \
+             patch.object(KeycloakMiddleware, "_get_signing_key", return_value=mock_key), \
+             patch("jwt.decode", side_effect=pyjwt.InvalidTokenError("bad sig")):
             response = client.get("/api/data", headers={"Authorization": f"Bearer {token}"})
+
         assert response.status_code == 401
 
     def test_401_response_has_correct_content_type(self):

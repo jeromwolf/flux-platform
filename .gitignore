@@ -54,6 +54,10 @@ plugins/
 *.key
 credentials.json
 
+# K8s secrets (never commit real secrets)
+infra/k8s/**/secret.yaml
+!infra/k8s/**/secret-template.yaml.example
+
 # Claude
 .claude/
 

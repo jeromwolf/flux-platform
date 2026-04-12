@@ -168,7 +168,7 @@ class TestQueryExecutionException:
         class ErrorSession:
             """Session that raises on run()."""
 
-            async def run(self, cypher: str, params: dict | None = None):
+            async def run(self, cypher: str, params: dict | None = None, **kwargs: Any):
                 raise RuntimeError("connection refused")
 
             async def close(self) -> None:
@@ -218,7 +218,7 @@ class TestQueryExecutionException:
         """When execution fails, results field is explicitly None (not empty list)."""
 
         class ErrorSession:
-            async def run(self, cypher: str, params: dict | None = None):
+            async def run(self, cypher: str, params: dict | None = None, **kwargs: Any):
                 raise ValueError("invalid Cypher syntax")
 
             async def close(self) -> None:

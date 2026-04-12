@@ -156,7 +156,7 @@ class MockNeo4jSession:
         self._side_effects = side_effects or []
         self._call_index = 0
 
-    async def run(self, cypher: str, params: dict[str, Any] | None = None) -> MockNeo4jResult:
+    async def run(self, cypher: str, params: dict[str, Any] | None = None, **kwargs: Any) -> MockNeo4jResult:
         if self._call_index < len(self._side_effects):
             result = self._side_effects[self._call_index]
         else:
