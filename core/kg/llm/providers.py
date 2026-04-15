@@ -45,11 +45,9 @@ class OllamaProvider:
         try:
             from langchain_ollama import ChatOllama  # noqa: PLC0415
         except ImportError:
-            logger.warning("langchain-ollama not installed, returning stub response")
-            return LLMResponse(
-                text="[Ollama stub response]",
-                model=self._config.model,
-                provider="ollama",
+            raise RuntimeError(
+                "langchain-ollama not installed. "
+                "Install with: pip install langchain-ollama"
             )
 
         llm = ChatOllama(
@@ -102,10 +100,15 @@ class OpenAIProvider:
 
     def generate(self, prompt: str, **kwargs: object) -> LLMResponse:
         """Generate completion via OpenAI API."""
-        return LLMResponse(
-            text="[OpenAI stub — configure API key for production use]",
-            model=self._config.model,
-            provider="openai",
+        if not self._config.api_key:
+            raise RuntimeError(
+                "OpenAI API key not configured. "
+                "Set OPENAI_API_KEY environment variable for production use."
+            )
+        # Real implementation would call OpenAI API here
+        raise RuntimeError(
+            "OpenAI provider not fully implemented in core/kg module. "
+            "Use agent.llm.providers.OpenAIProvider for production inference."
         )
 
     def is_available(self) -> bool:
@@ -136,10 +139,14 @@ class AnthropicProvider:
 
     def generate(self, prompt: str, **kwargs: object) -> LLMResponse:
         """Generate completion via Anthropic API."""
-        return LLMResponse(
-            text="[Anthropic stub — configure API key for production use]",
-            model=self._config.model,
-            provider="anthropic",
+        if not self._config.api_key:
+            raise RuntimeError(
+                "Anthropic API key not configured. "
+                "Set ANTHROPIC_API_KEY environment variable for production use."
+            )
+        raise RuntimeError(
+            "Anthropic provider not fully implemented in core/kg module. "
+            "Use agent.llm.providers.AnthropicProvider for production inference."
         )
 
     def is_available(self) -> bool:

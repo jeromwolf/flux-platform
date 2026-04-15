@@ -26,7 +26,7 @@ export class ApiClientError extends Error {
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
+export async function getAuthHeaders(): Promise<Record<string, string>> {
   const keycloak = getKeycloak()
   if (keycloak.authenticated && keycloak.token) {
     // Try to refresh token if it expires within 30 seconds

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
-import { Bell, LogIn, LogOut, ChevronDown } from 'lucide-vue-next'
+import { Bell, LogIn, LogOut, ChevronDown, Menu } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores/app'
 import { UBadge, UDropdown, UDropdownItem } from '@/components/ui'
 import ConnectionStatus from '@/components/common/ConnectionStatus.vue'
 import ProjectSelector from '@/components/ProjectSelector.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
+const appStore = useAppStore()
 const pageTitle = computed(() => (route.meta.title as string) || 'IMSP')
 
 const roleBadgeVariant = computed(() => {
@@ -35,8 +37,19 @@ const roleLabel = computed(() => {
 </script>
 
 <template>
-  <header class="flex h-12 shrink-0 items-center justify-between border-b border-border-subtle bg-surface-primary px-6">
-    <h1 class="text-sm font-medium text-text-primary">{{ pageTitle }}</h1>
+  <header class="flex h-12 shrink-0 items-center justify-between border-b border-border-subtle bg-surface-primary px-4 sm:px-6">
+    <div class="flex items-center gap-1">
+      <!-- Mobile hamburger -->
+      <button
+        v-if="appStore.isMobile"
+        class="mr-1 rounded-lg p-2 text-text-secondary transition-colors hover:bg-surface-secondary hover:text-text-primary"
+        aria-label="Menu"
+        @click="appStore.toggleSidebar()"
+      >
+        <Menu class="h-5 w-5" />
+      </button>
+      <h1 class="text-sm font-medium text-text-primary">{{ pageTitle }}</h1>
+    </div>
     <div class="flex items-center gap-2">
       <!-- KG Project selector -->
       <ProjectSelector class="mr-2" />

@@ -212,6 +212,7 @@ async def list_sessions() -> dict[str, Any]:
         sessions = provider.list_sessions() if hasattr(provider, "list_sessions") else []
         return {"sessions": sessions, "count": len(sessions)}
     except Exception:
+        logger.warning("Failed to list agent sessions", exc_info=True)
         return {"sessions": [], "count": 0}
 
 
@@ -233,6 +234,7 @@ async def get_session_history(session_id: str, limit: int = 50) -> dict[str, Any
         ]
         return {"session_id": session_id, "messages": entries, "count": len(entries)}
     except Exception:
+        logger.warning("Failed to get session history for %s", session_id, exc_info=True)
         return {"session_id": session_id, "messages": [], "count": 0}
 
 

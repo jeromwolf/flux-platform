@@ -143,6 +143,7 @@ def _serialize_record(record: Any) -> dict[str, Any]:
         try:
             items = dict(record).items()  # type: ignore[assignment]
         except Exception:
+            logger.debug("Failed to convert record to dict", exc_info=True)
             return {}
 
     row: dict[str, Any] = {}

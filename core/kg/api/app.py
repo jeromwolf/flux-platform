@@ -21,7 +21,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from kg.api.middleware.auth import get_current_api_key
+from kg.api.middleware.auth import get_current_api_key, get_current_user, require_role
 from kg.config import AppConfig, close_driver, get_config, set_config
 
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         from kg.db.memory_document_repo import InMemoryDocumentRepository
         app.state.workflow_repo = InMemoryWorkflowRepository()
         app.state.document_repo = InMemoryDocumentRepository()
-        logger.info("Using in-memory repositories (PostgreSQL unavailable)")
+        logger.warning("Using in-memory repositories — data will NOT persist across restarts. Configure PostgreSQL for production.", exc_info=True)
 
     # Agent tool registry (graceful fallback)
     try:
@@ -64,7 +64,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.info("Agent tool registry initialized (%d tools)", len(app.state.tool_registry.list_tools()))
     except Exception:
         app.state.tool_registry = None
-        logger.info("Agent tools not available")
+        logger.warning("Agent tool registry unavailable — agent chat/tool endpoints will return 503", exc_info=True)
 
     # RAG engine (graceful fallback)
     try:
@@ -74,7 +74,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.info("RAG engine initialized")
     except Exception:
         app.state.rag_engine = None
-        logger.info("RAG engine not available")
+        logger.warning("RAG engine unavailable — document search endpoints will return empty results", exc_info=True)
 
     # Document pipeline (graceful fallback)
     try:
@@ -83,7 +83,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.info("Document pipeline initialized")
     except Exception:
         app.state.document_pipeline = None
-        logger.info("Document pipeline not available")
+        logger.warning("Document pipeline unavailable — file upload/parsing will not work", exc_info=True)
 
     yield
     logger.info("Maritime KG API shutting down -- closing Neo4j drivers")
@@ -119,15 +119,24 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     """
     if config is not None:
         set_config(config)
+        cfg = config
     else:
         # Ensure config singleton is initialized
-        get_config()
+        cfg = get_config()
+
+    # Disable interactive docs in production (security: prevent schema exposure)
+    _is_production = cfg.env == "production"
+    docs_url = None if _is_production else "/docs"
+    openapi_url = None if _is_production else "/openapi.json"
 
     app = FastAPI(
         title="Maritime KG API",
         version="0.1.0",
         description="REST API for exploring the KRISO Maritime Knowledge Graph",
         lifespan=_lifespan,
+        docs_url=docs_url,
+        openapi_url=openapi_url,
+        redoc_url=None,
     )
 
     # CORS -- configurable origins (default: localhost for development)
@@ -214,24 +223,37 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     from kg.api.routes.schema import router as schema_router
     from kg.api.routes.workflows import router as workflows_router
 
-    _auth_deps = [Depends(get_current_api_key)]
+    # --- RBAC dependency tiers ---
+    # Base: authenticated user (viewer+)
+    _auth_deps = [Depends(get_current_user)]
+    # Writer: data modification (researcher, developer, admin)
+    _write_deps = [Depends(require_role("researcher", "developer", "admin"))]
+    # Admin: dangerous operations (admin only)
+    _admin_deps = [Depends(require_role("admin"))]
 
+    # No auth required
     app.include_router(health_router, prefix="/api/v1")
+
+    # Read-only routes (viewer+)
     app.include_router(graph_router, prefix="/api/v1", dependencies=_auth_deps)
     app.include_router(schema_router, prefix="/api/v1", dependencies=_auth_deps)
     app.include_router(query_router, prefix="/api/v1", dependencies=_auth_deps)
     app.include_router(lineage_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(etl_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(nodes_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(relationships_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(cypher_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(embeddings_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(algorithms_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(rag_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(agent_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(documents_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(workflows_router, prefix="/api/v1", dependencies=_auth_deps)
-    app.include_router(mcp_router, prefix="/api/v1", dependencies=_auth_deps)
+
+    # Write routes (researcher/developer/admin)
+    app.include_router(nodes_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(relationships_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(embeddings_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(rag_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(agent_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(documents_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(workflows_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(algorithms_router, prefix="/api/v1", dependencies=_write_deps)
+
+    # Admin routes (admin only)
+    app.include_router(cypher_router, prefix="/api/v1", dependencies=_admin_deps)
+    app.include_router(etl_router, prefix="/api/v1", dependencies=_admin_deps)
+    app.include_router(mcp_router, prefix="/api/v1", dependencies=_admin_deps)
 
     return app
 

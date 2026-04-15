@@ -22,16 +22,21 @@ const navItems = computed(() => [
 
 <template>
   <aside
-    class="fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-border-subtle bg-surface-primary transition-all duration-250"
-    :style="{ width: `${appStore.sidebarWidth}px` }"
-    @mouseenter="appStore.setSidebarExpanded(true)"
-    @mouseleave="appStore.setSidebarExpanded(false)"
+    class="fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-border-subtle bg-surface-primary transition-all duration-250"
+    :class="{
+      '-translate-x-full': appStore.isMobile && !appStore.mobileMenuOpen,
+      'translate-x-0': !appStore.isMobile || appStore.mobileMenuOpen,
+      'w-60': appStore.isMobile,
+    }"
+    :style="!appStore.isMobile ? { width: `${appStore.sidebarWidth}px` } : undefined"
+    @mouseenter="!appStore.isMobile && appStore.setSidebarExpanded(true)"
+    @mouseleave="!appStore.isMobile && appStore.setSidebarExpanded(false)"
   >
     <!-- Logo -->
     <div class="flex h-12 items-center gap-3 border-b border-border-subtle px-4">
       <Anchor class="h-6 w-6 shrink-0 text-ocean-400" />
       <span
-        v-if="appStore.sidebarExpanded"
+        v-if="appStore.sidebarExpanded || appStore.isMobile"
         class="whitespace-nowrap text-sm font-semibold text-text-primary"
       >
         IMSP
@@ -47,7 +52,8 @@ const navItems = computed(() => [
         :label="item.label"
         :icon="item.icon"
         :active="route.path === item.path"
-        :expanded="appStore.sidebarExpanded"
+        :expanded="appStore.sidebarExpanded || appStore.isMobile"
+        @click="appStore.isMobile && appStore.closeMobileMenu()"
       />
     </nav>
   </aside>

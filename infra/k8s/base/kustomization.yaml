@@ -21,6 +21,8 @@ resources:
   - postgres-init-configmap.yaml
   - gateway-deployment.yaml
   - gateway-service.yaml
+  - ui-deployment.yaml
+  - ui-service.yaml
   - keycloak-deployment.yaml
   - keycloak-service.yaml
   - keycloak-db-deployment.yaml

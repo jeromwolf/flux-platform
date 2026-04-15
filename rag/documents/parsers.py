@@ -599,6 +599,7 @@ class HWPParser:
                         if text.strip():
                             text_parts.append(text.strip())
                     except Exception:  # noqa: S112
+                        logger.debug("Failed to extract text from OLE stream %s", stream_path, exc_info=True)
                         continue
 
             ole.close()
@@ -758,7 +759,7 @@ class DOCXParser:
         except Exception:  # noqa: S110
             # python-docx is installed but the file is malformed / not a real DOCX;
             # fall through to the zipfile fallback.
-            pass
+            logger.warning("python-docx failed to parse DOCX data, falling back to zipfile", exc_info=True)
 
         # Tier 2: zipfile XML extraction (stdlib only)
         try:
@@ -773,6 +774,7 @@ class DOCXParser:
                 text = re.sub(r"\s+", " ", text).strip()
                 return text
         except Exception:
+            logger.warning("DOCX zipfile extraction failed", exc_info=True)
             return ""
 
 
@@ -901,7 +903,7 @@ class PPTXParser:
         except Exception:  # noqa: S110
             # python-pptx is installed but the file is malformed / not a real PPTX;
             # fall through to the zipfile fallback.
-            pass
+            logger.warning("python-pptx failed to parse PPTX data, falling back to zipfile", exc_info=True)
 
         # Tier 2: zipfile XML extraction (stdlib only)
         try:
@@ -922,6 +924,7 @@ class PPTXParser:
                         text_parts.append(text)
                 return "\n\n".join(text_parts)
         except Exception:
+            logger.warning("PPTX zipfile extraction failed", exc_info=True)
             return ""
 
 

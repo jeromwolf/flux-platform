@@ -29,6 +29,10 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
       containers:
         - name: gateway
           image: imsp/gateway:v0.1.0  # Pinned — updated by CD pipeline via kustomize set image
@@ -84,3 +88,9 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL

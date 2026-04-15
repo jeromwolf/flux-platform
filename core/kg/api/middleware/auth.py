@@ -128,3 +128,37 @@ def get_current_user(
         status_code=401,
         detail="Authentication required: provide JWT Bearer token or X-API-Key",
     )
+
+
+def require_role(*allowed_roles: str):
+    """FastAPI dependency factory that checks user roles.
+
+    Creates a dependency that verifies the authenticated user has at least
+    one of the specified roles.  In development mode, ``get_current_user``
+    already returns ``role="admin"`` so all checks pass transparently.
+
+    Usage::
+
+        @router.post("/admin-only", dependencies=[Depends(require_role("admin"))])
+        async def admin_endpoint(): ...
+
+    Args:
+        allowed_roles: One or more role names that are allowed to access
+            the endpoint.
+
+    Returns:
+        A FastAPI dependency function.
+    """
+
+    async def _check_role(user: dict = Depends(get_current_user)):  # noqa: B008
+        user_role = user.get("role", "")
+        user_roles = user.get("roles", [])
+        all_roles = {user_role} | set(user_roles)
+        if not all_roles & set(allowed_roles):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Insufficient permissions. Required: {', '.join(allowed_roles)}",
+            )
+        return user
+
+    return _check_role

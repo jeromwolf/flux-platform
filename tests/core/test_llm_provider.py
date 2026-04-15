@@ -253,19 +253,29 @@ class TestBuiltinProviders:
         p = OpenAIProvider(LLMConfig(provider="openai", api_key="sk-test"))
         assert p.is_available() is True
 
-    def test_anthropic_stub_generate(self) -> None:
-        """TC-LP05-e: AnthropicProvider returns stub response."""
+    def test_anthropic_raises_runtime_error_with_key(self) -> None:
+        """TC-LP05-e: AnthropicProvider raises RuntimeError (not fully implemented)."""
         p = AnthropicProvider(LLMConfig(provider="anthropic", api_key="ak-test"))
-        resp = p.generate("test prompt")
-        assert isinstance(resp, LLMResponse)
-        assert resp.provider == "anthropic"
+        with pytest.raises(RuntimeError, match="Anthropic provider not fully implemented"):
+            p.generate("test prompt")
 
-    def test_openai_stub_generate(self) -> None:
-        """TC-LP05-f: OpenAIProvider returns stub response."""
+    def test_anthropic_raises_runtime_error_without_key(self) -> None:
+        """TC-LP05-e2: AnthropicProvider raises RuntimeError when no API key."""
+        p = AnthropicProvider(LLMConfig(provider="anthropic", api_key=""))
+        with pytest.raises(RuntimeError, match="Anthropic API key not configured"):
+            p.generate("test prompt")
+
+    def test_openai_raises_runtime_error_without_key(self) -> None:
+        """TC-LP05-f: OpenAIProvider raises RuntimeError when no API key."""
         p = OpenAIProvider()
-        resp = p.generate("test prompt")
-        assert isinstance(resp, LLMResponse)
-        assert resp.provider == "openai"
+        with pytest.raises(RuntimeError, match="OpenAI API key not configured"):
+            p.generate("test prompt")
+
+    def test_openai_raises_runtime_error_with_key(self) -> None:
+        """TC-LP05-f2: OpenAIProvider raises RuntimeError (not fully implemented)."""
+        p = OpenAIProvider(LLMConfig(provider="openai", api_key="sk-test"))
+        with pytest.raises(RuntimeError, match="OpenAI provider not fully implemented"):
+            p.generate("test prompt")
 
 
 # =============================================================================

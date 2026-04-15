@@ -75,6 +75,7 @@ async def schema(
             cnt_record = await cnt_result.single()
             label_counts[lbl] = cnt_record["cnt"] if cnt_record else 0
         except Exception:
+            logger.debug("Failed to count nodes for label %s", lbl, exc_info=True)
             label_counts[lbl] = 0
 
     # Add counts to labels

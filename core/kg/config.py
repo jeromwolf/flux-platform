@@ -72,7 +72,7 @@ class AppConfig:
     """Application-level configuration."""
 
     project_name: str = "maritime-platform"
-    env: Environment = Environment.DEVELOPMENT
+    env: Environment = Environment.PRODUCTION
     log_level: str = "INFO"
     neo4j: Neo4jConfig = field(default_factory=Neo4jConfig)
     postgres: PostgresConfig = field(default_factory=PostgresConfig)

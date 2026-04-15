@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: imsp-ui
+  namespace: imsp
+  labels:
+    app: imsp-ui
+    app.kubernetes.io/name: imsp-ui
+    app.kubernetes.io/component: ui
+    app.kubernetes.io/part-of: imsp-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: imsp-ui
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP

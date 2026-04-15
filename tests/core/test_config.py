@@ -75,9 +75,14 @@ class TestAppConfig:
     def test_defaults(self):
         cfg = AppConfig()
         assert cfg.project_name == "maritime-platform"
-        assert cfg.env == "development"
+        assert cfg.env == "production"
         assert cfg.log_level == "INFO"
         assert isinstance(cfg.neo4j, Neo4jConfig)
+
+    def test_default_env_is_production(self):
+        cfg = AppConfig()
+        from kg.config import Environment
+        assert cfg.env == Environment.PRODUCTION
 
     def test_from_env_with_env_vars(self):
         env_vars = {
@@ -114,7 +119,7 @@ class TestAppConfig:
             cfg = AppConfig.from_env()
             assert cfg.neo4j.uri == "bolt://localhost:7687"
             assert cfg.neo4j.user == "neo4j"
-            assert cfg.env == "development"
+            assert cfg.env == "production"
 
     def test_frozen(self):
         cfg = AppConfig()
@@ -193,8 +198,10 @@ class TestSingletonManagement:
         _ = get_config()
         reset()
         # After reset, a fresh config is created on next access
+        # get_config() reads ENV from environment; match the expected value
         cfg = get_config()
-        assert cfg.env == "development"
+        env_expected = os.environ.get("ENV", "production")
+        assert cfg.env == env_expected
 
     def test_get_driver_returns_singleton(self):
         import kg.config as cfg_module
@@ -273,7 +280,8 @@ class TestBackwardCompat:
 
         with pytest.warns(DeprecationWarning, match="deprecated"):
             env = cfg_module.ENV
-        assert env == "development"
+        env_expected = os.environ.get("ENV", "production")
+        assert env == env_expected
 
     def test_unknown_attr_raises(self):
         import kg.config as cfg_module

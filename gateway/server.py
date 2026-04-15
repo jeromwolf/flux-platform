@@ -117,11 +117,20 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
     _gateway = create_gateway_app(config)
     gw = _gateway
 
+    # Disable interactive docs in production (security: prevent schema exposure)
+    _env = os.getenv("ENV", "production")
+    _is_production = _env == "production"
+    _docs_url = None if _is_production else "/docs"
+    _openapi_url = None if _is_production else "/openapi.json"
+
     app = FastAPI(
         title="IMSP API Gateway",
         version="0.1.0",
         description="API Gateway for the Interactive Maritime Service Platform",
         lifespan=_lifespan,
+        docs_url=_docs_url,
+        openapi_url=_openapi_url,
+        redoc_url=None,
     )
 
     # Middleware registration order note:
@@ -138,8 +147,8 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(gw.config.cors_origins),
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-API-Key", "Accept", "X-Request-ID", "X-KG-Project", "Idempotency-Key"],
         expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "X-KG-Project"],
     )
 
@@ -152,7 +161,7 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
     # 4. Rate Limit
     rate_config = RateLimitConfig(
         requests_per_minute=gw.config.rate_limit_per_minute,
-        exclude_paths=["/health", "/ready", "/docs", "/openapi.json"],
+        exclude_paths=["/health", "/ready"],
     )
     app.add_middleware(RateLimitMiddleware, config=rate_config)
 
@@ -165,7 +174,7 @@ def create_server(config: GatewayConfig | None = None) -> FastAPI:
             keycloak_url=keycloak_url,
             realm=os.getenv("KEYCLOAK_REALM", "imsp"),
             client_id=os.getenv("KEYCLOAK_CLIENT_ID", "imsp-api"),
-            public_paths=["/health", "/ready", "/metrics", "/docs", "/openapi.json", "/ws"],
+            public_paths=["/health", "/ready", "/metrics", "/ws"],
         )
 
     # 7. Metrics request-tracking middleware

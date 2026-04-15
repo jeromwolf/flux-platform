@@ -14,6 +14,7 @@ const defaultConfig: KeycloakConfig = {
 
 let keycloakInstance: Keycloak | null = null
 let initialized = false
+let refreshIntervalId: ReturnType<typeof setInterval> | null = null
 
 export function isKeycloakReady(): boolean {
   return initialized
@@ -38,8 +39,12 @@ export async function initKeycloak(): Promise<boolean> {
     })
 
     if (authenticated) {
+      // Clear any existing interval before creating a new one
+      if (refreshIntervalId !== null) {
+        clearInterval(refreshIntervalId)
+      }
       // Auto-refresh token when it expires
-      setInterval(async () => {
+      refreshIntervalId = setInterval(async () => {
         try {
           await keycloak.updateToken(60) // refresh if token expires within 60s
         } catch {
@@ -56,4 +61,13 @@ export async function initKeycloak(): Promise<boolean> {
     initialized = false
     return false
   }
+}
+
+export function destroyKeycloak(): void {
+  if (refreshIntervalId !== null) {
+    clearInterval(refreshIntervalId)
+    refreshIntervalId = null
+  }
+  initialized = false
+  keycloakInstance = null
 }

@@ -1,4 +1,5 @@
-import { api } from './client'
+import { api, getAuthHeaders } from './client'
+import { useProject, HEADER_NAME as KG_PROJECT_HEADER } from '@/composables/useProject'
 import type { GatewayMetrics } from './types'
 import type {
   HealthResponse,
@@ -127,8 +128,16 @@ export const documentApi = {
     form.append('file', file)
     form.append('description', description)
 
+    const authHeaders = await getAuthHeaders()
+    const { currentProject } = useProject()
+
     const response = await fetch(`${BASE_URL}/v1/documents/upload`, {
       method: 'POST',
+      headers: {
+        ...authHeaders,
+        [KG_PROJECT_HEADER]: currentProject.value,
+        // DO NOT set Content-Type — browser sets multipart/form-data with boundary automatically
+      },
       body: form,
     })
 

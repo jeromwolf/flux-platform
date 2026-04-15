@@ -442,6 +442,7 @@ def _handle_kg_schema(label: str = "") -> str:
                 else:
                     properties_map[lbl] = []
             except Exception:
+                logger.debug("Failed to get properties for label %s", lbl, exc_info=True)
                 properties_map[lbl] = []
 
         result = {

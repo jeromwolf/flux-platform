@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { getKeycloak } from '@/auth/keycloak'
+import { getKeycloak, destroyKeycloak } from '@/auth/keycloak'
 
 export interface UserProfile {
   id: string
@@ -62,6 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
+    destroyKeycloak()
     const kc = getKeycloak()
     await kc.logout({ redirectUri: window.location.origin })
   }
