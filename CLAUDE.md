@@ -64,6 +64,7 @@ flux-platform/
 │   ├── etl/                 # ELT 파이프라인 (ETL→ELT 전환)
 │   ├── lineage/             # W3C PROV-O 리니지 (시간조건부 확장)
 │   ├── rbac/                # RBAC → Keycloak 전환
+│   ├── workflow/            # 워크플로 실행 엔진 (DAG executor, 6 내장 노드, 스케줄러)
 │   ├── entity_resolution/   # 엔티티 해석기
 │   ├── embeddings/          # 임베딩 모듈
 │   └── n10s/                # Neosemantics
@@ -267,7 +268,7 @@ QDRANT_PORT=6333
 6. JWT + Keycloak OIDC 듀얼 모드 인증 구현 완료 (RS256+JWKS + HS256 fallback, base64 fallback 제거됨)
 7. ETL → ELT 전환 완료 (RawStore Protocol + LocalFileStore + deferred mode + reprocess API)
 8. Activepieces 제거 완료, Argo Workflow (K8s only) 전환
-9. 테스트 4,580+ 통과 (unit 4,501 + integration 75), 커버리지 ~92%
+9. 테스트 4,590+ 통과 (unit 4,529 + integration 75), 커버리지 ~92%
 10. E2E 3-Tier 테스트 구축 완료: Mock Harness 112개 + Real Neo4j 10개 + Playwright 브라우저 35개
 11. 멀티 프로젝트 KG 관리 구현 완료 — X-KG-Project 헤더 기반 레이블 격리 (KG_DevKG, KG_ProdKG 등)
 12. S-100 ENC 매핑 스캐폴드 구현 (domains/maritime/s100/)
@@ -275,3 +276,4 @@ QDRANT_PORT=6333
 14. 프로덕션 하드닝 완료: External Secrets, Redis 인증, Cypher 타임아웃, CD 파이프라인, HPA/PDB, AlertManager, Loki 로그, Grafana 대시보드, 운영 Runbook
 15. Cypher LIMIT 자동삽입 RETURN절 한정, _inject_project_label MATCH절 한정, search fulltext fallback 버그 수정
 16. 제품화 하드닝 P0+P1 12건: RBAC 3단계 적용, 기본 ENV→production, CORS 명시화, LLM 스텁→에러, /docs 보호, Alembic 마이그레이션, UI 업로드 인증, 토큰 리프레시 누수 수정, 모바일 사이드바, Gateway/UI K8s 매니페스트, 사일런트 에러 로깅
+17. 워크플로 실행 엔진 구현: DAG executor (위상정렬), 6 내장 노드 (input/api/crawler/process/ai/output), Redis 큐 워커, SSRF 방어, PG 영속화 스케줄러/웹훅, 동시 실행 제한 (per-workflow 3, total 10), 192 테스트

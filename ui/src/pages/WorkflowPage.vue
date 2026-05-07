@@ -5,10 +5,12 @@ import AppShell from '@/layouts/AppShell.vue'
 import WorkflowCanvas from '@/components/workflow/WorkflowCanvas.vue'
 import NodePalette from '@/components/workflow/NodePalette.vue'
 import NodeInspector from '@/components/workflow/NodeInspector.vue'
+import ExecutionPanel from '@/components/workflow/ExecutionPanel.vue'
+import ExecutionHistory from '@/components/workflow/ExecutionHistory.vue'
 import { USpinner } from '@/components/ui'
-import { Plus, Save, CheckCircle2, ChevronDown, Trash2 } from 'lucide-vue-next'
-import { workflowPersistApi } from '@/api/endpoints'
-import type { WorkflowResponse } from '@/api/types'
+import { Plus, Save, CheckCircle2, ChevronDown, Trash2, Play } from 'lucide-vue-next'
+import { workflowPersistApi, executionApi } from '@/api/endpoints'
+import type { WorkflowResponse, ExecutionResponse } from '@/api/types'
 
 const selectedNode = ref<Node | null>(null)
 const canvasRef = ref<InstanceType<typeof WorkflowCanvas> | null>(null)
@@ -126,6 +128,69 @@ async function onWorkflowSave(nodes: Node[], edges: Edge[]) {
 }
 
 onMounted(loadWorkflowList)
+
+// ---- Execution ----
+
+const executing = ref(false)
+const currentExecution = ref<ExecutionResponse | null>(null)
+const executionHistoryRef = ref<InstanceType<typeof ExecutionHistory> | null>(null)
+
+async function executeWorkflow() {
+  if (!activeWorkflowId.value || executing.value) return
+
+  executing.value = true
+  try {
+    const result = await executionApi.execute(activeWorkflowId.value)
+    currentExecution.value = result
+    pollExecution(result.id)
+  } catch (err: unknown) {
+    console.error('워크플로우 실행 실패:', err)
+  } finally {
+    executing.value = false
+  }
+}
+
+async function pollExecution(executionId: string) {
+  const poll = setInterval(async () => {
+    try {
+      const exec = await executionApi.get(executionId)
+      currentExecution.value = exec
+      updateNodeStatuses(exec)
+      if (exec.status !== 'pending' && exec.status !== 'running') {
+        clearInterval(poll)
+        executionHistoryRef.value?.loadHistory()
+      }
+    } catch {
+      clearInterval(poll)
+    }
+  }, 1000)
+}
+
+function updateNodeStatuses(exec: ExecutionResponse) {
+  if (!canvasRef.value) return
+  const nodeResults = exec.node_results || {}
+  // Node status dots are driven by node.data.status — update via the loaded nodes ref
+  // so CustomNode's statusDot computed reflects the live execution state
+  loadedNodes.value = loadedNodes.value.map((n) => {
+    const result = nodeResults[n.id]
+    if (!result) return n
+    return {
+      ...n,
+      data: {
+        ...(n.data as Record<string, unknown>),
+        status: result.status,
+      },
+    } as Node
+  })
+}
+
+function onExecutionSelect(exec: ExecutionResponse) {
+  currentExecution.value = exec
+}
+
+function closeExecutionPanel() {
+  currentExecution.value = null
+}
 </script>
 
 <template>
@@ -214,6 +279,25 @@ onMounted(loadWorkflowList)
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- Execute button -->
+          <button
+            class="flex items-center gap-2 rounded-lg border border-status-success/30 bg-status-success/20 px-3 py-1.5 text-sm font-medium text-status-success transition-colors hover:bg-status-success/30 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!activeWorkflowId || executing"
+            @click="executeWorkflow"
+          >
+            <USpinner v-if="executing" size="sm" />
+            <Play v-else class="h-4 w-4" />
+            {{ executing ? '실행 중...' : '실행' }}
+          </button>
+
+          <!-- Execution history -->
+          <ExecutionHistory
+            ref="executionHistoryRef"
+            :workflow-id="activeWorkflowId"
+            @select="onExecutionSelect"
+          />
+
+          <!-- Save button -->
           <button
             class="flex items-center gap-2 rounded-lg border border-border-default bg-surface-secondary px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-navy-700 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="savingId !== null"
@@ -266,6 +350,7 @@ onMounted(loadWorkflowList)
           />
         </div>
         <NodeInspector :node="selectedNode" @close="closeInspector" />
+        <ExecutionPanel :execution="currentExecution" @close="closeExecutionPanel" />
       </div>
     </div>
   </AppShell>

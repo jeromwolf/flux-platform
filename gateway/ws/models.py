@@ -21,6 +21,8 @@ class WSMessageType(str, Enum):
     PONG = "pong"
     AGENT_QUERY = "agent_query"
     AGENT_RESPONSE = "agent_response"
+    WORKFLOW_EXECUTION = "workflow_execution"
+    NODE_STATUS = "node_status"
 
 
 @dataclass(frozen=True)

@@ -20,6 +20,9 @@ import type {
   WorkflowResponse,
   WorkflowListResponse,
   WorkflowSaveData,
+  ExecutionResponse,
+  ExecutionListResponse,
+  NodeTypeInfo,
 } from './types'
 
 /** Health */
@@ -115,6 +118,27 @@ export const workflowPersistApi = {
 
   delete: (id: string) =>
     api.delete<{ deleted: string }>(`/v1/workflows/${id}`),
+}
+
+/** Workflow execution API */
+export const executionApi = {
+  execute: (workflowId: string, initialData?: Record<string, unknown>[]) =>
+    api.post<ExecutionResponse>(`/v1/workflows/${workflowId}/execute`, { initial_data: initialData }),
+
+  list: (workflowId: string, limit = 20, offset = 0) =>
+    api.get<ExecutionListResponse>(`/v1/workflows/${workflowId}/executions`, { limit, offset }),
+
+  get: (executionId: string) =>
+    api.get<ExecutionResponse>(`/v1/executions/${executionId}`),
+
+  delete: (executionId: string) =>
+    api.delete<{ deleted: string }>(`/v1/executions/${executionId}`),
+
+  getNodeTypes: () =>
+    api.get<NodeTypeInfo[]>('/v1/nodes/types'),
+
+  getNodeSchema: (nodeType: string) =>
+    api.get<{ name: string; display_name: string; parameter_schema: Record<string, unknown> }>(`/v1/nodes/types/${nodeType}/schema`),
 }
 
 /** Document upload API */

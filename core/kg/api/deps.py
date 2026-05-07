@@ -79,6 +79,11 @@ def get_document_repo(request: Request):
     return request.app.state.document_repo
 
 
+def get_execution_repo(request: Request):
+    """Get the execution repository from app state."""
+    return getattr(request.app.state, "execution_repo", None)
+
+
 def get_tool_registry(request: Request):
     """Get the shared tool registry from app state."""
     return getattr(request.app.state, "tool_registry", None)

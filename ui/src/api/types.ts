@@ -213,6 +213,43 @@ export interface WorkflowSaveData {
   viewport?: Record<string, unknown>
 }
 
+/** Execution types */
+export interface ExecutionResponse {
+  id: string
+  workflow_id: string
+  status: 'pending' | 'running' | 'success' | 'error' | 'cancelled'
+  trigger_type: 'manual' | 'schedule' | 'webhook' | 'event'
+  started_at: string
+  finished_at: string | null
+  error_message: string
+  node_results: Record<string, NodeExecutionResult>
+}
+
+export interface NodeExecutionResult {
+  node_id: string
+  node_type: string
+  status: 'idle' | 'running' | 'success' | 'error' | 'skipped'
+  input_data: Record<string, unknown>[]
+  output_data: Record<string, unknown>[]
+  error_message: string
+  started_at: string | null
+  finished_at: string | null
+  duration_ms: number
+}
+
+export interface ExecutionListResponse {
+  executions: ExecutionResponse[]
+  total: number
+}
+
+export interface NodeTypeInfo {
+  name: string
+  display_name: string
+  description: string
+  category: string
+  parameter_schema: Record<string, unknown>
+}
+
 /** Gateway Metrics types */
 export interface GatewayMetrics {
   requestsTotal: number

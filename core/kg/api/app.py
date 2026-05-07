@@ -45,16 +45,20 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         if pool is not None:
             from kg.db.pg_workflow_repo import PgWorkflowRepository
             from kg.db.pg_document_repo import PgDocumentRepository
+            from kg.db.pg_execution_repo import PgExecutionRepository
             app.state.workflow_repo = PgWorkflowRepository(pool)
             app.state.document_repo = PgDocumentRepository(pool)
+            app.state.execution_repo = PgExecutionRepository(pool)
             logger.info("Using PostgreSQL repositories")
         else:
             raise ImportError("No pool")
     except Exception:
         from kg.db.memory_workflow_repo import InMemoryWorkflowRepository
         from kg.db.memory_document_repo import InMemoryDocumentRepository
+        from kg.db.memory_execution_repo import InMemoryExecutionRepository
         app.state.workflow_repo = InMemoryWorkflowRepository()
         app.state.document_repo = InMemoryDocumentRepository()
+        app.state.execution_repo = InMemoryExecutionRepository()
         logger.warning("Using in-memory repositories — data will NOT persist across restarts. Configure PostgreSQL for production.", exc_info=True)
 
     # Agent tool registry (graceful fallback)
@@ -85,7 +89,91 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app.state.document_pipeline = None
         logger.warning("Document pipeline unavailable — file upload/parsing will not work", exc_info=True)
 
+    # Execution worker (Redis-backed task queue)
+    try:
+        from core.workflow.execution_worker import ExecutionWorker
+        app.state.execution_worker = ExecutionWorker(
+            execution_repo=app.state.execution_repo,
+            workflow_repo=app.state.workflow_repo,
+            ws_manager=getattr(app.state, "ws_manager", None),
+        )
+        await app.state.execution_worker.start()
+        logger.info("Execution worker initialized")
+    except Exception:
+        app.state.execution_worker = None
+        logger.warning("Execution worker unavailable -- falling back to in-process execution", exc_info=True)
+
+    # Workflow scheduler + webhook manager (with optional PG persistence)
+    from core.workflow.scheduler import WebhookTokenManager, WorkflowScheduler
+
+    async def scheduled_execute(workflow_id: str, trigger_type: str) -> None:
+        """Execute a workflow triggered by scheduler."""
+        from core.workflow.models import ExecutionResult, TriggerType
+
+        wf = await app.state.workflow_repo.get(workflow_id)
+        if wf is None:
+            logger.warning("Scheduled workflow not found: %s", workflow_id)
+            return
+
+        tt = TriggerType.SCHEDULE if trigger_type == "schedule" else TriggerType.EVENT
+        exec_result = ExecutionResult(workflow_id=workflow_id, trigger_type=tt)
+        execution_repo = getattr(app.state, "execution_repo", None)
+        if execution_repo:
+            await execution_repo.create(exec_result.to_dict())
+
+        execution_worker = getattr(app.state, "execution_worker", None)
+        if execution_worker:
+            await execution_worker.enqueue(
+                execution_id=exec_result.execution_id,
+                workflow_id=workflow_id,
+                trigger_type=trigger_type,
+            )
+        else:
+            # Fallback: in-process execution when worker not available
+            from core.workflow.executor import WorkflowExecutor
+
+            executor = WorkflowExecutor()
+            result = await executor.execute(wf, tt)
+            if execution_repo:
+                await execution_repo.update(
+                    exec_result.execution_id,
+                    {
+                        "status": result.status.value,
+                        "finished_at": result.finished_at.isoformat() if result.finished_at else None,
+                        "error_message": result.error_message,
+                        "node_results": {nid: nr.to_dict() for nid, nr in result.node_results.items()},
+                    },
+                )
+
+    # Use PG-backed schedule/webhook repo when a pool is available
+    schedule_repo = None
+    try:
+        _wf_repo = getattr(app.state, "workflow_repo", None)
+        if _wf_repo is not None and hasattr(_wf_repo, "_pool"):
+            from kg.db.pg_schedule_repo import PgScheduleRepository
+            schedule_repo = PgScheduleRepository(_wf_repo._pool)
+            logger.info("Using PostgreSQL-backed schedule/webhook repository")
+    except Exception:
+        logger.debug("PgScheduleRepository unavailable — schedules/tokens will be in-memory only", exc_info=True)
+
+    app.state.workflow_scheduler = WorkflowScheduler(
+        execute_fn=scheduled_execute,
+        schedule_repo=schedule_repo,
+    )
+    app.state.webhook_manager = WebhookTokenManager(token_repo=schedule_repo)
+    await app.state.workflow_scheduler.start()
+    await app.state.webhook_manager.load_from_db()
+    logger.info("Workflow scheduler and webhook manager initialized")
+
     yield
+    # Shutdown: stop execution worker
+    if hasattr(app.state, "execution_worker") and app.state.execution_worker:
+        await app.state.execution_worker.stop()
+
+    # Shutdown: stop scheduler
+    if hasattr(app.state, "workflow_scheduler"):
+        await app.state.workflow_scheduler.stop()
+
     logger.info("Maritime KG API shutting down -- closing Neo4j drivers")
     close_driver()
     from kg.config import close_async_driver
@@ -222,6 +310,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     from kg.api.routes.relationships import router as relationships_router
     from kg.api.routes.schema import router as schema_router
     from kg.api.routes.workflows import router as workflows_router
+    from kg.api.routes.executions import router as executions_router
+    from kg.api.routes.schedules import router as schedules_router
 
     # --- RBAC dependency tiers ---
     # Base: authenticated user (viewer+)
@@ -248,6 +338,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     app.include_router(agent_router, prefix="/api/v1", dependencies=_write_deps)
     app.include_router(documents_router, prefix="/api/v1", dependencies=_write_deps)
     app.include_router(workflows_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(executions_router, prefix="/api/v1", dependencies=_write_deps)
+    app.include_router(schedules_router, prefix="/api/v1", dependencies=_write_deps)
     app.include_router(algorithms_router, prefix="/api/v1", dependencies=_write_deps)
 
     # Admin routes (admin only)
