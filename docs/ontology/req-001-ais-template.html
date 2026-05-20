@@ -40,7 +40,7 @@
         <div class="section-head"><span class="num">1</span><h2>개요</h2></div>
         <div class="prose card">
           <p><strong>AIS</strong>(Automatic Identification System, 선박자동식별시스템)는 선박이 식별·위치·항행
-            정보를 VHF 대역으로 주기 송신하는 국제 표준 시스템(ITU-R M.1371, NMEA0183)이다.
+            정보를 VHF 대역으로 주기 송신하는 국제 표준 시스템(AIS 메시지 표준 ITU-R M.1371)이다.
             해사서비스 플랫폼에서 <strong>가장 대표적이며 선박 중심 지식그래프의 핵심 연결축</strong>이다.</p>
           <p style="margin-top:8px"><strong>본 템플릿의 목적</strong> — ① AIS 데이터 자체의 표준 분석,
             ② GPS·RADAR·VHF·Port-MIS·CCTV·환경정보 등을 동일한 틀로 확장 분석하는 기준 양식 제공.</p>
@@ -130,7 +130,7 @@
             해사 특화 관계(TRANSMITTED_BY·PORT_ENTRY·PORT_DEPARTURE·ANCHOR_AT·BERTH_TO·UNBERTH_FROM·COMMUNICATE_WITH·PROVIDED_BY·LOCATED_IN)와
             본 분석 제안 관계(ON_VOYAGE·HAS_POSITION)를 구분한다. 영문 명칭·방향의 최종 확정은 DES-001 온톨로지 설계 단계에서 수행한다.
             §5.1의 Vessel·Voyage·Position·Event는 AIS 직접 도출 노드, Port·Route·Area는 타 데이터 연계 시 구체화되는 공간 노드 —
-            인벤토리 ③의 AIS 행은 직접 도출 노드 4종만 싣는다.</div>
+            인벤토리 ③의 AIS 행은 직접 도출 노드 4종만 싣는다. TRANSMITTED_BY·COMMUNICATE_WITH는 AIS 단독이 아닌 VHF 교신 데이터 연계 시 생성되는 관계다.</div>
         </div>
       </div>
 
@@ -143,7 +143,7 @@
           <tbody>
             <tr><td>데이터 구분</td><td>AIS (선박자동식별시스템)</td></tr>
             <tr><td>형식</td><td>바이너리 텍스트(NMEA0183), CSV·OpenAPI(공개 파일)</td></tr>
-            <tr><td>세부 항목</td><td>선박 식별·정적정보, 위치, 침로·속력, ETA·목적지·흘수</td></tr>
+            <tr><td>세부 항목</td><td>선박 식별·정적정보, 위치, 항행정보(침로·속력·선수방향·회전율·항행상태), 운항정보(목적지·ETA·흘수)</td></tr>
             <tr><td>연계 항목</td><td>GPS · RADAR · VHF · Port-MIS · CCTV · 환경정보</td></tr>
             <tr><td>주요 식별자</td><td>MMSI · IMO 번호 · 호출부호</td></tr>
             <tr><td>시공간 정보</td><td>O — 위경도 + 수신시각</td></tr>

@@ -79,15 +79,17 @@
             <tr><td><b>AIS</b></td><td>Vessel·Voyage·Position·Event</td><td>ON_VOYAGE·HAS_POSITION·LOCATED_IN·COMMUNICATE_WITH</td><td>특정 선박·시점·해역 탐색의 기준축</td></tr>
             <tr><td><b>GPS</b></td><td>Position·Vessel</td><td>HAS_POSITION</td><td>위치 정밀도 교차 검증</td></tr>
             <tr><td><b>항해장비</b></td><td>Equipment·SensorReading·Vessel</td><td>EQUIPPED_ON·MEASURED_BY</td><td>선박 운항 상태·기관 모니터링</td></tr>
-            <tr><td><b>RADAR</b></td><td>RadarTarget·Position</td><td>DETECTED·MATCHED_WITH(→Vessel)</td><td>표적-선박 매칭, 미식별 표적 탐지</td></tr>
+            <tr><td><b>RADAR</b></td><td>RadarTarget·Position</td><td>DETECTED·MATCHED_WITH</td><td>표적-선박 매칭, 미식별 표적 탐지</td></tr>
             <tr><td><b>VHF</b></td><td>VHFMessage·Vessel·VTSCenter</td><td>TRANSMITTED_BY·COMMUNICATE_WITH·PROVIDED_BY</td><td>교신 이력 ↔ 위치 연계, 충돌위험 교신 분석</td></tr>
             <tr><td><b>Port-MIS</b></td><td>PortCall·Port·Berth·Vessel</td><td>ARRIVES_AT·DEPARTS_FROM·BERTH_TO</td><td>입출항 이력, 항만 이용 분석</td></tr>
             <tr><td><b>CCTV</b></td><td>CCTVDetection·Vessel·Camera</td><td>LOCATED_IN·DETECTED·BERTH_TO</td><td>영상 표적 검증, 접·이안 모니터링</td></tr>
-            <tr><td><b>환경정보</b></td><td>WeatherObservation·Area·ObservationStation</td><td>OBSERVED·AFFECTS(→Voyage)</td><td>기상-항행 영향, 사고 원인 분석</td></tr>
+            <tr><td><b>환경정보</b></td><td>WeatherObservation·Area·ObservationStation</td><td>OBSERVED·AFFECTS</td><td>기상-항행 영향, 사고 원인 분석</td></tr>
             <tr><td><b>전자해도(ENC)</b></td><td>NavigationArea·Route·NavAid·Depth</td><td>CONTAINS·NEAR·OVERLAPS</td><td>항로 안전, S-100 표준 매핑(REQ-004)</td></tr>
             <tr><td><b>법령</b></td><td>Regulation·LegalReference</td><td>APPLIES_TO·REGULATED_BY</td><td>사고 시 적용 법령 탐색</td></tr>
           </tbody>
         </table></div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:6px">
+          ※ 후보 관계는 요약 표기다 — 방향·도메인 완전형은 ④ §5.2·⑤ §6 참조.</p>
         <div class="callout warn">
           <span class="ico">⚠</span>
           <div><b>KG 후보 노드·관계명은 잠정(provisional)이다.</b> 정성제안서 표 II-7(오재용·김혜진 2024)·표 II-8

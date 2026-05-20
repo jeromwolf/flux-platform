@@ -49,13 +49,15 @@ A 데이터 자체(데이터구분·형식·세부항목) · B 연결 정보(연
 | **AIS** | Vessel·Voyage·Position·Event | ON_VOYAGE·HAS_POSITION·LOCATED_IN·COMMUNICATE_WITH | 특정 선박·시점·해역 탐색의 기준축 |
 | **GPS** | Position·Vessel | HAS_POSITION | 위치 정밀도 교차 검증 |
 | **항해장비** | Equipment·SensorReading·Vessel | EQUIPPED_ON·MEASURED_BY | 선박 운항 상태·기관 모니터링 |
-| **RADAR** | RadarTarget·Position | DETECTED·MATCHED_WITH(→Vessel) | 표적-선박 매칭, 미식별 표적 탐지 |
+| **RADAR** | RadarTarget·Position | DETECTED·MATCHED_WITH | 표적-선박 매칭, 미식별 표적 탐지 |
 | **VHF** | VHFMessage·Vessel·VTSCenter | TRANSMITTED_BY·COMMUNICATE_WITH·PROVIDED_BY | 교신 이력 ↔ 위치 연계, 충돌위험 교신 분석 |
 | **Port-MIS** | PortCall·Port·Berth·Vessel | ARRIVES_AT·DEPARTS_FROM·BERTH_TO | 입출항 이력, 항만 이용 분석 |
 | **CCTV** | CCTVDetection·Vessel·Camera | LOCATED_IN·DETECTED·BERTH_TO | 영상 표적 검증, 접·이안 모니터링 |
-| **환경정보** | WeatherObservation·Area·ObservationStation | OBSERVED·AFFECTS(→Voyage) | 기상-항행 영향, 사고 원인 분석 |
+| **환경정보** | WeatherObservation·Area·ObservationStation | OBSERVED·AFFECTS | 기상-항행 영향, 사고 원인 분석 |
 | **전자해도(ENC)** | NavigationArea·Route·NavAid·Depth | CONTAINS·NEAR·OVERLAPS | 항로 안전, S-100 표준 매핑(REQ-004) |
 | **법령** | Regulation·LegalReference | APPLIES_TO·REGULATED_BY | 사고 시 적용 법령 탐색 |
+
+*※ 후보 관계는 요약 표기다 — 방향·도메인 완전형은 ④ §5.2·⑤ §6 참조.*
 
 > **KG 후보 노드·관계명은 잠정(provisional)이다.** 정성제안서 표 II-7(오재용·김혜진 2024)·표 II-8에 근거한 관계(TRANSMITTED_BY·BERTH_TO·ARRIVES_AT·DEPARTS_FROM·COMMUNICATE_WITH·PROVIDED_BY·LOCATED_IN 등)와, 본 분석에서 도출한 제안 관계(HAS_POSITION·ON_VOYAGE·OBSERVED·AFFECTS·EQUIPPED_ON·MEASURED_BY·DETECTED 등)를 함께 제시한다. 영문 명칭·방향의 최종 확정은 DES-001 온톨로지 설계 단계에서 수행하며, 산출물 ④·⑤와 동일 명칭 체계를 사용한다.
 
