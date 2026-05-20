@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COM-005 산출물 관리 및 제출 (GitHub) | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="COM-005">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>공통</span><span class="sep">›</span>
+        <span class="cur">COM-005</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">공통 요구사항</div>
+        <h1 class="page-title">COM-005 · 산출물 관리 및 제출 (GitHub)</h1>
+        <p class="page-desc">과업지시서 COM-005에 따라 용역 감독관의 GitHub에 용역 수행 중 산출되는 모든 산출물을 등록하여 변경을 관리한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">공통</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">전원</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">상시 (전 기간)</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">GitHub 리포지토리 (산출물 버전 관리)</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">—</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">전체 산출물</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>COM-005는 산출물의 형상 관리 체계다. 감독관 GitHub에 모든 산출물을 등록하고, 폴더 구조·커밋 규칙·PR 리뷰 절차를 정해 변경 이력을 투명하게 관리한다. 프로젝트 전 기간에 걸쳐 상시 운영된다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>리포지토리 구조 수립</h4><p>01_data_analysis · 02_ontology_design · 03_poc · 04_2nd_year_design · 05_reports 폴더 구조로 산출물 유형별 관리.</p></div>
+          <div class="method-step"><h4>커밋 규칙 정의</h4><p>[날짜][담당자] 작업내용 형식 커밋 메시지 + 주요 산출물 마일스톤 태그(v0.1, v1.0).</p></div>
+          <div class="method-step"><h4>접근 권한 설정</h4><p>감독관 계정을 Repository Owner, 수행 인력은 Contributor 권한.</p></div>
+          <div class="method-step"><h4>PR 기반 리뷰·승인</h4><p>주요 산출물 제출 전 PR로 감독관 리뷰·승인 후 병합.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">2건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">감독관 GitHub 계정·리포지토리 — 착수 시 KRISO와 셋업 필요</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">COM-005는 "감독관의 GitHub"를 전제. 계정·리포·권한이 없으면 산출물 관리 체계가 시작되지 않는다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">착수보고 회의에서 감독관 GitHub 계정 확인 + 리포지토리 생성·권한 부여를 1차 안건으로 처리.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">보안 — 해사 데이터 민감정보 GitHub 업로드 금지</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">제안서 보안계획은 보안등급 데이터의 외부 클라우드 업로드를 금지. GitHub도 외부 저장소.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">산출물 "문서"만 GitHub 관리, 보안등급 원천 데이터는 연구소 내부 환경에만 보관. 디지털 파일은 암호화 압축 후 업로드.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="com005-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">감독관 GitHub 리포지토리 생성·권한</div>
+            <div class="ck-desc">Owner/Contributor 설정</div></div></li>
+          <li class="check" data-ck="com005-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">리포 폴더 구조 수립</div>
+            <div class="ck-desc">01~05 유형별 폴더</div></div></li>
+          <li class="check" data-ck="com005-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">커밋 규칙·태그 정책</div>
+            <div class="ck-desc">[날짜][담당자] + 마일스톤 태그</div></div></li>
+          <li class="check" data-ck="com005-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">PR 리뷰·승인 워크플로</div>
+            <div class="ck-desc">주요 산출물 제출 전 PR</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">COM-005 GitHub 산출물 관리</div>
+            <div class="a-path">docs/COM-005_GitHub_산출물_관리.md</div></div>
+          <span class="a-tag reuse">재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-24 — GitHub 버전 관리 체계</div>
+            <div class="a-path">리포 구조·커밋 규칙 기초</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

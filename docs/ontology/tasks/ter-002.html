@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TER-002 지식그래프 시각화 및 탐색 인터페이스 PoC 검증 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="TER-002">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>3단계</span><span class="sep">›</span>
+        <span class="cur">TER-002</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">3단계 · 시험 요구사항</div>
+        <h1 class="page-title">TER-002 · 지식그래프 시각화 및 탐색 인터페이스 PoC 검증</h1>
+        <p class="page-desc">설계된 온톨로지 및 스키마를 기반으로 지식그래프 탐색 및 시각화 프로토타입을 구현하고 사용자 관점의 시각적 분석 실현 가능성을 검증한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">3단계</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">신동욱</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+7</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">지식그래프 모델 PoC 결과 보고서 (시각화)</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">DES-001 · DES-004</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">2차년도 설계서</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>TER-002는 사람이 KG를 눈으로 탐색할 수 있는지 검증한다. 노드-엣지 그래프 시각화, 선박 항적과 지식 노드를 지도·타임라인에 결합, 대용량 렌더링 성능이 핵심이다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>자산 탐색·관계 시각화</h4><p>Neo4j Bloom 또는 D3.js 기반 1-hop/2-hop 연관 자산 탐색·레이아웃 + 노드 클릭 시 속성 상세 패널 + 분류체계 계층 탐색 UI.</p></div>
+          <div class="method-step"><h4>시공간 데이터 연계 시각화</h4><p>선박 항적과 연관 지식 노드(기상·법령)를 Leaflet 지도와 결합 + 타임라인 슬라이더 연동 동적 그래프 변화.</p></div>
+          <div class="method-step"><h4>시각화 성능·대용량 대응 측정</h4><p>대규모 노드/엣지 렌더링 응답 성능 + 노드 필터링·검색·클러스터링 인터페이스 적정성 평가.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">시각화 도구 선택 — Neo4j Bloom(상용) vs D3.js(오픈소스)</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">Bloom은 강력하나 Enterprise 라이선스. D3.js는 무료지만 개발 공수 큼.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">PoC는 D3.js 또는 Neo4j 무료 시각화로 검증, Bloom은 2차년도 라이선스 검토 사항으로 분리.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">대용량 렌더링 성능 — 1,000노드 3초 목표 검증</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">제안서 합격 기준은 1,000노드/2,000엣지 3초 이내. 웹 기반 렌더링에서 도전적인 목표.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">노드 클러스터링·레벨오브디테일(LOD)·가상화 기법을 설계에 포함. 목표 미달 시 KRISO와 기준 협의(제안서 리스크 관리).</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">지도 라이브러리 — Leaflet vs 대안</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">선박 항적 지도 시각화에 Leaflet을 제안. 해도(S-100) 표시 요구 시 전용 라이브러리 검토 필요.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">PoC는 Leaflet + OSM 기본. S-100 전자해도 오버레이는 2차년도 검토.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="ter002-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">자산 탐색·관계 그래프 시각화</div>
+            <div class="ck-desc">1-hop/2-hop + 속성 패널 + 계층 탐색</div></div></li>
+          <li class="check" data-ck="ter002-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">시공간 데이터 지도·타임라인 연계</div>
+            <div class="ck-desc">Leaflet 지도 + 타임라인 슬라이더</div></div></li>
+          <li class="check" data-ck="ter002-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">시각화 성능 측정</div>
+            <div class="ck-desc">1,000노드 3초 · 2-hop 2초 · 필터 1초</div></div></li>
+          <li class="check" data-ck="ter002-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">시각화 PoC 결과 정리</div>
+            <div class="ck-desc">PoC 결과 보고서 통합</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📁</div>
+          <div class="a-body"><div class="a-name">사전 개발 UI (VueFlow 캔버스)</div>
+            <div class="a-path">ui/</div></div>
+          <span class="a-tag reuse">재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-15 — 시각화 성능 측정 기준</div>
+            <div class="a-path">렌더링·응답·필터 기준</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

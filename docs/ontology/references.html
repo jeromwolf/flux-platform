@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조사 참고자료 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <span class="cur">조사 참고자료</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">자체 조사 · 리서치</div>
+        <h1 class="page-title">조사 참고자료</h1>
+        <p class="page-desc">당사가 공개 자료를 기반으로 자체 조사하는 항목의 참고 URL·자료 모음이다.
+          KRISO 협조 없이 진행하며, 연구소가 추가 자료를 알려주면 본 목록에 보강한다.</p>
+      </div>
+
+      <div class="callout warn">
+        <span class="ico">⚠</span>
+        <div>URL은 작성 시점(2026-05) 기준이다. 접속 시 변경·이전이 확인되면
+          본 페이지의 문서 업데이트 로그에 기록하고 갱신한다.</div>
+      </div>
+
+      <!-- 1. 그래프 DB 기술 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>그래프 DB 기술</h2>
+          <span class="hint">REQ-003</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>자료</th><th>링크</th><th>설명</th></tr></thead>
+            <tbody>
+              <tr><td>Neo4j</td>
+                <td><a href="https://neo4j.com" target="_blank" rel="noopener">neo4j.com</a></td>
+                <td>LPG 그래프 DB · Cypher · 벡터 인덱스 · 공식 문서·다운로드</td></tr>
+              <tr><td>ISO/IEC 39075 (GQL)</td>
+                <td><a href="https://www.iso.org" target="_blank" rel="noopener">iso.org</a></td>
+                <td>그래프 질의 언어 국제 표준 (2024 채택)</td></tr>
+              <tr><td>Apache Jena</td>
+                <td><a href="https://jena.apache.org" target="_blank" rel="noopener">jena.apache.org</a></td>
+                <td>RDF/SPARQL 프레임워크 — LPG vs RDF 비교용</td></tr>
+              <tr><td>Memgraph</td>
+                <td><a href="https://memgraph.com" target="_blank" rel="noopener">memgraph.com</a></td>
+                <td>인메모리 그래프 DB — 실시간 스트리밍 대안 검토</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. 해사 국제 표준 -->
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>해사 국제 표준</h2>
+          <span class="hint">REQ-004</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>자료</th><th>링크</th><th>설명</th></tr></thead>
+            <tbody>
+              <tr><td>IHO (국제수로기구)</td>
+                <td><a href="https://iho.int" target="_blank" rel="noopener">iho.int</a></td>
+                <td>S-100 범용 수로 데이터 모델 · S-101 ENC 등 Product Specification</td></tr>
+              <tr><td>IMO (국제해사기구)</td>
+                <td><a href="https://www.imo.org" target="_blank" rel="noopener">imo.org</a></td>
+                <td>GMDSS · e-Navigation · FAL Convention · MASS</td></tr>
+              <tr><td>IHO S-100 등록부</td>
+                <td><a href="https://registry.iho.int" target="_blank" rel="noopener">registry.iho.int</a></td>
+                <td>S-100 Feature Catalogue · 객체·속성 레지스트리</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. 한국 해양 데이터 포털 -->
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>한국 해양 데이터 포털</h2>
+          <span class="hint">REQ-001 · 외부 기관 데이터 현황</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>기관·포털</th><th>링크</th><th>설명</th></tr></thead>
+            <tbody>
+              <tr><td>해양수산부</td>
+                <td><a href="https://www.mof.go.kr" target="_blank" rel="noopener">mof.go.kr</a></td>
+                <td>해사 정책·데이터 총괄 부처</td></tr>
+              <tr><td>국립해양조사원 (KHOA)</td>
+                <td><a href="https://www.khoa.go.kr" target="_blank" rel="noopener">khoa.go.kr</a></td>
+                <td>전자해도·수심·조석·해양관측</td></tr>
+              <tr><td>바다누리 해양정보 서비스</td>
+                <td><a href="https://www.khoa.go.kr/oceangrid/" target="_blank" rel="noopener">khoa.go.kr/oceangrid</a></td>
+                <td>격자체계 기반 해양관측·예측 정보 통합 서비스</td></tr>
+              <tr><td>해양환경정보포털 (MEIS)</td>
+                <td><a href="https://www.meis.go.kr" target="_blank" rel="noopener">meis.go.kr</a></td>
+                <td>수질·퇴적물·해양생물·해양환경 데이터</td></tr>
+              <tr><td>해양공간통합관리정보시스템</td>
+                <td><a href="https://www.msp.go.kr" target="_blank" rel="noopener">msp.go.kr</a></td>
+                <td>해양공간계획·해양공간 정보</td></tr>
+              <tr><td>기상청</td>
+                <td><a href="https://www.kma.go.kr" target="_blank" rel="noopener">kma.go.kr</a></td>
+                <td>해상·해양 기상 데이터</td></tr>
+              <tr><td>공공데이터포털</td>
+                <td><a href="https://www.data.go.kr" target="_blank" rel="noopener">data.go.kr</a></td>
+                <td>해양 분야 공공 데이터·Open API 검색</td></tr>
+              <tr><td>해양경찰청</td>
+                <td><a href="https://www.kcg.go.kr" target="_blank" rel="noopener">kcg.go.kr</a></td>
+                <td>해양사고·수색구조·해양안전 (상세 데이터는 비공개)</td></tr>
+              <tr><td>한국해양과학기술원 (KIOST)</td>
+                <td><a href="https://www.kiost.ac.kr" target="_blank" rel="noopener">kiost.ac.kr</a></td>
+                <td>해양 과학 관측·위성·해저지형 데이터</td></tr>
+              <tr><td>선박해양플랜트연구소 (KRISO)</td>
+                <td><a href="https://www.kriso.re.kr" target="_blank" rel="noopener">kriso.re.kr</a></td>
+                <td>발주처 · 시험시설·연구 정보</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. 학술 선행연구 -->
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>학술 선행연구</h2>
+          <span class="hint">REQ-004 · DES-001</span></div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>개별 논문 링크는 학술 DB에서 제목으로 검색한다. 아래는 제안서가 인용한 핵심 선행연구다.</div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>선행연구</th><th>출처</th><th>활용</th></tr></thead>
+            <tbody>
+              <tr><td>오재용·김혜진 (2024) — 멀티 모달 해사 데이터 관리 체계 설계에 관한 연구</td>
+                <td>Journal of the Korean Society of Marine Environment &amp; Safety</td>
+                <td>멀티모달 해사데이터 8종 명세·관계 유형 — REQ-001 인벤토리·DES-001 관계 설계</td></tr>
+              <tr><td>MAKG — Maritime Accident KG (Liu &amp; Cheng, 2024)</td>
+                <td>학술 DB (제목 검색)</td>
+                <td>해양사고 KG 구조·NER 방법론 — DES-001 차별화 분석</td></tr>
+              <tr><td>PIKG — Place Identifier KG (김지영·이지원, 2024)</td>
+                <td>학술 DB (제목 검색)</td>
+                <td>ISO 19155 장소식별자 기반 LPG 실증 — 시공간 관계 설계</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px">
+          <span style="font-size:.8rem;color:var(--text-2)">학술 검색:</span>
+          <a href="https://www.kci.go.kr" target="_blank" rel="noopener" class="tag">KCI 한국학술지인용색인</a>
+          <a href="https://scholar.google.com" target="_blank" rel="noopener" class="tag">Google Scholar</a>
+          <a href="https://www.dbpia.co.kr" target="_blank" rel="noopener" class="tag">DBpia</a>
+        </div>
+      </div>
+
+      <!-- 5. 글로벌 해사 KG 참고 -->
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>글로벌 해사 KG·데이터 참고</h2>
+          <span class="hint">배경 조사</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>자료</th><th>링크</th><th>설명</th></tr></thead>
+            <tbody>
+              <tr><td>MarineTraffic</td>
+                <td><a href="https://www.marinetraffic.com" target="_blank" rel="noopener">marinetraffic.com</a></td>
+                <td>글로벌 선박 추적 · 공개 AIS 데이터 (PoC 대체 데이터원)</td></tr>
+              <tr><td>EU EMODnet</td>
+                <td><a href="https://emodnet.ec.europa.eu" target="_blank" rel="noopener">emodnet.ec.europa.eu</a></td>
+                <td>유럽 해양 관측 데이터 네트워크 · Linked Data 사례</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 문서 업데이트 로그 -->
+      <div class="section">
+        <div class="section-head"><span class="num">+</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">조사 참고자료 페이지 생성 — 그래프 DB·국제표준·한국 해양 포털·학술 선행연구·글로벌 참고 5개 분류.</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

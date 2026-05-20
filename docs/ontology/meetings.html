@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회의록 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <span class="cur">회의록</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">내부 협의 기록</div>
+        <h1 class="page-title">회의록</h1>
+        <p class="page-desc">㈜인사이트마이닝 내부 미팅 및 KRISO 정기 협의 기록. 최신순 정렬.
+          자체 미팅은 매주 화요일 오전 8시, KRISO 격주 협의는 별도다.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">▦</span><h2>회의 기록</h2>
+          <span class="hint">총 1건</span></div>
+        <div class="task-grid">
+
+          <a class="task-card com" href="meetings/meeting-2026-05-20.html">
+            <div class="tc-top">
+              <span class="tc-code">2026-05-20</span>
+              <span class="badge done">내부 회의</span>
+            </div>
+            <div class="tc-title">[해양플랜트 과제] 착수 1차 내부 회의</div>
+            <div class="tc-meta">
+              <span><b>참석</b> 양선희·신동욱·이부일·이재현</span>
+              <span><b>차기</b> 05-26 (화) 08:00</span>
+            </div>
+            <div style="font-size:.76rem;color:var(--text-2);margin-top:8px">
+              제안서·RFP 숙지 우선 · 착수보고서 최우선 · REQ-001 숙지</div>
+          </a>
+
+        </div>
+      </div>
+
+      <div class="callout info">
+        <span class="ico">◆</span>
+        <div>새 회의록은 <code>meetings/</code> 폴더에 개별 페이지로 추가하고, 위 목록에 카드 1개를 추가한다.
+          회의록 목록은 항상 짧게 유지된다.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

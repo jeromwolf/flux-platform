@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TER-001 PoC 구축 및 기능 검증 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="TER-001">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>3단계</span><span class="sep">›</span>
+        <span class="cur">TER-001</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">3단계 · 시험 요구사항</div>
+        <h1 class="page-title">TER-001 · PoC 구축 및 기능 검증</h1>
+        <p class="page-desc">설계된 온톨로지 및 스키마를 기반으로 지식그래프 PoC 프로토타입을 구축하고 시험을 수행하여 실현가능성(feasibility)을 검증한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">3단계</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">신동욱</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+7</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">지식그래프 모델 PoC 결과 보고서</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">DES-001 · DES-002 · DES-003 · DES-004</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">TER-002 · 2차년도 설계서</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>TER-001은 설계가 실제로 동작하는지 증명한다. 단순 설계 검토가 아니라 KRISO K8s 환경에 그래프 DB를 배포하고 샘플 데이터 3종을 적재하여 시공간·관계 탐색을 시험한다. 합격 기준(관계 정확도 90%, 3-hop 탐색, 시나리오 3건)을 충족해야 한다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>PoC 환경 구축·데이터 적재</h4><p>선정 그래프 DB를 KRISO K8s 플랫폼에 배포·최적화 + 샘플 데이터 3종을 DES-003 ETL로 적재 + DES-002 물리 스키마 제약 준수 확인.</p></div>
+          <div class="method-step"><h4>시공간·관계 탐색 기능 시험</h4><p>특정 선박 궤적-인접 자산 시공간 관계 추출 + 다단계 경로(Multi-hop) 탐색 + 도메인 복합 쿼리 시나리오 검증.</p></div>
+          <div class="method-step"><h4>성능·확장성 평가</h4><p>대용량 환경 응답 성능 측정 + 신규 노드/엣지 추가 시 성능 저하·확장성 한계 측정.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev high">HIGH</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">K8s 플랫폼 접근 권한 — KRISO 제공 의존 (M+5)</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">PoC는 KRISO K8s 인프라에 배포. 접근 권한이 M+5에 제공되지 않으면 PoC 착수 불가.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">착수보고서에 K8s 접근 권한 요청(M+5)을 명시. 지연 대비 로컬/사내 K8s 환경에서 사전 검증 후 이식.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev high">HIGH</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">PoC 샘플 데이터 3종 — KRISO 지정·제공 의존 (M+3)</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">제안서는 시험시설 메타데이터·연구논문·해양기상/사고 3종을 PoC 대상으로 구체화. M+3 제공 필요.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">제안서 명시 대로 내부 데이터 지연 시 공개 AIS 데이터(MarineTraffic API)로 대체 적용, 실 데이터 확보 시 교체.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">DES-001~004 완료(M+5) 후 PoC 착수 — M+5~M+7 2개월 압축</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">PoC는 모든 설계(DES)의 완료를 전제. M+5 설계 완료 후 M+7까지 2개월에 구축·시험·보고서를 끝내야 한다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">설계 진행 중 PoC 환경(K8s 배포·도구 셋업)을 병행 준비. DES Step별 확정분을 점진 적재하여 일정 압축에 대비.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="ter001-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">PoC 환경 구축 (K8s 배포)</div>
+            <div class="ck-desc">그래프 DB 배포·최적화 설정</div></div></li>
+          <li class="check" data-ck="ter001-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">샘플 데이터 3종 적재</div>
+            <div class="ck-desc">ETL 파이프라인 통한 적재 + 스키마 제약 확인</div></div></li>
+          <li class="check" data-ck="ter001-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">시공간·관계 탐색 시험</div>
+            <div class="ck-desc">관계 정확도 90% · 3-hop 탐색 · 시나리오 3건</div></div></li>
+          <li class="check" data-ck="ter001-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">성능·확장성 평가</div>
+            <div class="ck-desc">단순&lt;1s·복합&lt;5s · 10만 노드 선형</div></div></li>
+          <li class="check" data-ck="ter001-5"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">PoC 검증 결과보고서</div>
+            <div class="ck-desc">샘플 매핑 + 프로토타입 시험 + 종합 검증</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📁</div>
+          <div class="a-body"><div class="a-name">사전 개발 KG 엔진 (Neo4j + ETL)</div>
+            <div class="a-path">core/kg/</div></div>
+          <span class="a-tag reuse">재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-11~13 — PoC 데이터·합격기준·성능목표</div>
+            <div class="a-path">PoC 검증 기준</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">✎</div>
+          <div class="a-body"><div class="a-name">PoC 결과 보고서</div>
+            <div class="a-path">신규 작성 대상</div></div>
+          <span class="a-tag new">신규 작성</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COM-004 필요 장비 및 소프트웨어 확보 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="COM-004">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>공통</span><span class="sep">›</span>
+        <span class="cur">COM-004</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">공통 요구사항</div>
+        <h1 class="page-title">COM-004 · 필요 장비 및 소프트웨어 확보</h1>
+        <p class="page-desc">연구 및 PoC 수행을 위한 필요 장비 및 소프트웨어(그래프 DB 라이선스 등)를 업체가 확보하여 업무에 사용한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">공통</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">신동욱</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+5 이전 (PoC 착수 전)</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">PoC 장비·SW 환경</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">REQ-003</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">TER-001 · TER-002</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>COM-004는 PoC(TER-001·002) 수행에 필요한 장비·소프트웨어를 누가 확보하는지 규정한다. 업체 확보가 원칙이며, 연구소 보유 검증용 소프트웨어가 있으면 제공받을 수 있다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>PoC 장비·SW 목록 산정</h4><p>PoC 수행에 필요한 장비·소프트웨어 목록을 REQ-003 그래프 DB 선정 결과와 연계하여 산정.</p></div>
+          <div class="method-step"><h4>그래프 DB 라이선스 확보</h4><p>오픈소스(Neo4j Community 등) 우선 적용 — 라이선스 비용 최소화.</p></div>
+          <div class="method-step"><h4>연구소 보유 SW 확인</h4><p>연구소가 보유한 검증용 소프트웨어가 있으면 제공 가능 여부 확인.</p></div>
+          <div class="method-step"><h4>사후관리 라이선스 정리</h4><p>본 용역 이후 사후 관리를 위해 검증에 활용한 장비·SW 라이선스를 필요 시 연구소에 제공.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">2건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">Neo4j Community vs Enterprise 라이선스 — REQ-003과 연계</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">PoC는 Community로 충분하나 GDS·HA 등은 Enterprise 필요. 라이선스 결정이 비용에 영향.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">REQ-003 그래프 DB 평가 결과에 따라 1차년도는 Community로 PoC, Enterprise 전환은 2차년도 검토.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">연구소 K8s 인프라 활용 범위</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">PoC는 연구소 K8s 플랫폼에 배포(TER-001). 업체 장비와 연구소 인프라의 경계 설정이 필요.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">착수 협의에서 PoC 환경(연구소 K8s)과 개발 환경(업체 장비)의 역할 분담을 확정.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="com004-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">PoC 장비·SW 목록 산정</div>
+            <div class="ck-desc">REQ-003 선정 결과 연계</div></div></li>
+          <li class="check" data-ck="com004-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">그래프 DB 라이선스 확보</div>
+            <div class="ck-desc">오픈소스 우선</div></div></li>
+          <li class="check" data-ck="com004-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">연구소 보유 검증 SW 확인</div>
+            <div class="ck-desc">제공 가능 여부</div></div></li>
+          <li class="check" data-ck="com004-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">사후관리 라이선스 정리</div>
+            <div class="ck-desc">연구소 제공 대상 식별</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">과업지시서 COM-004 — 장비·SW 확보</div>
+            <div class="a-path">REQ-003 그래프 DB 평가 연계</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

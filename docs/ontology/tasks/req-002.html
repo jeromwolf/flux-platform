@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REQ-002 지식그래프 구축 대상 자산 선정 및 로드맵 수립 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="REQ-002">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>1단계</span><span class="sep">›</span>
+        <span class="cur">REQ-002</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">1단계 · 연구 요구사항</div>
+        <h1 class="page-title">REQ-002 · 지식그래프 구축 대상 자산 선정 및 로드맵 수립</h1>
+        <p class="page-desc">대화형 해사서비스 플랫폼에서 지식그래프로 관리할 멀티모달 데이터·모델·소프트웨어 자산의 유형과 범위를 정의하고 전략적 우선순위를 도출한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">1단계</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">이부일 · 이재현</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+2</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">해사 데이터 현황 분석 보고서 (REQ-001과 통합)</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">REQ-001</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">DES-001 · DES-002</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>REQ-001이 "데이터가 무엇인가"를 조사했다면, REQ-002는 "무엇을 먼저 지식그래프로 만들까"를 결정한다. 모든 데이터를 일괄 그래프화하지 않고 플랫폼 활용성·구축 효율을 고려한 단계적 우선순위를 세우는 것이 핵심이다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>플랫폼 자산 유형 정의</h4><p>데이터 자산(선박 정적/동적 궤적/환경/비정형 문서) · 모델 자산(AI 분석/시뮬레이션) · 인프라·워크플로우(컴퓨팅 노드/처리 파이프라인/에이전트) 3대 유형으로 범위 선정.</p></div>
+          <div class="method-step"><h4>편입 기준·우선순위 도출</h4><p>연결밀도(Centrality) 40% · 활용성·시급성 35% · 데이터 품질 25% 가중치로 평가.</p></div>
+          <div class="method-step"><h4>자산 간 관계 유형 사전 정의</h4><p>계층 관계(Taxonomy) · 참조/의존 관계 · 시공간 관계를 온톨로지 설계 전에 사전 식별.</p></div>
+          <div class="method-step"><h4>단계별 구축 로드맵 수립</h4><p>1단계 PoC 핵심 자산(Target Subset) → 2~3차년도 전사 자산 통합·실시간 연계 확장.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">REQ-001 데이터 인벤토리 완료 전에는 우선순위 평가 불가</span>
+            <span class="issue-state progress">진행 중</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">우선순위 선정은 REQ-001의 9컬럼 인벤토리가 입력. 인벤토리 미완 시 평가 점수를 매길 수 없다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">REQ-001과 동일 팀(이부일·이재현)이 수행하므로 인벤토리 작성과 병행. AIS 등 확정 데이터부터 점진 평가.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">가중치 40/35/25 평가의 정량 산정 방법 미확정</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">연결밀도·활용성·품질을 어떻게 점수화할지(0-100) 기준이 없으면 평가가 주관적이 된다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">각 축별 1-5점 척도 + 측정 근거를 정의한 평가 루브릭을 작성하고 KRISO 1차 협의에서 합의.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">Core/Extended/Future 경계값(80/60)의 KRISO 합의 필요</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">제안서는 80점↑ Core, 60-79 Extended, 60↓ Future로 제시. 경계값은 KRISO와 합의되어야 검수 근거가 된다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">경계값을 착수보고서 또는 1차 협의 안건으로 상정.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="req002-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">플랫폼 자산 유형 3대 분류 정의</div>
+            <div class="ck-desc">데이터/모델/인프라·워크플로우</div></div></li>
+          <li class="check" data-ck="req002-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">우선순위 평가 가중치·루브릭 확정</div>
+            <div class="ck-desc">40/35/25 + 점수 산정 기준</div></div></li>
+          <li class="check" data-ck="req002-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">자산 간 관계 유형 사전 정의</div>
+            <div class="ck-desc">계층/참조·의존/시공간</div></div></li>
+          <li class="check" data-ck="req002-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">지식그래프 구축 대상 자원 우선순위 선정표</div>
+            <div class="ck-desc">Core/Extended/Future 분류</div></div></li>
+          <li class="check" data-ck="req002-5"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">단계별 구축 로드맵</div>
+            <div class="ck-desc">PoC → 2-3차년도 확장</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">REQ-002 KG 구축 대상 자원 선정</div>
+            <div class="a-path">docs/REQ-002_KG_구축_대상_자원_선정.md</div></div>
+          <span class="a-tag reuse">부분 재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-1 — 자산 우선순위 평가 가중치</div>
+            <div class="a-path">연결밀도 40% · 활용성 35% · 품질 25%</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

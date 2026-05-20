@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REQ-003 지식그래프 DB 기술 조사 및 최적 솔루션 평가 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="REQ-003">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>1단계</span><span class="sep">›</span>
+        <span class="cur">REQ-003</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">1단계 · 연구 요구사항</div>
+        <h1 class="page-title">REQ-003 · 지식그래프 DB 기술 조사 및 최적 솔루션 평가</h1>
+        <p class="page-desc">해사 멀티모달 데이터의 효율적 저장·탐색·추론을 위한 그래프 DB 기술을 조사하고 PoC·2차년도 구축에 최적인 솔루션을 선정한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">1단계</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">신동욱</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+2</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">지식그래프 온톨로지 설계서 (M+5)에 포함</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">REQ-001</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">DES-002 · TER-001</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>과업지시서는 LPG와 RDF를 객관적으로 비교한 후 선정할 것을 요구한다. 제안서는 PIKG 국내 실증 사례를 근거로 Neo4j LPG를 우선 권고했으나, 검수에서 "형식적 비교"로 보이지 않도록 정량 평가표 기반의 객관적 분석이 필요하다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>그래프 데이터 모델 비교</h4><p>LPG(Neo4j·Memgraph) vs RDF(Apache Jena·Stardog) — 모델 특성·쿼리 언어·시공간 지원·스키마 유연성·K8s 배포·LLM 연계 6축 비교.</p></div>
+          <div class="method-step"><h4>해사 특화 평가 기준 수립</h4><p>시공간 쿼리 지원 · 대규모 처리량(수백만 AIS) · 스키마 유연성 · 2차년도 LLM/GraphRAG 연계 용이성.</p></div>
+          <div class="method-step"><h4>라이선스·운영 환경 검토</h4><p>Neo4j Community vs Enterprise · 오픈소스 vs 상용 TCO · 연구소 K8s 인프라 연동성.</p></div>
+          <div class="method-step"><h4>최적 솔루션 제안</h4><p>PoC용 최종 선정 + 선정 사유 명시 + 데이터 모델링·쿼리 튜닝 가이드라인.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">과업지시서는 객관적 LPG/RDF 비교 요구 — 제안서는 이미 Neo4j 권고</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">결론이 정해진 채로 비교하면 검수 시 "형식적"이라는 지적 가능. 평가의 객관성 입증이 필요.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">6축 정량 평가표 + 가중치 + 점수를 제시하고, PIKG/MAKG 등 국내외 실증 사례를 근거로 결론 도출.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">Neo4j Community vs Enterprise 라이선스 — 2차년도 비용 영향</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">Community는 무료지만 GDS 그래프 알고리즘·HA·RBAC 미지원. PoC는 CE로 충분하나 2차년도 구축 시 비용 발생.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">1차년도는 CE로 PoC 수행, 2차년도 Enterprise 전환 여부를 비용·기능 분석과 함께 권고에 명시.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">Memgraph 등 대안 솔루션의 검토 깊이</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">Memgraph(인메모리)는 실시간 AIS 스트리밍에 강점. 검토 누락 시 비교 완결성 부족.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">주요 대안 3-4종을 비교표에 포함하되, 2차년도 하이브리드 구조 검토 사항으로 별도 정리.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="req003-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">LPG vs RDF 6축 비교표</div>
+            <div class="ck-desc">모델/쿼리/시공간/스키마/배포/LLM</div></div></li>
+          <li class="check" data-ck="req003-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">해사 특화 평가 기준 수립</div>
+            <div class="ck-desc">시공간·처리량·유연성·LLM 연계</div></div></li>
+          <li class="check" data-ck="req003-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">라이선스·운영환경 검토</div>
+            <div class="ck-desc">CE/EE · TCO · K8s 연동</div></div></li>
+          <li class="check" data-ck="req003-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">최적 솔루션 제안서</div>
+            <div class="ck-desc">선정 + 사유 + 튜닝 가이드</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">REQ-003 그래프DB 기술 비교</div>
+            <div class="a-path">docs/REQ-003_그래프DB_기술_비교.md</div></div>
+          <span class="a-tag reuse">부분 재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-7 — LPG/RDF 비교</div>
+            <div class="a-path">6축 비교 기초 자료</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-8 — PIKG 시공간 관계 실증</div>
+            <div class="a-path">김지영·이지원 2024 · LPG 선정 근거</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

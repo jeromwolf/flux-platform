@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COM-001 보안 요건 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="COM-001">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>공통</span><span class="sep">›</span>
+        <span class="cur">COM-001</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">공통 요구사항</div>
+        <h1 class="page-title">COM-001 · 보안 요건</h1>
+        <p class="page-desc">일반용역 수행 시 보안 요건 — 본 사업 수행 중 취득한 지식에 대해 사업 완료 후에도 비밀 보안을 준수하고, 연구 데이터 및 관련 소프트웨어의 유출을 방지한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">공통</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">전원 (보안관리자 지정)</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">상시 (전 기간)</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">보안 관리 체계 (운영 준수 항목)</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">—</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">전체 태스크</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>해사 데이터에는 보안등급이 지정된 데이터가 포함될 수 있다. COM-001은 프로젝트 전 기간에 걸친 보안 준수 체계를 규정한다. 제안서 보안관리 계획(표 II-27)의 5개 보안 항목으로 대응한다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>보안각서 제출·보안관리자 지정</h4><p>계약 체결 즉시 PM 및 전 참여자 보안각서 제출 + 정·부 보안관리자 지정.</p></div>
+          <div class="method-step"><h4>개발 자산 별도 관리</h4><p>개발 컴퓨터·디스크·CD·출력물을 별도 관리하여 연구 데이터·소프트웨어 유출 방지.</p></div>
+          <div class="method-step"><h4>연구소 내 작업</h4><p>연구소가 보안관리가 필요하다고 지정하는 작업은 연구소 내에서 수행.</p></div>
+          <div class="method-step"><h4>보안등급 데이터 지침 준수</h4><p>보안 등급이 지정된 해사 데이터는 연구소 보안 지침을 준수하고, 외부 처리 시 매 건 사전 승인.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">2건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">보안각서 제출 시점 — 계약 체결 즉시</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">제안서는 계약 체결 즉시 전 참여자 보안각서 제출을 명시. 누락 시 보안 요건 위반.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">착수 행정 절차에 보안각서 제출을 포함. 참여자 교체 시 교체 인력 보안각서 재제출.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">보안등급 데이터의 외부 처리 — 매 건 사전 승인 필요</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">AIS·시험 데이터 등 보안등급 데이터는 연구소 외부 처리 시 매 건 사전 승인 필요(특수조건).</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">연구소 외부 작업이 필요한 데이터를 사전 식별하고, 승인 절차를 격주 협의에서 일괄 처리.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="com001-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">전 참여자 보안각서 제출</div>
+            <div class="ck-desc">계약 체결 즉시</div></div></li>
+          <li class="check" data-ck="com001-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">정·부 보안관리자 지정</div>
+            <div class="ck-desc">자료 접근 로그 관리</div></div></li>
+          <li class="check" data-ck="com001-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">개발 자산 별도 관리 체계</div>
+            <div class="ck-desc">컴퓨터·디스크·출력물 분리</div></div></li>
+          <li class="check" data-ck="com001-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">보안등급 데이터 처리 지침 수립</div>
+            <div class="ck-desc">연구소 보안 지침 준수</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-27 — 보안 관리 계획</div>
+            <div class="a-path">5개 보안 항목 대응 방안</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

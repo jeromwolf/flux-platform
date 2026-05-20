@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COM-003 상호 협의 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="COM-003">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>공통</span><span class="sep">›</span>
+        <span class="cur">COM-003</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">공통 요구사항</div>
+        <h1 class="page-title">COM-003 · 상호 협의</h1>
+        <p class="page-desc">세부 요구사항은 연구소의 요구사항 변경 및 기능 향상 등을 위하여 수행 과정 중 연구소와 용역업체 간 상호 협의에 의해 변경될 수 있다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">공통</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">전원</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">상시 (격주)</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">협의록 (GitHub /05_reports/meeting_minutes)</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">—</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">전체 태스크</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>COM-003은 요구사항 변경의 공식 절차를 규정한다. 제안서는 격주 기술 협의(표 II-25)를 협의 채널로 운영하며, 최소 격주 1회 이상 진행 상황을 공유한다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>격주 정기 협의</h4><p>격주 화요일 오전 10시 화상 또는 연구소 방문 — 상호 협의로 확정.</p></div>
+          <div class="method-step"><h4>4-Item 보고</h4><p>전주 진행 실적 · 금주 계획 · 리스크/이슈 · 연구소 확인 필요 사항.</p></div>
+          <div class="method-step"><h4>협의록 작성·공유</h4><p>매 협의 후 3일 이내 회의록 작성 → GitHub /05_reports/meeting_minutes/ 업로드.</p></div>
+          <div class="method-step"><h4>긴급 이슈 서면 보고</h4><p>일정·범위 변경 리스크 발생 시 즉시 감독관 서면 보고, 5일 이내 대응방안 제출.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">2건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">협의 채널·주기 확정 필요</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">제안서는 격주 화요일 오전 10시를 제안. 실제 시점·방식은 KRISO와 합의되어야 한다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">착수보고 회의에서 정기 협의 요일·시간·방식(화상/방문)을 1차 안건으로 확정.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">요구사항 변경 이력 문서화</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">상호 협의로 변경된 요구사항이 문서화되지 않으면 검수 시 범위 해석에 혼선이 생긴다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">변경 사항을 협의록에 기록하고, 영향받는 태스크 페이지의 문서 업데이트 로그에 반영.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="com003-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">정기 협의 요일·시간·방식 확정</div>
+            <div class="ck-desc">KRISO 합의</div></div></li>
+          <li class="check" data-ck="com003-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">격주 협의 운영 (4-Item 보고)</div>
+            <div class="ck-desc">전주실적·금주계획·이슈·확인사항</div></div></li>
+          <li class="check" data-ck="com003-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">협의록 작성·GitHub 업로드</div>
+            <div class="ck-desc">협의 후 3일 이내</div></div></li>
+          <li class="check" data-ck="com003-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">요구사항 변경 이력 관리</div>
+            <div class="ck-desc">협의록 + 문서 업데이트 로그</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-25 — 격주 기술 협의 체계</div>
+            <div class="a-path">협의 운영 방안</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

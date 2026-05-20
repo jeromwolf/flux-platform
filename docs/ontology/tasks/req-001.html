@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REQ-001 해사 데이터 현황 조사 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="REQ-001">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>1단계</span><span class="sep">›</span>
+        <span class="cur">REQ-001</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">1단계 · 연구 요구사항</div>
+        <h1 class="page-title">REQ-001 · 해사 데이터 현황 조사 및 의미적 연관성 분석</h1>
+        <p class="page-desc">지식그래프로 구축하여 활용 가능한 멀티모달 해사데이터의 현황을 조사하고,
+          데이터 간 연결 및 지식화 가능성을 정밀 분석한다. 모든 후속 설계(DES)의 입력이 되는 1차년도 첫 산출물이다.</p>
+      </div>
+
+      <!-- 개요 -->
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">1단계 · 데이터 분석</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">이부일 · 이재현</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+2 (계약 후 2개월)</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">해사 데이터 현황 분석 보고서</div></div>
+        <div class="meta-item"><div class="k">산출물</div><div class="v">6종</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">없음 (최우선 착수)</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">REQ-002 · DES-001 · DES-002</div></div>
+        <div class="meta-item"><div class="k">상태</div><div class="v">진행 중</div></div>
+      </div>
+
+      <!-- 진행률 -->
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">산출물 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 6 완료</span>
+      </div>
+
+      <!-- 1. 목적 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>왜 이 태스크가 먼저인가</h2></div>
+        <div class="prose card">
+          <p>REQ-001은 <strong>모든 후속 작업의 입력</strong>이다. 제안서 스탠포드 7단계 방법론에서
+            <code>Step 3 핵심 용어 열거</code>는 명시적으로 <strong>"REQ-001 데이터 인벤토리 기반 도출"</strong>로
+            정의되어 있다. 즉 REQ-001 없이는 DES-001 온톨로지를 시작할 수 없다.</p>
+          <p>REQ-001의 본질은 <strong>"우리 데이터가 무엇이고, 어떻게 연결되며, 무엇을 먼저 지식그래프로 만들까"</strong>를
+            정하는 것이다. 결과물 기준으로 보면 <strong>산출물 6종을 만드는 일</strong>이다.</p>
+          <div class="callout tip">
+            <span class="ico">✦</span>
+            <div><b>막막할 때 핵심 전략:</b> 6종을 동시에 만들지 말 것. <b>AIS 한 개</b>로 인벤토리·템플릿을
+              먼저 완성하면, 나머지 7종 데이터(GPS·RADAR·VHF·Port-MIS·CCTV·환경정보·전자해도)는 같은 틀의 복제다.
+              제안서도 "AIS를 대표 사례로 표준화"라고 명시했다.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 수행 방법 -->
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법 — 6단계</h2>
+          <span class="hint">제안서 II.2 나) 1단계 가)~바)</span></div>
+        <div class="method">
+          <div class="method-step"><h4>데이터 제공처별 현황 조사</h4>
+            <p>외부 6기관 + 내부 8시설을 11개 항목(데이터명·제공기관·형식·갱신주기·시공간범위·메타데이터수준·식별자·접근권한 등) 기준으로 조사.</p></div>
+          <div class="method-step"><h4>시험시설 8종 자원구조 분석</h4>
+            <p>해양공학수조·선형시험수조·빙해수조·심해공학수조·파력시험장·고압챔버·캐비테이션터널·선박운항시뮬레이터를 시설→시험→관측→분석→결과→문서 구조로 분석.</p></div>
+          <div class="method-step"><h4>멀티모달 데이터 인벤토리 구축</h4>
+            <p>8종 데이터를 9개 컬럼 표로 정리. 향후 온톨로지 설계와 KG 대상 선정의 기준 산출물.</p></div>
+          <div class="method-step"><h4>AIS 중심 표준 분석 템플릿</h4>
+            <p>AIS 1종을 깊게 분석하여 인벤토리 작성 기준을 표준화 → 나머지 데이터셋의 본보기.</p></div>
+          <div class="method-step"><h4>연계 규칙·식별자 체계 도출</h4>
+            <p>선박(MMSI·IMO·Call Sign)·시간·위치·시설·문서·이벤트 기준의 조인 키와 관계 생성 규칙 정의.</p></div>
+          <div class="method-step"><h4>구축 대상 자원 우선순위 선정</h4>
+            <p>연결밀도 40% · 활용성 35% · 품질 25% 가중치로 평가 → Core(80↑)/Extended(60-79)/Future(60↓) 분류.</p></div>
+        </div>
+      </div>
+
+      <!-- 3. 문제점 도출 -->
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3종 문서 정독 결과 · 6건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev high">HIGH</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">보유 문서가 "동향 조사"라 KRISO 검수 산출물 6종은 새로 작성해야 함</span>
+            <span class="issue-state progress">진행 중</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">
+              <code>docs/REQ-001_해사_KG_동향_조사.md</code>는 글로벌 KG 이니셔티브·기술 동향·표준을 다룬
+              <b>배경 리서치</b>다. 과업지시서 REQ-001이 요구하는 것은 <b>실제 데이터 인벤토리 구축</b>이다.</div></div>
+            <div class="row"><div class="lbl">영향</div><div class="txt">
+              산출물 6종(현황 조사서·자원구조 분석서·인벤토리·AIS 템플릿·식별자 정의서·우선순위 선정표)을
+              모두 신규 작성해야 한다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">
+              보유 문서 <b>5장(한국 해양 데이터 현황)</b>을 외부기관·시험시설 1차 자료로 재활용하되,
+              6종 산출물은 9컬럼 템플릿 기반으로 신규 작성. 본 워크벤치 체크리스트로 추적.</div></div>
+          </div>
+        </div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev high">HIGH</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">시험시설 8종 데이터는 KRISO 제공 의존 — 협조 요청 지연 시 산출물 ② 불가</span>
+            <span class="issue-state progress">진행 중</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">
+              시험시설 자원구조 분석서(산출물 ②)는 KRISO 내부 데이터가 있어야 작성 가능.
+              제안서 표 II-28은 "착수 후 2주" 협조 요청을 명시.</div></div>
+            <div class="row"><div class="lbl">영향</div><div class="txt">
+              협조 요청이 늦거나 거부되면 M+2 마감(현황 분석 보고서) 전체가 지연. 리스크 등급 <b>높음</b>.</div></div>
+            <div class="row"><div class="lbl">KRISO 우선 요청 — 최소 정보</div><div class="txt">
+              시험시설 데이터 <b>전체가 아니라</b>, 산출물 ②(자원구조 분석서)의 틀·메타데이터 작성에
+              필요한 <b>최소 정보를 먼저 요청</b>한다 — 시설 8종별 ⑴ 생성 데이터 목록(데이터 카탈로그)
+              ⑵ 데이터 형식·갱신 주기 ⑶ 메타데이터 항목 구조. 실측 데이터·대용량 파일은 후속 수신해도 무방.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">
+              ① 착수보고서에 위 최소 정보 협조 요청을 명문화(요청 시기·사유 포함).
+              ② 데이터 도착 전까지 외부 공개 데이터로 인벤토리 골격을 선행 작성.
+              ③ 정상 수신 시 틀에 데이터를 채우고, 수신이 늦으면 틀을 먼저 완성·제출한 뒤
+              확보 시 갱신본을 재제출한다 (제안서 표 II-26·II-11 "지연 시 대체, 확보 시 교체").</div></div>
+          </div>
+        </div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">9컬럼 데이터 인벤토리 템플릿 미확정 — 조사 시작 전 고정 필요</span>
+            <span class="issue-state open">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">
+              모든 데이터를 동일한 틀로 조사해야 산출물 ⑥ 우선순위 비교가 가능. 템플릿이 흔들리면 재작업 발생.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">
+              아래 "9컬럼 인벤토리 템플릿"을 W1에 확정하고 KRISO 감독관과 1차 협의에서 합의.</div></div>
+          </div>
+        </div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-04</span>
+            <span class="issue-title">외부 6기관 데이터 접근 방식 불명 (해수부·기상청·해경 등)</span>
+            <span class="issue-state open">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">
+              해수부·조사원·측위정보원·기상청·해경·자율운항선박실증센터의 데이터는 공개 API/신청/비공개가 혼재.
+              해경 사고 데이터는 통계 수준만 공개(보유 문서 5.4 확인).</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">
+              KRISO에 외부기관 데이터 접근 소개·협조 요청(제안서 표 II-28, 착수 후 1개월).
+              접근 불가 데이터는 "메타데이터 수준 조사"로 범위 한정하고 보고서에 명시.</div></div>
+          </div>
+        </div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-05</span>
+            <span class="issue-title">멀티모달 데이터 범위 불일치 — 과업지시서 vs 제안서</span>
+            <span class="issue-state open">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">
+              과업지시서는 "궤적·레이다·CCTV·VHF·전자해도·항해술·법령"을 예시. 제안서 표 II-3은
+              선행연구 기반 8종(AIS·GPS·센서·RADAR·VHF·Port-MIS·CCTV·환경정보)을 명세. 전자해도·항해술·법령의
+              인벤토리 포함 깊이가 불명확.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">
+              핵심 8종은 제안서 표 II-3 기준 정밀 조사, 전자해도·항해술·법령은 "확장 후보"로 메타 수준 조사.
+              범위를 KRISO 1차 협의에서 확정.</div></div>
+          </div>
+        </div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-06</span>
+            <span class="issue-title">보유 문서 정보 노후화 — Activepieces·103엔티티 등 구버전 기재</span>
+            <span class="issue-state open">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">
+              보유 문서가 워크플로우 엔진을 Activepieces 0.78.0, 온톨로지를 103엔티티/45관계로 기재.
+              현재는 Argo Workflow 전환, 온톨로지 147엔티티/108관계.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">
+              5장 데이터 현황만 발췌 재활용하고, 기술 스택 서술은 인용하지 않음. 신규 산출물에 구버전 정보 유입 차단.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. 산출물 체크리스트 -->
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>산출물 6종 — 작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="req001-d1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">① 해사서비스 플랫폼 데이터 현황 조사서
+            &nbsp;<a href="../req-001-data-survey.html" style="font-size:.74rem;font-weight:600">draft 보기 &rarr;</a></div>
+            <div class="ck-desc">외부 6기관 + 내부 8시설, 11개 항목 기준 조사·정리</div></div></li>
+          <li class="check" data-ck="req001-d2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">② 연구소 보유 시험시설 데이터 자원구조 분석서</div>
+            <div class="ck-desc">8시설, 시설→시험→관측→분석→결과→문서 연결 구조 (KRISO 데이터 의존)</div></div></li>
+          <li class="check" data-ck="req001-d3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">③ 멀티모달 해사데이터 데이터 인벤토리
+            &nbsp;<a href="../req-001-inventory.html" style="font-size:.74rem;font-weight:600">draft 보기 &rarr;</a></div>
+            <div class="ck-desc">10종 데이터 × 9개 컬럼 — REQ-001 핵심 산출물</div></div></li>
+          <li class="check" data-ck="req001-d4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">④ AIS 데이터 중심 표준 분석 템플릿
+            &nbsp;<a href="../req-001-ais-template.html" style="font-size:.74rem;font-weight:600">draft 보기 &rarr;</a></div>
+            <div class="ck-desc">AIS 1종 정밀 분석 → 나머지 데이터셋 확장의 기준 틀 (먼저 착수 권장)</div></div></li>
+          <li class="check" data-ck="req001-d5"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">⑤ 데이터 간 연계 규칙 및 식별자 체계 정의서
+            &nbsp;<a href="../req-001-identifiers.html" style="font-size:.74rem;font-weight:600">draft 보기 &rarr;</a></div>
+            <div class="ck-desc">MMSI·IMO·Call Sign·시간·위치·시설·문서·이벤트 조인 키 + 관계 생성 규칙</div></div></li>
+          <li class="check" data-ck="req001-d6"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">⑥ 지식그래프 구축 대상 자원 우선순위 선정표
+            &nbsp;<a href="../req-001-priority.html" style="font-size:.74rem;font-weight:600">draft 보기 &rarr;</a></div>
+            <div class="ck-desc">가중치 40/35/25 평가 → Core/Extended/Future 분류</div></div></li>
+        </ul>
+      </div>
+
+      <!-- 5. 주차별 타임라인 -->
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>주차별 실행 계획 — M ~ M+2 (약 8주)</h2></div>
+        <div class="timeline card">
+          <div class="tl-item"><div class="tl-when">W1 ~ W2</div>
+            <div class="tl-what">KRISO 협조 요청서 발송 · 9컬럼 인벤토리 템플릿 확정 · <b>AIS 인벤토리+표준 템플릿 완성</b></div></div>
+          <div class="tl-item"><div class="tl-when">W3 ~ W4</div>
+            <div class="tl-what">외부 6기관 데이터 현황 조사 · 멀티모달 7종 인벤토리 확장 (AIS 틀 복제)</div></div>
+          <div class="tl-item"><div class="tl-when">W5 ~ W6</div>
+            <div class="tl-what">시험시설 8종 자원구조 분석 (KRISO 데이터 도착 후) · 자원구조 분석서 작성</div></div>
+          <div class="tl-item"><div class="tl-when">W7</div>
+            <div class="tl-what">데이터 간 연계 규칙·식별자 체계 정의서 작성</div></div>
+          <div class="tl-item"><div class="tl-when">W8</div>
+            <div class="tl-what">우선순위 선정 (가중치 평가) · 6종 취합 → 해사 데이터 현황 분석 보고서 (M+2 제출)</div></div>
+        </div>
+      </div>
+
+      <!-- 6. 9컬럼 인벤토리 템플릿 -->
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>데이터 인벤토리 템플릿 — 9개 컬럼</h2>
+          <span class="hint">ISSUE-03 대응 · W1 확정</span></div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>각 데이터를 한 행으로, 9개 칸을 1→9 순서로 채운다.
+            <b>그룹 A·B(1~6)는 사실 조사</b>, <b>그룹 C(7~9)는 "그래프로 만들면?" 추론</b>이다.
+            그룹 C가 단순 데이터 목록과 다른 점 — 조사하며 온톨로지 밑그림을 함께 그린다.</div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th style="width:44px">#</th><th>컬럼</th><th>답하는 질문</th><th>AIS 예시</th></tr></thead>
+            <tbody>
+              <tr><td colspan="4" style="background:#e6f4f4;color:#0d5a5d;font-weight:700">그룹 A — 이게 무슨 데이터인가</td></tr>
+              <tr><td>1</td><td>데이터 구분</td><td>무슨 데이터셋인가?</td><td>AIS (선박자동식별)</td></tr>
+              <tr><td>2</td><td>형식</td><td>어떤 파일·포맷인가?</td><td>바이너리 텍스트 (NMEA0183)</td></tr>
+              <tr><td>3</td><td>세부 항목</td><td>안에 무슨 필드가 있나?</td><td>선박정적정보·위치·침로·속력·ETA·목적지</td></tr>
+              <tr><td colspan="4" style="background:#e8f2fd;color:#1a4a7a;font-weight:700">그룹 B — 어떻게 연결되나</td></tr>
+              <tr><td>4</td><td>연계 항목</td><td>어떤 다른 데이터와 이어지나?</td><td>Port-MIS·VHF·항만시설·GPS</td></tr>
+              <tr><td>5</td><td>주요 식별자</td><td>연결할 때 키가 되는 값은?</td><td>MMSI · IMO 번호 · Call Sign</td></tr>
+              <tr><td>6</td><td>시공간 정보</td><td>위치·시간이 있나?</td><td>O (위경도 + 수신시각)</td></tr>
+              <tr><td colspan="4" style="background:#fdf3dd;color:#8a5a00;font-weight:700">그룹 C — 그래프로 어떻게 만드나</td></tr>
+              <tr><td>7</td><td>KG 후보 노드</td><td>그래프의 '동그라미'로 무엇이 되나?</td><td>Vessel · Voyage · Position</td></tr>
+              <tr><td>8</td><td>KG 후보 관계</td><td>동그라미끼리 잇는 '선'은?</td><td>ON_VOYAGE · LOCATED_IN · COMMUNICATE_WITH</td></tr>
+              <tr><td>9</td><td>활용 시나리오</td><td>대화형 서비스 어디에 쓰나?</td><td>특정 선박·시점·해역 탐색의 기준축</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 7. 조사 대상 -->
+      <div class="section">
+        <div class="section-head"><span class="num">7</span><h2>조사 대상 — 구체 목록</h2></div>
+        <div class="grid-2">
+          <div class="card">
+            <h4 style="font-size:.9rem;color:var(--navy);margin-bottom:8px">외부 기관 6 + 멀티모달 8종</h4>
+            <p style="font-size:.8rem;color:var(--text-2);margin-bottom:6px"><b>외부 기관:</b>
+              해수부 · 조사원 · 측위정보원 · 기상청 · 해경 · 자율운항선박실증센터</p>
+            <p style="font-size:.8rem;color:var(--text-2)"><b>멀티모달 8종:</b>
+              <span class="tag">AIS</span><span class="tag">GPS</span><span class="tag">RADAR</span>
+              <span class="tag">VHF</span><span class="tag">Port-MIS</span><span class="tag">CCTV</span>
+              <span class="tag">환경정보</span><span class="tag">항해장비</span></p>
+          </div>
+          <div class="card">
+            <h4 style="font-size:.9rem;color:var(--navy);margin-bottom:8px">KRISO 시험시설 8종</h4>
+            <p style="font-size:.8rem;color:var(--text-2)">
+              <span class="tag">해양공학수조</span><span class="tag">선형시험수조</span>
+              <span class="tag">빙해수조</span><span class="tag">심해공학수조</span>
+              <span class="tag">파력시험장</span><span class="tag">고압챔버</span>
+              <span class="tag">캐비테이션터널</span><span class="tag">선박운항시뮬레이터</span></p>
+            <p style="font-size:.76rem;color:var(--muted);margin-top:6px">연간 약 730건 실험 메타데이터 ·
+              5,000만 측정 포인트 (보유 문서 5.5 추정)</p>
+          </div>
+        </div>
+        <div class="callout warn">
+          <span class="ico">⚠</span>
+          <div><b>KRISO 협조 요청 (착수보고서 명시):</b> 시험시설 8종 데이터 샘플·메타데이터 목록(착수 후 2주) ·
+            내부 LIMS 스키마(착수 후 1개월) · 외부기관 데이터 접근 소개(착수 후 1개월) ·
+            기존 플랫폼 데이터 모델 문서(착수 후 2주).</div>
+        </div>
+      </div>
+
+      <!-- 8. 보유 자산 -->
+      <div class="section">
+        <div class="section-head"><span class="num">8</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">REQ-001 해사 KG 동향 조사</div>
+            <div class="a-path">docs/REQ-001_해사_KG_동향_조사.md · 5장 한국 해양 데이터 현황</div></div>
+          <span class="a-tag reuse">부분 재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-3 — 멀티모달 해사데이터 8종 명세</div>
+            <div class="a-path">오재용·김혜진 2024 선행연구 기반 · 인벤토리 ③의 뼈대</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-4 — 해사 특화 관계 유형</div>
+            <div class="a-path">TRANSMITTED_BY · BERTH_TO · COMMUNICATE_WITH 등 · 연계규칙 ⑤의 출발점</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">✎</div>
+          <div class="a-body"><div class="a-name">산출물 6종 (현황 조사서·인벤토리·식별자 정의서 등)</div>
+            <div class="a-path">신규 작성 대상 · ISSUE-01</div></div>
+          <span class="a-tag new">신규 작성</span>
+        </div>
+      </div>
+
+      <!-- 9. 문서 업데이트 로그 -->
+      <div class="section">
+        <div class="section-head"><span class="num">9</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서·보유문서 3종 정독 후 착수 가이드 작성. 문제점 6건 도출.</span></li>
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">ISSUE-02 보강 — 시험시설 데이터 전체가 아닌 메타데이터 작성용 최소 정보(데이터 카탈로그·형식·갱신주기) 우선 요청 항목 추가. 지연 시 틀 선행·갱신본 재제출 대응 명시 (제안서 표 II-26·II-11 근거).</span></li>
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">9컬럼 인벤토리 템플릿에 A·B·C 그룹 구분 추가 — A(데이터 자체 1~3)·B(연결 정보 4~6)·C(그래프 설계 준비 7~9). 각 컬럼에 '답하는 질문' 명시.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업이 진행되면 이 로그에 <b>날짜 · 변경 내용</b>을 추가하세요.
+            문제점이 해결되면 해당 ISSUE의 상태 배지를 <code>resolved</code>로 갱신합니다.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

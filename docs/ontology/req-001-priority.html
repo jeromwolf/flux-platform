@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우선순위 선정표 (Draft) | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="REQ-001">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <a href="tasks/req-001.html">REQ-001</a><span class="sep">›</span>
+        <span class="cur">우선순위 선정표</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">REQ-001 산출물 ⑥</div>
+        <h1 class="page-title">지식그래프 구축 대상 자원 우선순위 선정표 (Draft)</h1>
+        <p class="page-desc">멀티모달 데이터 인벤토리(③) 10종을 3축 가중치로 평가하여 구축 우선순위를
+          Core / Extended / Future로 분류한다.</p>
+      </div>
+
+      <div class="callout warn">
+        <span class="ico">⚠</span>
+        <div><b>Draft v0.1 (2026-05-20).</b> 점수는 잠정 평가이며 데이터 확보 후 정밀 평가로 갱신.
+          근거: 정성제안서 표 II-4, <a href="req-001-inventory.html">멀티모달 데이터 인벤토리(③)</a>.
+          원본: <code>docs/REQ-001_우선순위_선정표_draft.md</code></div>
+      </div>
+
+      <!-- 1. 평가 가중치 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>평가 가중치</h2>
+          <span class="hint">정성제안서 표 II-4</span></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>평가 축</th><th>가중치</th><th>평가 방법</th></tr></thead>
+          <tbody>
+            <tr><td>연결 밀도 (Centrality)</td><td>40%</td><td>타 데이터와의 연관 관계 — 공통 식별자 공유 데이터셋 수 기준</td></tr>
+            <tr><td>활용성 및 시급성</td><td>35%</td><td>대화형 서비스 시나리오(사고 대응·경로 최적화) 참조 빈도</td></tr>
+            <tr><td>데이터 품질 적합성</td><td>25%</td><td>메타데이터 보유·식별자 존재·결측치 비율</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div><b>등급 기준</b> — 합산 <b>80점↑ Core(핵심)</b> / <b>60~79 Extended(확장)</b> / <b>60점↓ Future(후속 검토)</b></div>
+        </div>
+      </div>
+
+      <!-- 2. 평가표 -->
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>우선순위 평가표 — 10종</h2></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터</th><th>연결밀도 (40%)</th><th>활용성 (35%)</th><th>품질 (25%)</th><th>가중 합산</th><th>등급</th></tr></thead>
+          <tbody>
+            <tr><td><b>AIS</b></td><td>95</td><td>95</td><td>88</td><td><b>93.3</b></td><td>Core</td></tr>
+            <tr><td><b>Port-MIS</b></td><td>82</td><td>88</td><td>86</td><td><b>85.1</b></td><td>Core</td></tr>
+            <tr><td><b>환경정보</b></td><td>78</td><td>84</td><td>82</td><td><b>81.1</b></td><td>Core</td></tr>
+            <tr><td><b>GPS</b></td><td>76</td><td>84</td><td>85</td><td><b>81.1</b></td><td>Core</td></tr>
+            <tr><td>전자해도(ENC)</td><td>68</td><td>80</td><td>85</td><td><b>76.5</b></td><td>Extended</td></tr>
+            <tr><td>RADAR</td><td>72</td><td>80</td><td>70</td><td><b>74.3</b></td><td>Extended</td></tr>
+            <tr><td>VHF</td><td>72</td><td>76</td><td>64</td><td><b>71.4</b></td><td>Extended</td></tr>
+            <tr><td>CCTV</td><td>70</td><td>72</td><td>64</td><td><b>69.2</b></td><td>Extended</td></tr>
+            <tr><td>항해장비</td><td>60</td><td>66</td><td>76</td><td><b>66.1</b></td><td>Extended</td></tr>
+            <tr><td>법령</td><td>54</td><td>70</td><td>44</td><td><b>57.1</b></td><td>Future</td></tr>
+          </tbody>
+        </table></div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:6px">
+          ※ 가중 합산 = 연결밀도×0.4 + 활용성×0.35 + 품질×0.25</p>
+      </div>
+
+      <!-- 3. 등급별 분류 -->
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>등급별 분류 결과</h2></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>등급</th><th>데이터</th><th>의미</th></tr></thead>
+          <tbody>
+            <tr><td><b style="color:#1a7a44">Core (핵심)</b></td><td>AIS · Port-MIS · 환경정보 · GPS</td><td>초기 지식그래프 필수 포함 · PoC 우선 대상</td></tr>
+            <tr><td><b style="color:#9a6a00">Extended (확장)</b></td><td>전자해도(ENC) · RADAR · VHF · CCTV · 항해장비</td><td>핵심 자원과 연결되어 단계적 반영</td></tr>
+            <tr><td><b style="color:#b91c1c">Future (후속)</b></td><td>법령</td><td>향후 확장 단계 — 비정형, NER/RE 필요</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 4. 시험시설 -->
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>연구소 시험시설 데이터</h2>
+          <span class="hint">A-1 대기</span></div>
+        <div class="callout warn">
+          <span class="ico">⚠</span>
+          <div>정성제안서 자)는 "핵심 시험시설 데이터"를 Core 자원 예시로 제시한다. 시험시설 8종은
+            KRISO 협조 자료(A-1) 수령 후 동일 가중치로 평가하여 본 표에 추가한다.</div>
+        </div>
+      </div>
+
+      <!-- 5. 비교·다음 단계 -->
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>정성제안서 예시 비교 · 다음 단계</h2></div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div><b>정성제안서 예시와의 차이</b> — 정성제안서 자)는 RADAR를 Core 예시로 들었으나,
+            본 평가에서 RADAR는 품질 축(식별자 약함 — 표적 ID만, 텍스트+이미지)에서 감점되어 Extended(74.3).
+            데이터 확보·품질 확인 후 재평가 대상이다. 본 표는 잠정 평가다.</div>
+        </div>
+        <div class="prose card">
+          <ul style="margin:0 0 0 18px">
+            <li>KRISO 시험시설 데이터(A-1) 수령 후 8종 평가 추가</li>
+            <li>Core 자원(AIS·Port-MIS·환경정보·GPS)을 PoC(TER-001) 우선 적재 대상으로 선정</li>
+            <li>본 선정표 → 단계별 구축 로드맵(REQ-002)·DES-001 온톨로지 범위 설정의 입력</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 업데이트 로그 -->
+      <div class="section">
+        <div class="section-head"><span class="num">+</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">우선순위 선정표 draft 생성 — 10종 3축 가중 평가, Core 4·Extended 5·Future 1 분류.</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

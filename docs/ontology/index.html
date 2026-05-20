@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IMSP 프로젝트 워크벤치 | 대화형 해사서비스 플랫폼 지식그래프 모델 설계</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb"><span class="cur">프로젝트 대시보드</span></div>
+      <div class="topbar-right">
+        <a class="badge" href="stanford_7step_ontology.html">Stanford 7-Step ↗</a>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <!-- HERO -->
+      <div class="hero">
+        <h1>대화형 해사서비스 플랫폼을 위한 지식그래프 모델 설계 연구</h1>
+        <p>KRISO 1차년도 연구용역 · 프로젝트 실행 워크벤치</p>
+        <div class="hero-meta">
+          <div><div class="k">계약 기간</div><div class="v">계약 후 240일 (8개월)</div></div>
+          <div><div class="k">계약 금액</div><div class="v">78,300,000원</div></div>
+          <div><div class="k">발주처</div><div class="v">KRISO 해사디지털서비스연구센터</div></div>
+          <div><div class="k">수행</div><div class="v">㈜인사이트마이닝 · 4인</div></div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stat-grid section">
+        <div class="stat accent-1"><div class="v">15</div><div class="k">요구사항 태스크</div><div class="sub">REQ 4 · DES 4 · TER 2 · COM 5</div></div>
+        <div class="stat accent-2"><div class="v">5</div><div class="k">KRISO 의무 성과물</div><div class="sub">M+2 / M+5 / M+7 / M+8</div></div>
+        <div class="stat accent-3"><div class="v">7</div><div class="k">Stanford 온톨로지 단계</div><div class="sub">Step 1-4 완료 · 5-7 진행</div></div>
+        <div class="stat accent-4"><div class="v">3</div><div class="k">수행 단계</div><div class="sub">데이터분석 · 설계 · PoC</div></div>
+      </div>
+
+      <!-- 워크플로우 안내 -->
+      <div class="section">
+        <div class="section-head"><span class="num">!</span><h2>이 워크벤치 사용법</h2></div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>각 태스크 페이지는 <b>① 수행 방법 → ② 문제점 도출 → ③ 하나씩 해결 → ④ 문서 업데이트</b>
+          순서로 구성됩니다. 막막할 때는 태스크를 열어 <b>"문제점 도출"</b> 섹션부터 보세요 —
+          해결해야 할 이슈가 심각도별로 정리되어 있습니다. 체크리스트는 자동 저장됩니다.</div>
+        </div>
+      </div>
+
+      <!-- 전체 일정 -->
+      <div class="section">
+        <div class="section-head"><span class="num">★</span><h2>전체 일정 · 수행 방법론 · 주요 산출물</h2>
+          <span class="hint">계약 후 240일 · M ~ M+8</span></div>
+        <div class="gantt-wrap"><div class="gantt" id="gantt"></div></div>
+        <div class="gantt-legend">
+          <span><b style="color:#0d7377">■</b> 1단계 연구(REQ)</span>
+          <span><b style="color:#2196f3">■</b> 2단계 설계(DES)</span>
+          <span><b style="color:#f0a500">■</b> 3단계 PoC(TER)</span>
+          <span><b style="color:#e67e22">■</b> 보고서·납품</span>
+          <span><b style="color:#27ae60">■</b> 공통(COM)</span>
+          <span><b style="color:#9c6ade">■</b> 온톨로지 7단계</span>
+        </div>
+      </div>
+
+      <!-- 단계별 태스크 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>1단계 · 해사 데이터 분석 및 구축 대상 선정</h2>
+          <span class="hint">M ~ M+2</span></div>
+        <div class="task-grid" id="grid-s1"></div>
+      </div>
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>2단계 · 해사 도메인 온톨로지 · KG 모델 설계</h2>
+          <span class="hint">M+2 ~ M+5</span></div>
+        <div class="task-grid" id="grid-s2"></div>
+      </div>
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>3단계 · PoC 기반 모델 검증</h2>
+          <span class="hint">M+5 ~ M+8</span></div>
+        <div class="task-grid" id="grid-s3"></div>
+      </div>
+      <div class="section">
+        <div class="section-head"><span class="num">+</span><h2>공통 · 산출물 관리</h2></div>
+        <div class="task-grid" id="grid-com"></div>
+      </div>
+
+      <!-- 마일스톤 -->
+      <div class="section">
+        <div class="section-head"><span class="num">★</span><h2>KRISO 의무 성과물 마일스톤</h2>
+          <span class="hint"><a href="submissions.html">제출 문서 관리 &rarr;</a></span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>시점</th><th>성과물</th><th>구성</th><th>연계 태스크</th></tr></thead>
+            <tbody>
+              <tr><td><b>M+2</b></td><td>해사 데이터 현황 분석 보고서</td>
+                <td>현황 조사서 · 데이터 인벤토리 · 식별자 체계 · 우선순위 선정표</td><td>REQ-001 · REQ-002</td></tr>
+              <tr><td><b>M+5</b></td><td>지식그래프 온톨로지 설계서</td>
+                <td>ERA 정의서 · 자원 관계 모델 · 국제표준 정합성 · DB 비교 분석</td><td>REQ-003·004 · DES-001~004</td></tr>
+              <tr><td><b>M+7</b></td><td>지식그래프 모델 PoC 결과 보고서</td>
+                <td>샘플 매핑 결과 · 프로토타입 시험 · 자연어 탐색 시나리오</td><td>TER-001 · TER-002</td></tr>
+              <tr><td><b>M+8</b></td><td>2차년도 구축 상세 설계서 · 과업 완료 보고서</td>
+                <td>물리 스키마 상세 · ETL 상세 · 구축 로드맵 · 종합 결과</td><td>전체</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+/* 대시보드 태스크 그리드 렌더 */
+(function () {
+  const stCls = { 1:'s1', 2:'s2', 3:'s3', com:'com' };
+  for (const stage of [1,2,3,'com']) {
+    const grid = document.getElementById('grid-' + (stage==='com'?'com':'s'+stage));
+    if (!grid) continue;
+    grid.innerHTML = TASKS.filter(t => t.stage === stage).map(t => `
+      <a class="task-card ${stCls[stage]}" href="tasks/${t.file}">
+        <div class="tc-top">
+          <span class="tc-code">${t.code}</span>
+          <span class="badge ${t.status}">${t.status==='done'?'완료':t.status==='active'?'진행 중':'대기'}</span>
+        </div>
+        <div class="tc-title">${t.title}</div>
+        <div class="tc-meta">
+          <span><b>담당</b> ${t.owner}</span>
+          <span><b>마감</b> ${t.deadline}</span>
+        </div>
+      </a>`).join('');
+  }
+})();
+
+/* 대시보드 전체 일정 간트 */
+(function () {
+  const g = document.getElementById('gantt');
+  if (!g) return;
+  const mon = [['M','5월'],['M+1','6월'],['M+2','7월'],['M+3','8월'],['M+4','9월'],
+               ['M+5','10월'],['M+6','11월'],['M+7','12월'],['M+8','1월']];
+  const ticks = () => '<div class="g-tick"></div>'.repeat(9);
+  const col = (s, e) => 'grid-column:' + (s + 1) + '/' + (e + 2);
+  let h = '';
+
+  // 3단계 수행체계
+  h += '<div class="gantt-row"><div class="gantt-label sub">수행 체계</div><div class="gantt-track">'
+    + '<div class="g-stage" style="' + col(0,2) + ';background:#0d7377">1단계 · 데이터 분석</div>'
+    + '<div class="g-stage" style="' + col(3,5) + ';background:#2196f3">2단계 · 모델 설계</div>'
+    + '<div class="g-stage" style="' + col(6,8) + ';background:#f0a500">3단계 · PoC 검증</div>'
+    + '</div></div>';
+
+  // 월 헤더
+  h += '<div class="gantt-row"><div class="gantt-label hd">구분</div><div class="gantt-track">'
+    + mon.map(m => '<div class="g-mon">' + m[0] + '<br>' + m[1] + '</div>').join('') + '</div></div>';
+
+  // 보고회
+  const rep = { 0:'★ 착수', 4:'★ 중간', 8:'★ 최종' };
+  h += '<div class="gantt-row"><div class="gantt-label">★ 보고회</div><div class="gantt-track">'
+    + mon.map((m,i) => '<div class="g-report">' + (rep[i]||'') + '</div>').join('') + '</div></div>';
+
+  // 작업 13
+  const tasks = [
+    ['REQ-001 해사 데이터 현황 조사',0,2,'req'],
+    ['REQ-002 구축 대상 자산 선정',1,2,'req'],
+    ['REQ-003 그래프 DB 기술 평가',1,2,'req'],
+    ['REQ-004 국제표준·온톨로지 매핑',1,2,'req'],
+    ['DES-001 해사 도메인 온톨로지 설계',2,5,'des'],
+    ['DES-002 물리 스키마 설계',3,5,'des'],
+    ['DES-003 ETL 파이프라인 설계',3,5,'des'],
+    ['DES-004 탐색·복합질의 아키텍처',4,5,'des'],
+    ['TER-001 PoC 구축·기능 검증',5,7,'ter'],
+    ['TER-002 시각화 인터페이스 PoC',6,7,'ter'],
+    ['2차년도 구축 상세 설계서',7,8,'rpt'],
+    ['과업 완료 보고서',7,8,'rpt'],
+    ['COM-005 격주 협의·GitHub 관리',0,8,'com'],
+  ];
+  tasks.forEach(t => {
+    h += '<div class="gantt-row"><div class="gantt-label">' + t[0] + '</div><div class="gantt-track">'
+      + ticks() + '<div class="g-bar ' + t[3] + '" style="' + col(t[1],t[2]) + '"></div></div></div>';
+  });
+
+  // 스탠포드 7단계
+  const seven = [['S1','목적 정의'],['S2','재사용'],['S3','용어 열거'],['S4','클래스·계층'],
+                 ['S5','속성 정의'],['S6','제약 정의'],['S7','인스턴스 검증']];
+  h += '<div class="gantt-row"><div class="gantt-label sub">스탠포드 7단계</div><div class="gantt-track">'
+    + ticks() + '<div class="g-bar seven" style="' + col(2,5) + '">'
+    + seven.map(s => '<span title="' + s[1] + '">' + s[0] + '</span>').join('')
+    + '</div></div></div>';
+
+  // 주요 산출물
+  const dv = ['착수보고서','','◆ 해사 데이터<br>현황 분석 보고서','','',
+              '◆ 지식그래프<br>온톨로지 설계서','','◆ PoC 결과<br>보고서',
+              '◆ 2차년도 설계서<br>◆ 과업완료 보고서'];
+  h += '<div class="gantt-row"><div class="gantt-label hd">주요 산출물</div><div class="gantt-track">'
+    + dv.map(d => '<div class="g-deliv' + (d.indexOf('◆')>=0?' must':'') + '">' + d + '</div>').join('')
+    + '</div></div>';
+
+  g.innerHTML = h;
+})();
+</script>
+</body>
+</html>

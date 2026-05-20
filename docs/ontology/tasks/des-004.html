@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DES-004 지식 탐색 및 복합 질의 아키텍처 설계 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="DES-004">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>2단계</span><span class="sep">›</span>
+        <span class="cur">DES-004</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">2단계 · 설계 요구사항</div>
+        <h1 class="page-title">DES-004 · 지식 탐색 및 복합 질의 아키텍처 설계</h1>
+        <p class="page-desc">지식그래프 내 자산 간의 관계를 탐색하고 도메인 특화 복합 질의를 처리하기 위한 분석 아키텍처 및 인터페이스를 설계한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">2단계</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">양선희 · 신동욱</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+5</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">지식그래프 온톨로지 설계서 (탐색 아키텍처)</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">DES-001 · DES-002</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">TER-002</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>DES-004는 "만들어진 KG를 어떻게 쓸까"를 설계한다. 최단경로·다단계 탐색 알고리즘, 해사 서비스 복합 질의 시나리오, GraphQL/REST API, 그리고 2차년도 LLM/GraphRAG 연계를 고려한 모듈형 아키텍처가 핵심이다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>지식 탐색·경로 분석 알고리즘</h4><p>최단경로(Shortest Path) · 가변길이 경로(1~3-hop) · 중심성(Centrality) · 유사도 분석.</p></div>
+          <div class="method-step"><h4>해사 특화 복합 질의 시나리오</h4><p>"사고 발생 시 적용 법령", "선박-시험시설 연계 분석" 등 도메인 시나리오 + 시공간·속성 결합 쿼리 템플릿.</p></div>
+          <div class="method-step"><h4>API·인터페이스 아키텍처</h4><p>GraphQL(유연한 그래프 질의) + REST(외부 연동) 이중 인터페이스 + 2차년도 LLM 연계 모듈형 설계.</p></div>
+          <div class="method-step"><h4>시각화 UI/UX·쿼리 최적화</h4><p>그래프 시각화 레이아웃·필터링 UI + 인덱스 튜닝·결과 캐싱(TTL) 전략.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">2차년도 LLM/GraphRAG 연계 — 1차년도 설계 범위 경계</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">자연어→Cypher 변환·GraphRAG는 2차년도 구현 대상. 1차년도 설계에 어디까지 포함할지 모호.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">1차년도는 "모듈형 아키텍처 설계"까지 — 자연어→Cypher 모듈·그래프 컨텍스트 추출 모듈을 인터페이스 수준으로 정의, 구현은 2차년도로 명시.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">GraphQL vs REST 우선순위</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">이중 인터페이스를 제안했으나 1차년도 PoC에서 우선 검증할 인터페이스 선택 필요.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">PoC(TER)는 REST 우선 검증, GraphQL은 설계 명세로 제공.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">쿼리 응답 성능 목표의 설계 반영</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">복합 쿼리 5초 이내 목표를 설계 단계에서 보장할 인덱스·캐싱 전략이 필요.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">DES-002 인덱스 설계와 연계하여 빈번 복합 질의용 인덱스·캐싱(TTL)을 아키텍처에 명시.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="des004-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">탐색·경로 분석 알고리즘 설계</div>
+            <div class="ck-desc">최단경로·가변길이·중심성</div></div></li>
+          <li class="check" data-ck="des004-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">해사 복합 질의 시나리오·템플릿</div>
+            <div class="ck-desc">도메인 시나리오 + 쿼리 템플릿</div></div></li>
+          <li class="check" data-ck="des004-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">GraphQL/REST API 아키텍처</div>
+            <div class="ck-desc">이중 인터페이스 + 모듈형 설계</div></div></li>
+          <li class="check" data-ck="des004-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">시각화 UI/UX·쿼리 최적화</div>
+            <div class="ck-desc">레이아웃·필터 + 인덱스·캐싱</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">DES-004 자연어 탐색 아키텍처 설계서</div>
+            <div class="a-path">docs/DES-004_자연어_탐색_아키텍처_설계서.md</div></div>
+          <span class="a-tag reuse">부분 재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📁</div>
+          <div class="a-body"><div class="a-name">CypherBuilder · QueryGenerator</div>
+            <div class="a-path">core/kg/</div></div>
+          <span class="a-tag reuse">재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-10 — 복합 질의 시나리오</div>
+            <div class="a-path">해사 서비스 시나리오 기초</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

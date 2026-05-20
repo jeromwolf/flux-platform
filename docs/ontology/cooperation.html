@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRISO 협조 요청 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <span class="cur">KRISO 협조 요청</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">착수 단계 · KRISO 협조</div>
+        <h1 class="page-title">KRISO 연구 협조 요청</h1>
+        <p class="page-desc">워크벤치 15개 요구사항 전체에서 도출된 KRISO 의존 항목을 종합한 협조 요청이다.
+          착수보고서에 첨부하여 발송하며, 회신 상태를 본 페이지에서 추적한다.</p>
+      </div>
+
+      <!-- 진행률 -->
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">협조 회신 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <!-- 1. 협조 요청 이메일 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>협조 요청 이메일</h2>
+          <span class="hint">발송 초안 · docs/KRISO_협조요청서.md</span></div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="background:var(--navy);color:#fff;padding:14px 18px">
+            <div style="display:flex;gap:10px;font-size:.82rem;margin-bottom:5px">
+              <span style="color:#8b97a8;width:62px;flex-shrink:0">받는 사람</span>
+              <span>KRISO 해사디지털서비스연구센터 이용남 책임 (042-866-3612) · 이메일 〔감독관 지정 후 확정〕</span>
+            </div>
+            <div style="display:flex;gap:10px;font-size:.82rem;margin-bottom:5px">
+              <span style="color:#8b97a8;width:62px;flex-shrink:0">참조</span>
+              <span>계약담당자 최휘련 (070-8028-7030)</span>
+            </div>
+            <div style="display:flex;gap:10px;font-size:.82rem">
+              <span style="color:#8b97a8;width:62px;flex-shrink:0">제목</span>
+              <span style="font-weight:700;color:var(--amber)">[협조요청] 대화형 해사서비스 플랫폼 지식그래프 모델 설계 연구 용역 — 연구 자료·환경 협조 요청</span>
+            </div>
+          </div>
+          <div class="prose" style="padding:18px 20px">
+            <p>안녕하십니까.</p>
+            <p>「대화형 해사서비스 플랫폼을 위한 지식그래프 모델 설계 연구 용역」을 수행하는
+              <strong>㈜인사이트마이닝</strong>입니다.</p>
+            <p>본 용역은 계약 후 240일(8개월)의 단기 설계 연구로, 주요 산출물의 마감이
+              M+2·M+5·M+7·M+8 시점에 집중되어 있습니다. 특히 연구소 보유 자료·데이터·환경 등
+              연구소 제공이 전제된 항목이 다수 있어, 원활한 수행을 위하여 아래 <b>2~3장의 협조 항목</b>을
+              요청드립니다.</p>
+            <p style="margin-top:12px">가장 시급한 항목은 <strong>A-1(시험시설 데이터)</strong>이며,
+              데이터 본체는 준비에 시간이 소요될 수 있으므로 <strong>1차로 메타데이터 목록([첨부 1] 양식)을
+              착수 후 2주 내 우선 제공</strong>해 주시기를 요청드립니다. 다만 메타데이터만으로는 산출물의
+              '틀'까지만 작성 가능하며, <strong>데이터 명세 문서와 실측 데이터의 후속 제공이 반드시 필요</strong>합니다.</p>
+            <p style="margin-top:12px">또한 4장과 같이 당사 자체 조사 범위를 안내드리며, 연구소가 인지하신
+              추가 참고자료가 있으시면 알려주시면 적극 반영하겠습니다. 감사합니다.</p>
+            <p style="margin-top:10px;color:var(--text)">㈜인사이트마이닝<br>
+              책임연구원 양선희 드림 · 2026. 5.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 자료·데이터 협조 항목 -->
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>자료·데이터 제공 요청 — 회신 추적</h2>
+          <span class="hint">A-1 ~ A-9 · 자동 저장</span></div>
+
+        <div class="callout warn">
+          <span class="ico">⚠</span>
+          <div><b>A-1 시험시설 데이터 — 단계적 제공 요청.</b> 최종 필요 범위는
+            ① 메타데이터 목록 ② 데이터 명세·설명 문서 ③ 실측 샘플 데이터(원천·전처리·결과)입니다.
+            <b>1차로 메타데이터 목록을 착수 후 2주 내 우선 제공</b>, 명세 문서는 착수 후 1개월,
+            실측 데이터는 M+3 전후로 후속 제공을 요청합니다. <b>메타데이터만으로는 산출물의 '틀'까지만
+            작성 가능</b>하며, 실제 자원구조 분석을 위해 ②③의 제공이 반드시 필요합니다.</div>
+        </div>
+
+        <ul class="checklist">
+          <li class="check" data-ck="coop-a1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-1 · 시험시설 8종 데이터 (메타데이터 → 명세 문서 → 실측, 단계적)</div>
+            <div class="ck-desc">1차 메타데이터 착수 후 2주 / 2차 명세 문서 착수 후 1개월 / 3차 실측 M+3 · 연계 REQ-001</div></div></li>
+          <li class="check" data-ck="coop-a2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-2 · 시험시설·플랫폼 모델·워크플로우 자산 정보</div>
+            <div class="ck-desc">AI 분석모델·시뮬레이션 모델·데이터 처리 파이프라인·에이전트 워크플로우 목록 · 착수 후 1개월 · 연계 REQ-002</div></div></li>
+          <li class="check" data-ck="coop-a3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-3 · 내부 실험관리시스템(LIMS) 스키마 문서</div>
+            <div class="ck-desc">착수 후 1개월 · 연계 REQ-001 · DES-003 · 보안등급 시 부분 공개/연구소 내 열람 대체, 미제공 시 ScholarWorks@KRISO 메타데이터 우선 대체</div></div></li>
+          <li class="check" data-ck="coop-a4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-4 · 외부 6기관 데이터 접근 소개·협조</div>
+            <div class="ck-desc">해수부·조사원·측위정보원·기상청·해경·자율운항선박실증센터 · 착수 후 1개월 · 연계 REQ-001</div></div></li>
+          <li class="check" data-ck="coop-a5"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-5 · 기존 선박해양 디지털서비스 플랫폼 데이터 모델 문서</div>
+            <div class="ck-desc">착수 후 2주 · 연계 DES-001</div></div></li>
+          <li class="check" data-ck="coop-a6"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-6 · 연구소 보안 지침·규정 문서</div>
+            <div class="ck-desc">해사 데이터 보안 지침 · 착수 시 · 연계 COM-001</div></div></li>
+          <li class="check" data-ck="coop-a7"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-7 · 데이터 보안등급 분류 정보</div>
+            <div class="ck-desc">보안등급 지정 데이터 식별 · A-1과 함께 · 연계 COM-001 · REQ-001</div></div></li>
+          <li class="check" data-ck="coop-a8"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-8 · PoC 검증용 샘플 데이터 3종 지정·제공</div>
+            <div class="ck-desc">M+3 · 연계 TER-001</div></div></li>
+          <li class="check" data-ck="coop-a9"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">A-9 · 연구소 보유 검증용 소프트웨어 제공 (보유 시)</div>
+            <div class="ck-desc">M+5 이전 · 연계 COM-004</div></div></li>
+        </ul>
+      </div>
+
+      <!-- 3. 환경·권한 협조 항목 -->
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>환경·권한 제공 요청 — 회신 추적</h2>
+          <span class="hint">B-1 ~ B-4 · 자동 저장</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="coop-b1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">B-1 · K8s 플랫폼 환경 접근 권한 (PoC 배포용)</div>
+            <div class="ck-desc">M+5 · 연계 TER-001</div></div></li>
+          <li class="check" data-ck="coop-b2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">B-2 · 감독관 GitHub 계정·리포지토리 생성·권한 부여</div>
+            <div class="ck-desc">착수 시 · 연계 COM-005</div></div></li>
+          <li class="check" data-ck="coop-b3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">B-3 · 보안관리 필요 작업을 위한 연구소 내 작업 공간</div>
+            <div class="ck-desc">필요 시 · 연계 COM-001</div></div></li>
+          <li class="check" data-ck="coop-b4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">B-4 · 시험시설 담당자 인터뷰·현장 방문 협조</div>
+            <div class="ck-desc">시설별 담당자 협의 창구 · 착수 후 1개월 · 연계 REQ-001</div></div></li>
+        </ul>
+      </div>
+
+      <!-- 4. 착수보고 회의 협의 안건 -->
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>착수보고 회의 협의 안건</h2>
+          <span class="hint">C-1 ~ C-9</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th style="width:54px">#</th><th>협의 사항</th><th>비고</th></tr></thead>
+            <tbody>
+              <tr><td>C-1</td><td>계약 일자 확인</td><td>완수일자 2026-12-11 (입찰공고문 명시) · 계약 일자는 용역계약서 확인 · 과업지시서 "240일 이내" 상한 내</td></tr>
+              <tr><td>C-2</td><td>중간보고 시점 확정</td><td>M+4 전후 권장</td></tr>
+              <tr><td>C-3</td><td>참여 연구원 정정 보고</td><td>데이터분석·ETL 담당 이재현 확정 — 정성제안서 표기 '이동훈' → '이재현' 정정, 착수보고 시 KRISO 보고 (COM-001)</td></tr>
+              <tr><td>C-4</td><td>정기 기술 협의 일정 확정</td><td>격주 화요일 오전 10시 (제안)</td></tr>
+              <tr><td>C-5</td><td>검수 기준 합의</td><td>PoC 합격 기준·산출물 검수 절차</td></tr>
+              <tr><td>C-6</td><td>보안등급 데이터 외부 처리 승인 절차</td><td>COM-001</td></tr>
+              <tr><td>C-7</td><td>기술 지원(담당자 교육) 수요·시점</td><td>COM-002</td></tr>
+              <tr><td>C-8</td><td>자산 우선순위 경계값 합의</td><td>Core 80↑ / Extended 60–79 / Future 60↓ (제안)</td></tr>
+              <tr><td>C-9</td><td>용역 감독관 지정·연락처 확인</td><td>과업지시서 II.13</td></tr>
+              <tr><td>C-10</td><td>PoC 검증 데이터 대체 방안 확인</td><td>연구소 제공 데이터 지연 시 공개 데이터(MDSS 등) 임시 대체 → 실데이터 확보 시 교체 · 과업지시서 TER-001 "연구소 제공 샘플 데이터" 요구와 정합 확인</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. 자체 조사 범위 + 추가 참고자료 요청 -->
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>당사 자체 조사 범위 및 추가 참고자료 요청</h2></div>
+        <div class="grid-2">
+          <div class="card">
+            <h4 style="font-size:.9rem;color:var(--navy);margin-bottom:8px">당사 자체 조사 (협조 불필요)</h4>
+            <div class="prose" style="margin:0">
+              <ul style="margin:0 0 0 18px">
+                <li>그래프 DB 기술 동향 (LPG/RDF·Neo4j 등) — REQ-003</li>
+                <li>해사 국제 표준 (IHO S-100·IMO GMDSS·AIS) — REQ-004</li>
+                <li>지식그래프 학술 선행연구 (MAKG·PIKG·오재용·김혜진 2024) — REQ-004·DES-001</li>
+                <li>외부 기관 공개 데이터 현황 (공개 API·포털)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card" style="border-left:4px solid var(--teal)">
+            <h4 style="font-size:.9rem;color:var(--navy);margin-bottom:8px">KRISO에 요청 — 추가 참고자료</h4>
+            <div class="prose" style="margin:0">
+              <p style="margin-bottom:6px">조사 완결성을 위해, 연구소가 보유·인지하신 정보가 있으면
+                알려주시면 <b>적극 참고·반영</b>하겠습니다.</p>
+              <ul style="margin:0 0 0 18px">
+                <li>해사 분야 참고 문헌·표준·웹 자료(URL)</li>
+                <li>연구소 선행 연구·기획 자료</li>
+                <li>분야별 내부 전문가·자문 가능 인력</li>
+                <li>기타 본 용역에 도움이 될 자료·정보</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. 첨부 1 -->
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>[첨부 1] 시험시설 데이터 — 1차 메타데이터 목록 양식</h2>
+          <span class="hint">A-1 1차 회신용</span></div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>본 양식은 <b>1차 메타데이터 목록</b>용입니다. 첫 행은 작성 예시이며,
+            데이터 명세 문서와 실측 데이터는 후속 단계로 제공해 주시면 됩니다.
+            본 양식 수준의 메타데이터 목록만으로 REQ-001 산출물 작성에 <b>착수</b>할 수 있습니다.</div>
+        </div>
+        <div class="callout tip">
+          <span class="ico">✦</span>
+          <div><b>"메타데이터 문서"란?</b> 데이터 파일 자체가 아니라 데이터를 <b>설명하는 문서</b>입니다 —
+            데이터 사전·명세서(필드 이름·의미·단위), 시험조건 명세서, 계측채널 정의서, README 등.
+            데이터 파일만으로는 각 항목의 의미를 알 수 없어 온톨로지 설계가 불가하므로,
+            이 문서의 유무·형태를 함께 알려주시면 됩니다.</div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>시설명</th><th>생성 데이터 종류</th><th>데이터 형식</th><th>갱신 주기</th><th>연간 규모</th><th>메타데이터 문서</th><th>담당 부서</th></tr></thead>
+            <tbody>
+              <tr style="background:#fff8e8">
+                <td><b>[작성 예시]</b><br>해양공학수조</td>
+                <td>파랑 중 선체운동 계측 시계열 · 계류력 데이터 · 시험 영상 · 결과 보고서</td>
+                <td>CSV·TXT(계측) / MP4(영상) / PDF·HWP(보고서)</td>
+                <td>시험 과제 단위 (비정기)</td>
+                <td>연 약 100~200건</td>
+                <td>시험조건 명세서 · 계측채널 정의서 (보유)</td>
+                <td>〔KRISO 기재〕</td>
+              </tr>
+              <tr><td>해양공학수조</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>선형시험수조(예인수조)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>빙해수조</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>심해공학수조</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>파력시험장</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>고압챔버</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>캐비테이션터널</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>선박운항시뮬레이터</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

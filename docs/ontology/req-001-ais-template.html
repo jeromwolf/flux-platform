@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIS 표준 분석 템플릿 (Draft) | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="REQ-001">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <a href="tasks/req-001.html">REQ-001</a><span class="sep">›</span>
+        <span class="cur">AIS 표준 분석 템플릿</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">REQ-001 산출물 ④</div>
+        <h1 class="page-title">AIS 데이터 중심 표준 분석 템플릿 (Draft)</h1>
+        <p class="page-desc">AIS를 대표 사례로 분석하고, 타 멀티모달 데이터셋 분석의 표준 양식을 제시한다.
+          AIS 분석은 모든 멀티모달 데이터에 동일 적용 가능한 분석 기준 사례다.</p>
+      </div>
+
+      <div class="callout warn">
+        <span class="ico">⚠</span>
+        <div><b>Draft v0.1 (2026-05-20).</b> 근거: 정성제안서 II.2 마), 데이터 제공처별 현황 조사서 v0.2.
+          원본: <code>docs/REQ-001_AIS_표준분석템플릿_draft.md</code></div>
+      </div>
+
+      <!-- 1. 개요 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>개요</h2></div>
+        <div class="prose card">
+          <p><strong>AIS</strong>(Automatic Identification System, 선박자동식별시스템)는 선박이 식별·위치·항행
+            정보를 VHF 대역으로 주기 송신하는 국제 표준 시스템(ITU-R M.1371, NMEA0183)이다.
+            해사서비스 플랫폼에서 <strong>가장 대표적이며 선박 중심 지식그래프의 핵심 연결축</strong>이다.</p>
+          <p style="margin-top:8px"><strong>본 템플릿의 목적</strong> — ① AIS 데이터 자체의 표준 분석,
+            ② GPS·RADAR·VHF·Port-MIS·CCTV·환경정보 등을 동일한 틀로 확장 분석하는 기준 양식 제공.</p>
+        </div>
+      </div>
+
+      <!-- 2. 세부 분석 -->
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>AIS 데이터 세부 분석 — 5개 범주</h2></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>범주</th><th>항목</th><th>설명</th></tr></thead>
+          <tbody>
+            <tr><td>선박 식별정보</td><td>MMSI · IMO 번호 · 호출부호 · 선박명</td><td>선박을 유일하게 식별하는 키</td></tr>
+            <tr><td>선박 정적정보</td><td>선종 · 선박 크기(길이·폭) · 국적 · 장비 정보</td><td>변하지 않는 선박 속성</td></tr>
+            <tr><td>위치정보</td><td>위도 · 경도 · 수신 시각</td><td>시공간 좌표</td></tr>
+            <tr><td>항행정보</td><td>침로(COG) · 속력(SOG) · 선수방향(HEADING) · 회전율(ROT) · 항행상태</td><td>실시간 운항 상태</td></tr>
+            <tr><td>운항정보</td><td>목적지 · ETA(예상도착시간) · 흘수(Draught)</td><td>항차 계획 정보</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 3. 소스·형식 -->
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>AIS 데이터 소스·형식</h2>
+          <span class="hint">현황 조사서 v0.2 기반</span></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>식별자</th><th>비고</th></tr></thead>
+          <tbody>
+            <tr><td>선박 AIS 동적정보</td><td>CSV · OpenAPI</td><td>샘플(2018~2023)</td><td>MMSI(공개 시 비식별)</td><td>위경도·SOG·COG·HEADING</td></tr>
+            <tr><td>선박 AIS 정적정보</td><td>CSV · OpenAPI</td><td>스냅샷</td><td>국적별 집계</td><td>—</td></tr>
+            <tr><td>선박위치정보(연안AIS) 통계</td><td>WMS/WFS API</td><td>1시간</td><td>해구번호</td><td>해역별 선박 척수</td></tr>
+            <tr><td>지능형해양수산재난체계 AIS</td><td>CSV · OpenAPI</td><td>수시</td><td><b>IMO번호 포함</b></td><td>식별 가능</td></tr>
+            <tr><td>SSAS(선박보안경보장치)</td><td>CSV · OpenAPI</td><td>수시</td><td>—</td><td>위치·시각·헤딩</td></tr>
+          </tbody>
+        </table></div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:6px">
+          ※ 원천 형식은 NMEA0183 바이너리 텍스트. 공개 파일은 CSV 변환 제공. 실시간 전체 AIS 스트림은 GICOMS API 별도 신청.</p>
+      </div>
+
+      <!-- 4. 연계 대상 -->
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>AIS 주요 연계 대상</h2></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>연계 데이터</th><th>연계 키</th><th>연계 방식 · 활용</th></tr></thead>
+          <tbody>
+            <tr><td>GPS</td><td>시각 · 위치</td><td>위치·속도 정보 교차 검증</td></tr>
+            <tr><td>RADAR</td><td>표적 정보 · 시공간</td><td>표적 추적 정보와 선박 식별 결합</td></tr>
+            <tr><td>VHF</td><td>MMSI · 위치</td><td>선박 위치 ↔ 채널/교신 정보 연계</td></tr>
+            <tr><td>Port-MIS</td><td>호출부호</td><td>입·출항 정보, 항만시설 이용 연계</td></tr>
+            <tr><td>CCTV</td><td>표적 MMSI · 위치</td><td>영상 내 표적 식별·운항 상황 검증</td></tr>
+            <tr><td>환경정보</td><td>위치 · 시각</td><td>조류·파고·풍향풍속·시정과 상황 연계</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 5. KG 매핑 -->
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>AIS 지식그래프 매핑</h2></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:6px 0 8px">5.1 후보 노드</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>노드</th><th>핵심 속성</th><th>AIS 항목 출처</th></tr></thead>
+          <tbody>
+            <tr><td>Vessel (선박)</td><td>mmsi · imoNumber · callSign · vesselName · vesselType · flag</td><td>선박 식별·정적정보</td></tr>
+            <tr><td>Voyage (항차)</td><td>departure · destination · eta</td><td>운항정보</td></tr>
+            <tr><td>Position (위치)</td><td>latitude · longitude · timestamp · sog · cog · heading</td><td>위치·항행정보</td></tr>
+            <tr><td>Event (이벤트)</td><td>eventType(입항·출항·교신) · time</td><td>이벤트성 정보</td></tr>
+            <tr><td>Port · Route · Area</td><td>(공간 개체)</td><td>연계 데이터</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">5.2 후보 관계</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>관계</th><th>의미</th><th>근거</th></tr></thead>
+          <tbody>
+            <tr><td>(Vessel)-[:ON_VOYAGE]->(Voyage)</td><td>선박의 항차</td><td>AIS 운항정보</td></tr>
+            <tr><td>(Voyage)-[:HAS_POSITION]->(Position)</td><td>항차의 위치 기록</td><td>AIS 동적정보</td></tr>
+            <tr><td>(Vessel)-[:LOCATED_IN]->(Area)</td><td>선박이 위치한 해역</td><td>위치 + 해역</td></tr>
+            <tr><td>(Voyage)-[:DEPARTS_FROM / ARRIVES_AT]->(Port)</td><td>출발·도착 항만</td><td>운항정보 + Port-MIS</td></tr>
+            <tr><td>(Vessel)-[:COMMUNICATE_WITH]->(Vessel)</td><td>선박 간 교신</td><td>VHF 연계</td></tr>
+            <tr><td>(Vessel)-[:TRANSMITTED_BY]->(VHFMessage)</td><td>교신 발신</td><td>KRISO 선행연구(표 II-7)</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>TRANSMITTED_BY·PORT_ENTRY·BERTH_TO 등 해사 특화 관계는 KRISO 선행연구
+            (오재용·김혜진 2024)의 관계 유형을 DES-001 온톨로지 설계에 반영한다.</div>
+        </div>
+      </div>
+
+      <!-- 6. 9컬럼 인벤토리 행 -->
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>AIS 9컬럼 인벤토리 행</h2>
+          <span class="hint">산출물 ③의 기준 행</span></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th style="width:140px">컬럼</th><th>AIS 값</th></tr></thead>
+          <tbody>
+            <tr><td>데이터 구분</td><td>AIS (선박자동식별시스템)</td></tr>
+            <tr><td>형식</td><td>바이너리 텍스트(NMEA0183), CSV·OpenAPI(공개 파일)</td></tr>
+            <tr><td>세부 항목</td><td>선박 식별·정적정보, 위치, 침로·속력, ETA·목적지·흘수</td></tr>
+            <tr><td>연계 항목</td><td>GPS · RADAR · VHF · Port-MIS · CCTV · 환경정보</td></tr>
+            <tr><td>주요 식별자</td><td>MMSI · IMO 번호 · 호출부호</td></tr>
+            <tr><td>시공간 정보</td><td>O — 위경도 + 수신시각</td></tr>
+            <tr><td>KG 후보 노드</td><td>Vessel · Voyage · Position · Event</td></tr>
+            <tr><td>KG 후보 관계</td><td>ON_VOYAGE · HAS_POSITION · LOCATED_IN · COMMUNICATE_WITH</td></tr>
+            <tr><td>활용 시나리오</td><td>특정 선박·시점·해역 탐색의 기준축, 사고 대응·경로 분석</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 7. 표준 분석 절차 -->
+      <div class="section">
+        <div class="section-head"><span class="num">7</span><h2>표준 분석 절차 — 타 데이터셋 적용</h2></div>
+        <div class="callout tip">
+          <span class="ico">✦</span>
+          <div>AIS에 적용한 분석 틀을 GPS·RADAR·VHF·Port-MIS·CCTV·환경정보·전자해도에 동일 적용한다.</div>
+        </div>
+        <div class="method">
+          <div class="method-step"><h4>데이터 세부 항목 범주별 분류</h4><p>§2 형식 — 식별·정적·위치·항행·운항 등</p></div>
+          <div class="method-step"><h4>데이터 소스·형식·갱신주기 정리</h4><p>§3 형식</p></div>
+          <div class="method-step"><h4>연계 키·방식 식별</h4><p>§4 형식 — 다른 데이터셋과의 조인 키</p></div>
+          <div class="method-step"><h4>KG 후보 노드·관계 도출</h4><p>§5 형식</p></div>
+          <div class="method-step"><h4>9컬럼 인벤토리 행 작성</h4><p>§6 형식 → 산출물 ③에 누적</p></div>
+        </div>
+        <p style="font-size:.84rem;color:var(--text-2);margin-top:8px">
+          → 7종 데이터를 이 절차로 분석하면 멀티모달 데이터 인벤토리(산출물 ③)가 완성된다.</p>
+      </div>
+
+      <!-- 업데이트 로그 -->
+      <div class="section">
+        <div class="section-head"><span class="num">+</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">AIS 표준 분석 템플릿 draft 생성 — 5범주 세부분석·소스·연계·KG 매핑·9컬럼 행·표준 절차.</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

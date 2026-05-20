@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데이터 제공처별 현황 조사서 (Draft) | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="REQ-001">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <a href="tasks/req-001.html">REQ-001</a><span class="sep">›</span>
+        <span class="cur">데이터 제공처별 현황 조사서</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">REQ-001 산출물 ①</div>
+        <h1 class="page-title">해사서비스 플랫폼 데이터 제공처별 현황 조사서 (Draft)</h1>
+        <p class="page-desc">공공데이터포털·기관 공식 사이트 실조사로 60개 이상의 해사·해양 데이터셋을 확인했다.
+          M+2 「해사 데이터 현황 분석 보고서」에 취합된다.</p>
+      </div>
+
+      <div class="callout warn">
+        <span class="ico">⚠</span>
+        <div><b>Draft v0.2 (2026-05-20).</b> 외부 기관 = 공공데이터포털(data.go.kr)·기관 포털 실조사.
+          내부 시험시설은 KRISO 협조 자료(A-1) 수령 후 작성. 원본: <code>docs/REQ-001_데이터제공처_현황조사서_draft.md</code></div>
+      </div>
+
+      <!-- 1. 개요 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>개요 · 조사 결과 요약</h2></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>제공처</th><th>확인 데이터셋</th><th>주력 형식</th><th>핵심 식별자</th></tr></thead>
+            <tbody>
+              <tr><td>해양수산부 (GICOMS·Port-MIS)</td><td>27건</td><td>CSV·OpenAPI·GIS</td><td>MMSI·IMO·호출부호·UN/LOCODE</td></tr>
+              <tr><td>국립해양조사원 (KHOA)</td><td>15건 (+API 240여 개)</td><td>S-57·JSON API·SHP</td><td>ENC셀번호·ObsCode</td></tr>
+              <tr><td>국립해양측위정보원 (NMPNT)</td><td>5건</td><td>RTCM·RINEX·JSON</td><td>기준국ID·관측소코드</td></tr>
+              <tr><td>기상청 (KMA)</td><td>7건</td><td>CSV·JSON API</td><td>지점번호·특보구역코드</td></tr>
+              <tr><td>해양경찰청 (KCG)</td><td>6건</td><td>CSV·REST API</td><td>연번·일자+지역</td></tr>
+              <tr><td>자율운항선박실증센터 (KRISO)</td><td>4건 (대부분 비공개)</td><td>—</td><td>—</td></tr>
+              <tr><td>기타 (MEIS·KIOST·중앙해양안전심판원)</td><td>13건+</td><td>CSV·API·NetCDF4</td><td>정점코드·사건번호</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div><b>11개 조사 항목</b> — 데이터명 · 제공기관 · 생성목적 · 형식 · 갱신주기 · 시공간범위 ·
+            주요필드 · 메타데이터 · 식별자 · 연계항목 · 접근권한</div>
+        </div>
+      </div>
+
+      <!-- 2. 해양수산부 -->
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>해양수산부</h2>
+          <span class="hint">GICOMS · Port-MIS · 27건</span></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:6px 0 8px">2.1 선박 동적정보 (AIS·항적)</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>선박 AIS 동적정보</td><td>CSV·OpenAPI</td><td>샘플(2018~2023)</td><td>MMSI(비식별)·수신시각·위경도·SOG·COG·HEADING</td><td>공개·무료</td></tr>
+            <tr><td>선박 AIS 정적정보</td><td>CSV·OpenAPI</td><td>스냅샷</td><td>국적별 집계</td><td>공개·무료</td></tr>
+            <tr><td>선박위치정보(연안AIS) 통계</td><td>WMS/WFS API</td><td>1시간</td><td>해구번호·해구경계좌표·선박척수</td><td>GICOMS API Key</td></tr>
+            <tr><td>지능형해양수산재난체계 AIS</td><td>CSV·OpenAPI</td><td>수시</td><td>선박명·<b>IMO번호</b>·호출부호·길이·SOG·COG</td><td>공개·무료</td></tr>
+            <tr><td>SSAS(선박보안경보장치)</td><td>CSV·OpenAPI</td><td>수시</td><td>전송·수신시각·위경도·헤딩·속도 (107,589행)</td><td>공개·무료</td></tr>
+            <tr><td>(융합)선박/어선 항적도</td><td>CSV·OpenAPI</td><td>수시</td><td>AIS+V-PASS 융합 항적·선종·톤수</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">2.2 선박 정적·등록 정보</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>선박원부등록정보</td><td>CSV·OpenAPI</td><td>연간</td><td>선박번호·<b>IMO</b>·호출부호·총톤수·치수·진수일·조선사</td><td>공개·무료</td></tr>
+            <tr><td>국제선박등록정보</td><td>CSV·OpenAPI</td><td>연간</td><td>국제선박등록번호·<b>IMO</b>·재화중량톤수·선적항</td><td>공개·무료</td></tr>
+            <tr><td>선박검사정보(KOMSA)</td><td>CSV·OpenAPI</td><td>연간</td><td>선박번호·검사종류·검사일·안전설비 (80+컬럼)</td><td>공개·무료</td></tr>
+            <tr><td>선령별 선종별 등록선박현황</td><td>CSV·OpenAPI</td><td>연간</td><td>선종·선령별 척수·총톤수 (통계)</td><td>공개·무료</td></tr>
+            <tr><td>선박국가코드</td><td>CSV·OpenAPI</td><td>수시</td><td>국가코드·MID(MMSI 앞 3자리)</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">2.3 입출항·항만 운영 (Port-MIS)</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>선박입항신고</td><td>CSV·OpenAPI</td><td>연간</td><td><b>호출부호</b>·선박명·입항일·입항목적·총톤수·계선장소 (293,211건)</td><td>공개·무료</td></tr>
+            <tr><td>선박관제정보 (VTS)</td><td>CSV·OpenAPI</td><td>연간</td><td>관제항구·<b>호출부호</b>·입출항일시·선박상태 (199,912건)</td><td>공개·무료</td></tr>
+            <tr><td>선박운항정보</td><td>OpenAPI</td><td>실시간</td><td>항구·입출항일시·선박명·총톤수·호출부호·차항지</td><td>API Key</td></tr>
+            <tr><td>한중일물류 입출항정보</td><td>CSV·OpenAPI</td><td>연간</td><td>호출부호·입출항일·차항지·목적항·위험물톤수 (30항목)</td><td>공개·무료</td></tr>
+            <tr><td>항만정보</td><td>CSV·OpenAPI</td><td>수시</td><td>항만명·수면적·하역능력·방파제·안벽 (전국 60항만)</td><td>공개·무료</td></tr>
+            <tr><td>항만시설제원코드</td><td>CSV·OpenAPI</td><td>수시</td><td>항만명·시설구분·선석·제원코드</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">2.4 해양공간정보·코드</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>해양공간범위</td><td>WMS/WFS API</td><td>실시간</td><td>좌표체계(EPSG:5179)·관리계획ID</td><td>API Key·무료</td></tr>
+            <tr><td>해양보호구역 지정 현황</td><td>HWP·외부URL</td><td>수시</td><td>명칭·고시번호·구역유형</td><td>공개·무료</td></tr>
+            <tr><td>항만가이드라인 항로(GIS)</td><td>SHP</td><td>수시</td><td>항로 선형 레이어</td><td>공개·무료</td></tr>
+            <tr><td>수심분포도 / 바닷가공간정보</td><td>CSV·SHP</td><td>수시</td><td>수심 등고선·연안 폴리곤</td><td>공개·무료</td></tr>
+            <tr><td>국가 및 항구코드 (UN/LOCODE)</td><td>CSV·OpenAPI</td><td>수시</td><td><b>UN/LOCODE 5자리</b>·국가명·항구명 (32,099행)</td><td>공개·무료</td></tr>
+            <tr><td>위험물정보 (IMDG)</td><td>XML REST API</td><td>실시간</td><td><b>UN번호</b>·IMDG명·등급·포장지침·비상조치</td><td>API Key·무료</td></tr>
+            <tr><td>해상교통관제센터(VTS) 점</td><td>SHP</td><td>연간</td><td>VTS 센터 위치 좌표</td><td>공개(KOGL2)</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="callout danger" style="margin-top:12px">
+          <span class="ico">⛔</span>
+          <div><b>비공개·제한 데이터</b> — LRIT 실시간 위치(국가 안보) · VMS 실시간 스트림(소유자 동의) ·
+            어선 V-PASS 실시간 위치(어민 사생활, 암호화 항적도만 부분 공개)</div>
+        </div>
+      </div>
+
+      <!-- 3. 국립해양조사원 -->
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>국립해양조사원 (KHOA)</h2>
+          <span class="hint">바다누리 · 개방海 · 15건+</span></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:6px 0 8px">3.1 전자해도·수심</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>전자해도 원본 (ENC)</td><td><b>S-57 + S-63 암호화</b></td><td>연1회 + 주간 UPDATE</td><td>해안선·수심·항로표지·위험물 / <b>ENC 셀번호</b>·LNAM</td><td><b>유료 구매</b></td></tr>
+            <tr><td>전자해도 일반도 (2레벨)</td><td>SHP</td><td>연간</td><td>해도번호·축척·간행일자</td><td>공개·무료</td></tr>
+            <tr><td>자연과학용 수심정보</td><td>JSON·XML API</td><td>실시간</td><td>위경도·수심값(150m 격자)</td><td>API Key·무료</td></tr>
+            <tr><td>1/25,000 연안정보도(수심)</td><td>SHP</td><td>수시</td><td>수심 등고선</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:6px">※ S-101 차세대 전자해도 — 2026년부터 단계적 도입, 한국이 IHO 시험운영국. REQ-004 국제표준 매핑과 직결.</p>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">3.2 조석·조류·해양관측 (바다누리 API)</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>조석예보</td><td>XML·JSON API</td><td>실시간</td><td><b>ObsCode</b>·고저조·극치시각·조위 / 관측소 48개소</td><td>바다누리 API Key</td></tr>
+            <tr><td>조위관측소 실측 데이터</td><td>JSON·XML API</td><td>실시간(10분~)</td><td>ObsCode·관측조위·예측조위</td><td>바다누리 API Key</td></tr>
+            <tr><td>파고 관측 데이터</td><td>JSON·XML API</td><td>실시간</td><td>관측소코드·유의/최대파고·파주기·파향 / 부이 32개소</td><td>바다누리 API Key</td></tr>
+            <tr><td>조류예보</td><td>JSON·XML API</td><td>실시간</td><td>ObsCode·유속·유향·창낙조 / 관측소 9개소</td><td>바다누리 API Key</td></tr>
+            <tr><td>해수유동·수온·염분 격자</td><td>CSV·SHP·API</td><td>월·연 통계</td><td>6단계 격자ID·수온·염분·유속·파고 (2000~)</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">3.3 관측소·해안선·위성</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>기본수준점</td><td>CSV·OpenAPI</td><td>연간</td><td>번호·위경도·MSL/DL 높이 (513개소)</td><td>공개</td></tr>
+            <tr><td>해양관측소 운영 현황</td><td>CSV·OpenAPI</td><td>수시</td><td>관측소 고유번호·유형·위경도</td><td>공개·무료</td></tr>
+            <tr><td>해안선</td><td>SHP</td><td>연간</td><td>해안선 길이·선형</td><td>공개·무료</td></tr>
+            <tr><td>해무관측소 최신 관측</td><td>JSON·XML API</td><td>실시간</td><td>관측소코드·가시도·기온·풍속 (11개소)</td><td>API Key</td></tr>
+            <tr><td>해양과학조사자료 점</td><td>SHP</td><td>연간</td><td>조사구역코드·기관코드·조사연도</td><td>공개</td></tr>
+            <tr><td>GOCI-II 해양위성 산출물</td><td>L1 JPG·L4 PNG·API</td><td>실시간(1시간)</td><td>SST·해색·적조·해무 등 26종</td><td>API 신청</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 4. 측위정보원 -->
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>국립해양측위정보원 (NMPNT)</h2>
+          <span class="hint">DGNSS · eLoran · 5건</span></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>DGNSS 중파방송 보정신호</td><td>RTCM SC-104</td><td>실시간</td><td>위성PRN·위치보정량(PRC)·기준국위치 / 기준국 17개소</td><td>수신기 보유 시 무료</td></tr>
+            <tr><td>DGNSS 인터넷 보정 (NTRIP)</td><td>RTCM 3.x 스트림</td><td>실시간(1초)</td><td>마운트포인트·기준국코드·GNSS 보정</td><td>회원가입·무료</td></tr>
+            <tr><td>GNSS 후처리 (RINEX)</td><td>RINEX 2.11/3.x</td><td>1시간·1일</td><td>관측소4자리코드·위성PRN·위사거리·위상</td><td>회원가입·무료</td></tr>
+            <tr><td>eLoran 지상파 신호·ASF</td><td>eLoran 신호·ASF 격자</td><td>실시간·부정기</td><td>GRI·TOA·ASF 보정값</td><td>수신기·웹 다운로드</td></tr>
+            <tr><td>해양기상 정보</td><td>JSON OpenAPI</td><td>실시간</td><td>풍향·풍속·수온·기온·기압·유향·유속</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 5. 기상청 -->
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>기상청 (KMA)</h2>
+          <span class="hint">해양기상부이 28개소 · 7건</span></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>해양기상부이 실시간·시계열</td><td>CSV·JSON·XML API</td><td>30분(일부 10분)</td><td>지점번호·풍향풍속·기압·기온·유의/최대파고·파주기·수온·시정 (1996~)</td><td>공개·무료</td></tr>
+            <tr><td>파고부이 관측자료</td><td>CSV·API</td><td>실시간</td><td>지점번호·유의/최대파고·파주기·수온</td><td>공개·무료</td></tr>
+            <tr><td>등표기상관측 자료</td><td>CSV·API</td><td>실시간</td><td>지점번호·풍향풍속·기압·기온·습도</td><td>공개·무료</td></tr>
+            <tr><td>해양기상관측 통합 조회 API</td><td>JSON·XML REST</td><td>실시간</td><td>부이·파고·등표 3종 통합</td><td>API Key·무료</td></tr>
+            <tr><td>기상특보 조회 (해상 포함)</td><td>JSON·XML API</td><td>실시간</td><td>특보구역·종류·현상·발령/해제시각 / 해상 44구역</td><td>공개·무료</td></tr>
+            <tr><td>해상예보 (중기·단기)</td><td>JSON·XML API</td><td>1일 2~4회</td><td>파고·풍향·풍속·날씨코드</td><td>공개·무료</td></tr>
+            <tr><td>해양기상관측 지점정보</td><td>TEXT API</td><td>지점변경 시</td><td>지점번호·위경도·관측이력 (메타데이터)</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 6. 해양경찰청 -->
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>해양경찰청 (KCG)</h2>
+          <span class="hint">통계 공개 · SAR 작전기록 비공개 · 6건</span></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>파출소 일일 사고통계</td><td>REST API</td><td>실시간</td><td>조직ID·기준일자·충돌/침수/전복/익수자수</td><td>API Key·무료</td></tr>
+            <tr><td>해상조난사고 상세 통계</td><td>CSV·API</td><td>연간</td><td>연·월·일·시간대·사고선박수·사망/실종자수 (4,213행, 국가승인통계)</td><td>공개·무료</td></tr>
+            <tr><td>해양오염사고 상세</td><td>CSV·API</td><td>연간</td><td>발생일시·<b>위경도</b>·오염원·선박종류·톤수·국적·유출량 (2,128건)</td><td>공개·무료</td></tr>
+            <tr><td>해양오염물질 감식 분석</td><td>CSV·API</td><td>연간</td><td>구분·연도·건수·시료수</td><td>공개·무료</td></tr>
+            <tr><td>연안사고 현황 (원인·유형·시도별)</td><td>CSV·API</td><td>연간</td><td>연도·시도·사고유형·원인·장소</td><td>공개·무료</td></tr>
+            <tr><td>해양조난사고 이전 아카이브</td><td>CSV</td><td>1회성(~2010)</td><td>위치·발생유형·사고원인</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 7. 자율운항센터 -->
+      <div class="section">
+        <div class="section-head"><span class="num">7</span><h2>자율운항선박실증센터 (KRISO)</h2>
+          <span class="hint">대부분 비공개</span></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>상태</th><th>비고</th></tr></thead>
+          <tbody>
+            <tr><td>NEMO 실증 항해 데이터</td><td>미공개 포맷</td><td><b>비공개</b> (내부 연구용)</td><td>8개 분야 100여 종 — 항해·엔진·관제·통신·해상교통·기상·안전</td></tr>
+            <tr><td>시뮬레이션 테스트베드(S-TAS)</td><td>내부 시뮬레이터</td><td><b>비공개</b></td><td>공동연구 협약 시 접근 가능성</td></tr>
+            <tr><td>선박통합데이터센터 (UIPA)</td><td>확인 안 됨</td><td>공개 여부 미확인</td><td>울산정보산업진흥원 운영</td></tr>
+            <tr><td>KASS AI 데이터플랫폼</td><td>표준 포맷(구축 중)</td><td><b>2029 이후 공개 예정</b></td><td>자율운항 AI 학습용 공공 데이터셋 100여 종</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>자율운항 데이터는 본 과제 발주처(KRISO) 내부 자산 — 협조요청 A-3(소개) 및 직접 협의 필요.</div>
+        </div>
+      </div>
+
+      <!-- 8. 기타 -->
+      <div class="section">
+        <div class="section-head"><span class="num">8</span><h2>기타 관련 기관</h2></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:6px 0 8px">8.1 중앙해양안전심판원 — 해양사고 공식 통계</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>해양사고 통계현황</td><td>CSV·API</td><td>연간</td><td><b>사건번호</b>·사고종류·발생일시·위경도·선박명·톤수·인명피해 (16,731건, 1976~)</td><td>공개(저작권 4유형)</td></tr>
+            <tr><td>해양교통안전공단 사고추세 API</td><td>REST API</td><td>실시간</td><td>연도·사고종류 15종·발생건수·인명피해 (2017~2024)</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">8.2 해양환경공단 (MEIS)</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>해양환경측정망 관측서비스</td><td>REST API</td><td>실시간</td><td><b>정점코드</b>·수온·염분·pH·DO·COD·영양염·클로로필·WQI</td><td>API Key·무료</td></tr>
+            <tr><td>해양수질자동측정망 (하구·만)</td><td>REST API</td><td>실시간</td><td>정점코드·해역·위경도 / 자동측정소 17개소</td><td>API Key·무료</td></tr>
+            <tr><td>해양환경측정망 퇴적물</td><td>CSV·API</td><td>연간</td><td>정점·좌표·중금속·TOC·AVS·입도 (198건)</td><td>공개·무료</td></tr>
+            <tr><td>해양환경측정망 CTD</td><td>REST API·CSV</td><td>실시간·연간</td><td>정점코드·수심별 수온·염분·전기전도도</td><td>API Key·무료</td></tr>
+            <tr><td>해양쓰레기 수거 / 해안쓰레기 모니터링</td><td>CSV·API</td><td>연·실시간</td><td>지역·연도·수거량·모니터링차수</td><td>공개·무료</td></tr>
+            <tr><td>해양보호구역 공간정보</td><td>CSV·GeoJSON·API</td><td>연간</td><td>보호구역구분·지정일·면적·GeoJSON좌표 (39건)</td><td>공개·무료</td></tr>
+            <tr><td>국가해양생태계 종합조사 연보</td><td>PDF</td><td>연간</td><td>권역·생물상·서식지·교란요인</td><td>공개·무료</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">8.3 한국해양과학기술원 (KIOST)</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터셋</th><th>형식</th><th>갱신</th><th>주요 필드·식별자</th><th>접근</th></tr></thead>
+          <tbody>
+            <tr><td>천리안 해양위성 GOCI-II 분석정보</td><td>NetCDF4 (L1B·L2 26종)</td><td>1시간</td><td>클로로필·CDOM·부유물질·SST·적조·해무</td><td>일부 공개·TDS</td></tr>
+            <tr><td>해양과학기지 실시간 관측</td><td>실시간 차트·다운로드</td><td>실시간</td><td>풍향풍속·수온·염분·파고·방사능·CO₂ / 이어도·가거초·소청초</td><td>차트 공개·원시 로그인</td></tr>
+            <tr><td>해양부이 관측자료</td><td>KORS 포털</td><td>실시간</td><td>수온·염분·파고·풍향풍속 / 황해·동중국해</td><td>차트 공개·원시 로그인</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 9. 내부 시험시설 -->
+      <div class="section">
+        <div class="section-head"><span class="num">9</span><h2>연구소 내부 시험시설 데이터 현황</h2>
+          <span class="hint">A-1 자료 수령 후</span></div>
+        <div class="callout warn">
+          <span class="ico">⚠</span>
+          <div>KRISO 협조 자료(협조요청 A-1) 수령 후 작성한다. 자원구조 상세 분석은 REQ-001 산출물 ②에서 수행.</div>
+        </div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>시설명</th><th>생성 데이터 종류</th><th>형식</th><th>갱신</th><th>메타데이터 문서</th><th>담당 부서</th></tr></thead>
+          <tbody>
+            <tr><td>해양공학수조</td><td>〔A-1 수령 후〕</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>선형시험수조(예인수조)</td><td>〔A-1 수령 후〕</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>빙해수조</td><td>〔A-1 수령 후〕</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>심해공학수조</td><td>〔A-1 수령 후〕</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>파력시험장</td><td>〔A-1 수령 후〕</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>고압챔버</td><td>〔A-1 수령 후〕</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>캐비테이션터널</td><td>〔A-1 수령 후〕</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>선박운항시뮬레이터</td><td>〔A-1 수령 후〕</td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 10. 종합 -->
+      <div class="section">
+        <div class="section-head"><span class="num">10</span><h2>종합 — 데이터셋 간 연계 (KG 설계 핵심)</h2></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:6px 0 8px">10.1 조인 키 매핑</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>조인 키</th><th>연결 데이터셋</th><th>표준</th></tr></thead>
+          <tbody>
+            <tr><td><b>IMO 번호</b></td><td>선박원부 ↔ 국제선박등록 ↔ 선박검사 ↔ AIS정보 ↔ 해양사고 통계</td><td>IMO 국제</td></tr>
+            <tr><td><b>MMSI</b></td><td>AIS 동적 ↔ AIS 정적 ↔ 연안AIS 통계 ↔ 인천항 AIS</td><td>ITU-R M.585</td></tr>
+            <tr><td><b>호출부호</b></td><td>선박입항신고 ↔ 선박관제(VTS) ↔ 선박운항정보 ↔ 한중일 입출항</td><td>ITU</td></tr>
+            <tr><td><b>UN/LOCODE</b></td><td>국가항구코드 ↔ 차항지·목적항 필드</td><td>UNECE</td></tr>
+            <tr><td><b>ObsCode</b></td><td>조석예보 ↔ 조위실측 ↔ 파고 ↔ 조류 ↔ 해양관측소</td><td>KHOA</td></tr>
+            <tr><td><b>정점코드</b></td><td>해양환경측정망 수질 ↔ CTD ↔ 퇴적물</td><td>MEIS</td></tr>
+            <tr><td><b>위경도(WGS84)</b></td><td>해양오염사고 ↔ 해양사고 통계 ↔ GOCI-II 격자 ↔ 조석·파고 관측소</td><td>공간 조인</td></tr>
+            <tr><td><b>ENC 셀번호</b></td><td>전자해도 ↔ 수심정보 ↔ 해안선</td><td>IHO S-57</td></tr>
+            <tr><td><b>UN번호</b></td><td>위험물정보(IMDG) ↔ 입출항 위험물톤수</td><td>UN IMDG</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:14px 0 8px">10.2 접근성 매트릭스</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>접근 유형</th><th>데이터 예</th></tr></thead>
+          <tbody>
+            <tr><td>완전 공개 (로그인 불필요)</td><td>AIS 통계·항만정보·해안선·해양사고 통계 등 CSV 다수</td></tr>
+            <tr><td>API Key (자동승인)</td><td>위험물정보·수심정보·해양환경측정망</td></tr>
+            <tr><td>API Key (심의/바다누리)</td><td>조석·조위·파고·조류</td></tr>
+            <tr><td>유료 구매</td><td>전자해도 ENC (S-57/S-63 원본)</td></tr>
+            <tr><td>비공개</td><td>LRIT·VMS·V-PASS 실시간 위치, 자율운항 실증 데이터, 해경 SAR 작전기록</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="callout tip" style="margin-top:12px">
+          <span class="ico">✦</span>
+          <div><b>핵심 발견</b> — ① AIS·Port-MIS·선박원부가 IMO·MMSI·호출부호로 강하게 연결 → 선박 중심 KG의 핵심 축.
+            ② 조석·파고·조류·해양기상이 ObsCode·위경도로 연계 → 해역·환경 노드.
+            ③ 전자해도(ENC)는 유료이나 S-100 표준 매핑(REQ-004)의 핵심 — 활용 조건 협의 필요.
+            ④ 자율운항 실증 데이터는 발주처 내부 자산 — 협조 필수.</div>
+        </div>
+      </div>
+
+      <!-- 11. 다음 단계 -->
+      <div class="section">
+        <div class="section-head"><span class="num">11</span><h2>다음 단계</h2></div>
+        <div class="prose card">
+          <ul style="margin:0 0 0 18px">
+            <li><b>외부기관 협조</b> (A-3) — 측위정보원·자율운항센터 데이터 세부, 전자해도 활용 조건</li>
+            <li><b>시험시설 데이터</b> (A-1) — 메타데이터 목록 수령 후 §9 작성</li>
+            <li><b>공개 API 직접 확인</b> — 핵심 API의 필드 명세 상세화 (당사 자체 조사)</li>
+            <li>본 조사서 → 멀티모달 데이터 인벤토리(산출물 ③), 우선순위 선정표(산출물 ⑥)의 입력</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 업데이트 로그 -->
+      <div class="section">
+        <div class="section-head"><span class="num">+</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">v0.1 생성 — 외부 6기관 골격.</span></li>
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">v0.2 대폭 보강 — 공공데이터포털·기관 포털 실조사로 60개+ 데이터셋 확인, 기관별 표·조인 키 매핑·접근성 매트릭스 작성.</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

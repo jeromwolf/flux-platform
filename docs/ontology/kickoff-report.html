@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>착수보고서 (Draft) | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <span class="cur">착수보고서 (Draft)</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">착수 단계 · 제출 문서</div>
+        <h1 class="page-title">착수보고서 (Draft)</h1>
+        <p class="page-desc">과업지시서 Ⅱ.7에 따라 계약일로부터 10일 이내 제출하는 착수보고서이다.
+          ① 착수신고서 ② 용역 실시 계획서 ③ 용역수행자 명단·편성표 ④ 예정공정표로 구성된다.</p>
+      </div>
+
+      <div class="callout warn">
+        <span class="ico">⚠</span>
+        <div><b>Draft v0.1 (2026-05-20).</b> 〔 〕 표시 항목은 착수보고 회의(KRISO 협의)에서 확정한다.
+          근거: 과업지시서 Ⅱ.7, 기술제안서, 발표자료 최종본. 원본 마크다운: <code>docs/착수보고서_draft.md</code></div>
+      </div>
+
+      <!-- Ⅰ. 착수신고서 -->
+      <div class="section">
+        <div class="section-head"><span class="num">Ⅰ</span><h2>착수신고서</h2></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <tbody>
+              <tr><th style="width:140px">용역명</th><td>대화형 해사서비스 플랫폼을 위한 지식그래프 모델 설계 연구 용역</td></tr>
+              <tr><th>발주처</th><td>한국해양과학기술원 부설 선박해양플랜트연구소 (KRISO)</td></tr>
+              <tr><th>계약상대자</th><td>㈜인사이트마이닝 · 대표자 이부일</td></tr>
+              <tr><th>소재지</th><td>대전광역시 유성구 노은로 151, 가나파로스빌 2차 208호</td></tr>
+              <tr><th>계약 금액</th><td>일금 칠천팔백삼십만원정 (₩78,300,000)</td></tr>
+              <tr><th>계약 일자</th><td>〔용역계약서(최종) 기준 — 착수보고 회의에서 확인〕</td></tr>
+              <tr><th>계약 기간</th><td>〔계약 일자〕 ~ 2026-12-11 (입찰공고문 완수일자 · 계약 후 240일 이내)</td></tr>
+              <tr><th>착수일</th><td>2026-05-18</td></tr>
+              <tr><th>책임연구원</th><td>양선희 (㈜인사이트마이닝 연구실장, 과제책임자)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="prose" style="margin-top:12px">
+          <p>상기와 같이 「대화형 해사서비스 플랫폼을 위한 지식그래프 모델 설계 연구 용역」에 착수하였음을 신고합니다.</p>
+          <p style="margin-top:8px">2026년 5월 · ㈜인사이트마이닝 대표이사 이부일 (인) · 선박해양플랜트연구소장 귀하</p>
+        </div>
+      </div>
+
+      <!-- Ⅱ. 용역 실시 계획서 -->
+      <div class="section">
+        <div class="section-head"><span class="num">Ⅱ</span><h2>용역 실시 계획서</h2></div>
+
+        <div class="prose card">
+          <p><strong>과업 목적</strong> — 해사 분야 멀티모달 데이터(해양관측·선박정보·전자해도·기상·항해 등)에 대한
+            지식그래프 모델을 설계하고, 데이터 간 의미적 관계를 체계화하여 자연어 기반 데이터 탐색 및 AI 서비스의
+            기반을 구축한다.</p>
+          <p style="margin-top:8px"><strong>과업 범위</strong> — 대화형 해사서비스 플랫폼의 지식그래프 모델을
+            설계하며, 2차년도 그래프 DB 구축·자연어 탐색 기능 개발로 이어지는 확장성 있는 설계를 수행한다.
+            5개년 2단계 사업의 <strong>1단계 1차년도</strong>(운영 개념 정의 및 설계)에 해당한다.</p>
+        </div>
+
+        <h3 style="font-size:.95rem;color:var(--navy);margin:16px 0 8px">수행 체계 — 3단계 접근</h3>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>단계</th><th>명칭</th><th>주요 내용</th></tr></thead>
+            <tbody>
+              <tr><td>1단계</td><td>해사 데이터 분석 및 구축 대상 선정</td><td>외부·내부 데이터 현황 조사, 멀티모달 분류, 구축 대상·우선순위 도출</td></tr>
+              <tr><td>2단계</td><td>해사 도메인 온톨로지 및 KG 모델 설계</td><td>온톨로지 설계(스탠포드 7단계), 국제표준 정합성, 자원 관계 모델, 그래프 DB 비교</td></tr>
+              <tr><td>3단계</td><td>지식그래프 모델 검증 PoC</td><td>샘플 데이터 검증, 프로토타입 구축, 자연어 탐색 검토</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="font-size:.95rem;color:var(--navy);margin:16px 0 8px">요구사항별 수행 계획 — 15개</h3>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>구분</th><th>코드</th><th>요구사항</th><th>단계</th></tr></thead>
+            <tbody>
+              <tr><td>연구</td><td>REQ-001</td><td>해사 데이터 현황 조사 및 의미적 연관성 분석</td><td>1단계</td></tr>
+              <tr><td>연구</td><td>REQ-002</td><td>지식그래프 구축 대상 자산 선정 및 로드맵 수립</td><td>1단계</td></tr>
+              <tr><td>연구</td><td>REQ-003</td><td>지식그래프 DB 기술 조사 및 최적 솔루션 평가</td><td>1단계</td></tr>
+              <tr><td>연구</td><td>REQ-004</td><td>해사 도메인 국제 표준 및 온톨로지 매핑 분석</td><td>1단계</td></tr>
+              <tr><td>설계</td><td>DES-001</td><td>해사 도메인 온톨로지 모델 설계</td><td>2단계</td></tr>
+              <tr><td>설계</td><td>DES-002</td><td>지식그래프 물리 스키마 설계</td><td>2단계</td></tr>
+              <tr><td>설계</td><td>DES-003</td><td>멀티모달 데이터 지식화 및 ETL 파이프라인 설계</td><td>2단계</td></tr>
+              <tr><td>설계</td><td>DES-004</td><td>지식 탐색 및 복합 질의 아키텍처 설계</td><td>2단계</td></tr>
+              <tr><td>시험</td><td>TER-001</td><td>지식그래프 PoC 구축 및 기능 검증</td><td>3단계</td></tr>
+              <tr><td>시험</td><td>TER-002</td><td>지식그래프 시각화 및 탐색 인터페이스 PoC 검증</td><td>3단계</td></tr>
+              <tr><td>공통</td><td>COM-001</td><td>보안 요건</td><td>전 기간</td></tr>
+              <tr><td>공통</td><td>COM-002</td><td>기술 지원 (연구소 담당자 교육)</td><td>요청 시</td></tr>
+              <tr><td>공통</td><td>COM-003</td><td>상호 협의</td><td>전 기간</td></tr>
+              <tr><td>공통</td><td>COM-004</td><td>필요 장비 및 소프트웨어 확보</td><td>PoC 착수 전</td></tr>
+              <tr><td>공통</td><td>COM-005</td><td>산출물 관리 및 제출 (GitHub)</td><td>전 기간</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout info" style="margin-top:12px">
+          <span class="ico">◆</span>
+          <div><b>수행 방법</b> — 온톨로지 설계는 스탠포드 7단계 방법론 적용 · KRISO 선행연구(오재용·김혜진 2024)
+            및 학술 선행연구(MAKG·PIKG) 반영 · IHO S-100 국제표준 정합성 · GitHub 산출물 버전 관리 ·
+            격주 기술 협의.</div>
+        </div>
+      </div>
+
+      <!-- Ⅲ. 용역수행자 명단·편성표 -->
+      <div class="section">
+        <div class="section-head"><span class="num">Ⅲ</span><h2>용역수행자 명단 및 편성표</h2></div>
+        <div class="prose" style="margin-bottom:10px">
+          <p>해사 도메인 온톨로지 설계·그래프 DB 구현·PoC 개발 3개 전문 분야를 균형 있게 수행하기 위해
+            <strong>정규 인력 4명</strong>으로 구성한다. 과업지시서 보안 요건에 따라 외부 인력 참여를 제한한다.</p>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>역할</th><th>성명</th><th>소속·직급</th><th>담당 요구사항</th></tr></thead>
+            <tbody>
+              <tr><td>PM · 온톨로지 설계 책임</td><td>양선희</td><td>인공지능분석실 실장</td><td>DES-001 · REQ-004 · DES-004 / 과제 총괄</td></tr>
+              <tr><td>그래프 DB 설계</td><td>신동욱</td><td>인공지능분석실 팀장</td><td>REQ-003 · DES-002 · TER-001 · TER-002</td></tr>
+              <tr><td>데이터 품질</td><td>이부일</td><td>대표이사</td><td>REQ-001 · REQ-002 · DES-003 (품질 총괄)</td></tr>
+              <tr><td>데이터 분석 · ETL</td><td>이재현</td><td>빅데이터분석실 팀장</td><td>REQ-001 · REQ-002 · DES-003</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:8px">
+          ※ 데이터 분석·ETL 담당은 <b>이재현</b>으로 확정. 정성제안서 표기('이동훈')는 착수보고 시 정정 보고한다(C-3).
+          투입 인월(M/M)은 편성표 확정 시 기재. 참여자 교체 시 연구소 사전 승인 후 보안각서 재제출(COM-001).</p>
+      </div>
+
+      <!-- Ⅳ. 예정 공정표 -->
+      <div class="section">
+        <div class="section-head"><span class="num">Ⅳ</span><h2>예정 공정표</h2>
+          <span class="hint">계약 후 240일 · M ~ M+8</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>추진 내용</th><th>M</th><th>M+1</th><th>M+2</th><th>M+3</th><th>M+4</th><th>M+5</th><th>M+6</th><th>M+7</th><th>M+8</th></tr></thead>
+            <tbody>
+              <tr><td>지식그래프 구축 대상 데이터 조사·분석</td><td>■</td><td>■</td><td>■</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>지식그래프 관련 기술 조사</td><td>■</td><td>■</td><td>■</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td>해사 온톨로지 설계</td><td></td><td></td><td>■</td><td>■</td><td>■</td><td>■</td><td></td><td></td><td></td></tr>
+              <tr><td>해사서비스 플랫폼 자원 지식그래프 설계</td><td></td><td></td><td></td><td>■</td><td>■</td><td>■</td><td></td><td></td><td></td></tr>
+              <tr><td>PoC 검증용 지식그래프 구축·시험</td><td></td><td></td><td></td><td></td><td></td><td>■</td><td>■</td><td>■</td><td></td></tr>
+              <tr><td>2차년도 구축 상세 설계서 작성</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>■</td><td>■</td></tr>
+              <tr><td>과업 완료 성과물 제출</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>■</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-2" style="margin-top:12px">
+          <div class="card">
+            <h4 style="font-size:.88rem;color:var(--navy);margin-bottom:7px">보고 일정</h4>
+            <div class="prose" style="margin:0"><ul style="margin:0 0 0 18px">
+              <li>착수보고 — 계약 후 10일 이내</li>
+              <li>중간보고 — 〔M+4 전후 · C-2 확정〕</li>
+              <li>최종보고 — 계약 종료 시 (M+8)</li>
+            </ul></div>
+          </div>
+          <div class="card">
+            <h4 style="font-size:.88rem;color:var(--navy);margin-bottom:7px">성과물 제출 일정</h4>
+            <div class="prose" style="margin:0"><ul style="margin:0 0 0 18px">
+              <li>해사 데이터 현황 분석 보고서 — M+2</li>
+              <li>지식그래프 온톨로지 설계서 — M+5</li>
+              <li>PoC 결과 보고서 — M+7</li>
+              <li>2차년도 구축 상세 설계서 · 과업 완료 보고서 — M+8</li>
+            </ul></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 확정 필요 항목 -->
+      <div class="section">
+        <div class="section-head"><span class="num">!</span><h2>착수보고 회의 확정 필요 항목</h2></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th style="width:54px">#</th><th>항목</th><th>비고</th></tr></thead>
+            <tbody>
+              <tr><td>C-1</td><td>계약 일자 확인</td><td>완수일자 2026-12-11 (입찰공고문 명시) · 계약 일자는 용역계약서 확인</td></tr>
+              <tr><td>C-2</td><td>중간보고 시점</td><td>M+4 전후 권장</td></tr>
+              <tr><td>C-3</td><td>참여 연구원 정정 보고</td><td>데이터분석·ETL 담당 이재현 확정 — 정성제안서 '이동훈' 정정 사항 KRISO 보고</td></tr>
+              <tr><td>—</td><td>용역 감독관 지정·연락처</td><td>과업지시서 Ⅱ.13</td></tr>
+              <tr><td>—</td><td>정기 기술 협의 일정</td><td>격주 화요일 오전 10시(제안)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>협조 요청 사항 전체는 <a href="cooperation.html">KRISO 협조 요청</a> 페이지를 참조한다.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

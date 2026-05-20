@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DES-001 해사 도메인 온톨로지 모델 설계 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="DES-001">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>2단계</span><span class="sep">›</span>
+        <span class="cur">DES-001</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">2단계 · 설계 요구사항</div>
+        <h1 class="page-title">DES-001 · 해사 도메인 온톨로지 모델 설계</h1>
+        <p class="page-desc">대화형 해사서비스 플랫폼의 데이터·모델·인프라 자산을 체계적으로 표현하고 의미적 연결이 가능하도록 해사 도메인 특화 온톨로지를 설계한다. 스탠포드 7단계 방법론을 적용한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">2단계</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">양선희</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+5</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">지식그래프 온톨로지 설계서</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">REQ-001 · REQ-002 · REQ-004</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">DES-002 · DES-003 · DES-004</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>DES-001은 본 용역의 핵심 산출물이다. 선박·항만·해역 등 일반 해사 개체뿐 아니라 KRISO 고유의 시험시설·시뮬레이션·분석모델·워크플로우까지 포괄하는 플랫폼 지향형 온톨로지를 설계한다. 스탠포드 7단계 중 Step 1-4는 완료, Step 5-7이 남았다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>Stanford Step 5 — 클래스 속성 정의</h4><p>메타데이터·보안등급·데이터 포맷·유효기간·버전 정보 등 엔티티 속성 명세화.</p></div>
+          <div class="method-step"><h4>Stanford Step 6 — 속성 제약 정의</h4><p>Cardinality · Domain/Range Restriction · 필수/선택 속성 구분.</p></div>
+          <div class="method-step"><h4>Stanford Step 7 — 인스턴스 생성·검증</h4><p>샘플 데이터 기반 인스턴스 생성 + 그래프 순회·패턴인식·집계 3종 검증.</p></div>
+          <div class="method-step"><h4>ERA 정의서·문서화</h4><p>엔티티-관계-속성 정의서 · 클래스 다이어그램 · 관계 정의서 · 온톨로지 가시화 자료.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev high">HIGH</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">REQ-001 데이터 인벤토리 완료 전 Step 3(핵심용어) 진행 불가</span>
+            <span class="issue-state progress">진행 중</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">스탠포드 Step 3은 "REQ-001 데이터 인벤토리 기반 도출"로 정의됨. REQ-001이 늦으면 DES-001 전체가 지연.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">Step 1-4는 이미 완료. Step 5-7은 REQ-001 인벤토리 확정 후 착수. REQ-001을 최우선 진행하여 선행 의존 해소.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">기존 stanford_7step HTML이 200KB 단일 파일 — Step 5-7 협업 어려움</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">한 파일에 7단계가 모두 들어있어 Step 하나를 수정하면 전체가 diff에 잡히고 동시 작업이 충돌한다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">Step별 페이지 분리(step5.html~step7.html)를 검토. 본 워크벤치 멀티페이지 구조와 통합.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">온톨로지 규모와 KRISO PoC 범위의 균형</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">현재 온톨로지는 147엔티티/108관계. PoC(TER-001)에서 전부 검증하긴 어렵다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">PoC 핵심 자원(Target Subset)을 별도 표시하고, 전체 온톨로지와 PoC 검증 범위를 구분 문서화.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="des001-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">Stanford Step 5 — 클래스 속성 정의</div>
+            <div class="ck-desc">메타데이터·보안등급·포맷·유효기간·버전</div></div></li>
+          <li class="check" data-ck="des001-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">Stanford Step 6 — 속성 제약 정의</div>
+            <div class="ck-desc">Cardinality · Domain/Range Restriction</div></div></li>
+          <li class="check" data-ck="des001-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">Stanford Step 7 — 인스턴스 생성·검증</div>
+            <div class="ck-desc">샘플 + 순회·패턴·집계 3종</div></div></li>
+          <li class="check" data-ck="des001-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">엔티티-관계-속성(ERA) 정의서</div>
+            <div class="ck-desc">논리 스키마 기초</div></div></li>
+          <li class="check" data-ck="des001-5"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">클래스 다이어그램·관계 정의서·가시화</div>
+            <div class="ck-desc">온톨로지 설계 문서화</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">DES-001 지식그래프 모델 설계서</div>
+            <div class="a-path">docs/DES-001_지식그래프_모델_설계서.md</div></div>
+          <span class="a-tag reuse">부분 재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">🌐</div>
+          <div class="a-body"><div class="a-name">Stanford 7-Step 온톨로지 (Step 1-4 완료)</div>
+            <div class="a-path">stanford_7step_ontology.html</div></div>
+          <span class="a-tag reuse">재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">Step 1-4 마크다운</div>
+            <div class="a-path">docs/ontology/step1~4_*.md</div></div>
+          <span class="a-tag reuse">재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">✎</div>
+          <div class="a-body"><div class="a-name">Step 5-7 · ERA 정의서</div>
+            <div class="a-path">신규 작성 대상</div></div>
+          <span class="a-tag new">신규 작성</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

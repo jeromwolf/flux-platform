@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DES-002 지식그래프 물리 스키마 설계 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="DES-002">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>2단계</span><span class="sep">›</span>
+        <span class="cur">DES-002</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">2단계 · 설계 요구사항</div>
+        <h1 class="page-title">DES-002 · 지식그래프 물리 스키마 설계</h1>
+        <p class="page-desc">선정된 그래프 DB의 기술적 특성을 반영하여 대규모 해사 데이터를 효율적으로 저장·탐색할 수 있는 물리적 데이터 구조를 설계한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">2단계</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">신동욱</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+5</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">지식그래프 온톨로지 설계서 (물리 스키마)</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">REQ-003 · DES-001</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">DES-003 · TER-001</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>DES-001이 논리 온톨로지라면 DES-002는 그것을 실제 Neo4j에 어떻게 저장할지 설계한다. 노드 레이블·관계 타입·속성 키 명명 규칙, 시공간 인덱스, 멀티모달 속성 수용 구조, 스키마 버전 관리가 핵심이다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>그래프 DB 물리 모델링·최적화</h4><p>노드 레이블·관계 타입·속성 키 명명 규칙 + 질의 성능 위한 정규화/비정규화 전략.</p></div>
+          <div class="method-step"><h4>시공간·대용량 인덱스 설계</h4><p>선박 위치·궤적용 공간 인덱스(point) + 시간축 인덱스 + 빈번 속성 전역 인덱스·제약조건.</p></div>
+          <div class="method-step"><h4>멀티모달 데이터 속성 수용 구조</h4><p>정형(AIS)·비정형(법령)·시공간 데이터 메타데이터 저장 구조 + 대용량 바이너리는 외부 저장소 하이브리드.</p></div>
+          <div class="method-step"><h4>스키마 버전 관리·파티셔닝</h4><p>2차년도 확장 대비 마이그레이션 체계 + 노드/엣지 파티셔닝·샤딩 전략 + Batch Size 정의.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev high">HIGH</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">보유 docs/DES-002는 "멀티모달 통합 설계서" — KRISO DES-002는 "물리 스키마 설계"</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">파일명·내용이 KRISO 요구와 불일치. 보유 문서를 그대로 제출하면 검수 부적합.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">보유 DES-002 문서의 멀티모달 부분은 REQ-001/DES-003으로 분산 활용하고, 물리 스키마 설계서는 신규 작성.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">DES-001 온톨로지 확정 전 물리 스키마 미확정 (선행 의존)</span>
+            <span class="issue-state progress">진행 중</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">물리 스키마는 논리 온톨로지(DES-001)를 입력으로 한다. DES-001 Step 5-7 완료 후 착수 가능.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">DES-001과 동일 마감(M+5). DES-001 Step 4(클래스 계층)까지 확정분으로 명명 규칙·인덱스 설계 선행.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">공간 인덱스 — Neo4j point() vs WKT 선택</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">Neo4j 네이티브 point()는 간단하나 복잡한 공간 연산 한계. WKT+공간 플러그인은 강력하나 복잡.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">PoC 범위는 point() 우선, 복잡 공간 연산 필요 시 2차년도 검토 사항으로 명시.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="des002-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">노드/관계/속성 명명 규칙</div>
+            <div class="ck-desc">PascalCase/SCREAMING_SNAKE/camelCase</div></div></li>
+          <li class="check" data-ck="des002-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">시공간·대용량 인덱스 설계</div>
+            <div class="ck-desc">공간·시간·전역 인덱스 + 제약조건</div></div></li>
+          <li class="check" data-ck="des002-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">멀티모달 속성 수용 구조</div>
+            <div class="ck-desc">정형/비정형/시공간 + 외부 저장소 연계</div></div></li>
+          <li class="check" data-ck="des002-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">스키마 버전 관리 체계</div>
+            <div class="ck-desc">마이그레이션 전략</div></div></li>
+          <li class="check" data-ck="des002-5"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">파티셔닝·적재 단위 설계</div>
+            <div class="ck-desc">샤딩 + Batch Size</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">DES-002 멀티모달 데이터 통합 설계서</div>
+            <div class="a-path">docs/DES-002_멀티모달_데이터_통합_설계서.md</div></div>
+          <span class="a-tag new">명칭 불일치 주의</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📁</div>
+          <div class="a-body"><div class="a-name">Neo4j 스키마 정의</div>
+            <div class="a-path">domains/maritime/schema/</div></div>
+          <span class="a-tag reuse">재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-6 — Neo4j LPG 변환 규칙</div>
+            <div class="a-path">물리 매핑 기초</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

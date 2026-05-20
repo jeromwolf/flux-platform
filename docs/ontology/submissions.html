@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제출 문서 관리 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <span class="cur">제출 문서 관리</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">산출물 · 성과물 관리</div>
+        <h1 class="page-title">제출 문서 관리</h1>
+        <p class="page-desc">KRISO 의무 성과물 5종과 보고 의무의 마감·구성·제출 상태를 한 곳에서 추적한다.
+          각 성과물은 여러 태스크의 산출물이 취합되어 구성된다.</p>
+      </div>
+
+      <!-- 진행률 -->
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">제출 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <!-- 1. 의무 성과물 5종 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>KRISO 의무 성과물 5종</h2>
+          <span class="hint">제안서 표 II-16 · 전자문서</span></div>
+
+        <div class="card" style="border-left:4px solid #0d7377">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+            <span style="width:22px;height:22px;border-radius:5px;background:#0d7377;color:#fff;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center">1</span>
+            <b style="font-size:.96rem;color:var(--navy)">해사 데이터 현황 분석 보고서</b>
+            <span class="badge active" style="margin-left:auto">마감 M+2 · 계약 후 2개월</span>
+          </div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:5px">구성 산출물 (6종)</div>
+          <div><span class="tag">데이터 현황 조사서</span><span class="tag">시험시설 자원구조 분석서</span><span class="tag">멀티모달 데이터 인벤토리</span><span class="tag">AIS 표준 분석 템플릿</span><span class="tag">연계규칙·식별자 정의서</span><span class="tag">우선순위 선정표</span></div>
+          <div style="font-size:.76rem;color:var(--text-2);margin-top:9px">연계 태스크 —
+            <a href="tasks/req-001.html">REQ-001</a> · <a href="tasks/req-002.html">REQ-002</a></div>
+        </div>
+
+        <div class="card" style="border-left:4px solid #2196f3">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+            <span style="width:22px;height:22px;border-radius:5px;background:#2196f3;color:#fff;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center">2</span>
+            <b style="font-size:.96rem;color:var(--navy)">지식그래프 온톨로지 설계서</b>
+            <span class="badge pending" style="margin-left:auto">마감 M+5 · 계약 후 5개월</span>
+          </div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:5px">구성 산출물 (6종)</div>
+          <div><span class="tag">해사 도메인 온톨로지 설계서</span><span class="tag">엔티티-관계-속성 정의서</span><span class="tag">플랫폼 자원 관계 모델 설계서</span><span class="tag">국제표준 정합성 검토서</span><span class="tag">그래프 DB 비교 분석서</span><span class="tag">지식그래프 논리모델</span></div>
+          <div style="font-size:.76rem;color:var(--text-2);margin-top:9px">연계 태스크 —
+            <a href="tasks/req-003.html">REQ-003</a> · <a href="tasks/req-004.html">REQ-004</a> ·
+            <a href="tasks/des-001.html">DES-001</a> · <a href="tasks/des-002.html">DES-002</a> ·
+            <a href="tasks/des-003.html">DES-003</a> · <a href="tasks/des-004.html">DES-004</a></div>
+        </div>
+
+        <div class="card" style="border-left:4px solid #f0a500">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+            <span style="width:22px;height:22px;border-radius:5px;background:#f0a500;color:#fff;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center">3</span>
+            <b style="font-size:.96rem;color:var(--navy)">지식그래프 모델 PoC 결과 보고서</b>
+            <span class="badge pending" style="margin-left:auto">마감 M+7 · 종료 1개월 전</span>
+          </div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:5px">구성 산출물 (5종)</div>
+          <div><span class="tag">샘플 데이터 매핑 결과서</span><span class="tag">프로토타입 시험 결과서</span><span class="tag">자연어 탐색 시나리오 정의서</span><span class="tag">PoC 검증 결과보고서</span><span class="tag">후속 연계 로드맵</span></div>
+          <div style="font-size:.76rem;color:var(--text-2);margin-top:9px">연계 태스크 —
+            <a href="tasks/ter-001.html">TER-001</a> · <a href="tasks/ter-002.html">TER-002</a></div>
+        </div>
+
+        <div class="card" style="border-left:4px solid #e67e22">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+            <span style="width:22px;height:22px;border-radius:5px;background:#e67e22;color:#fff;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center">4</span>
+            <b style="font-size:.96rem;color:var(--navy)">2차년도 구축 상세 설계서</b>
+            <span class="badge pending" style="margin-left:auto">마감 M+8 · 종료 2주 전</span>
+          </div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:5px">구성 산출물</div>
+          <div><span class="tag">물리 스키마 상세 설계</span><span class="tag">ETL 파이프라인 상세 설계</span><span class="tag">탐색 API 아키텍처</span><span class="tag">단계별 구축 로드맵</span></div>
+          <div style="font-size:.76rem;color:var(--text-2);margin-top:9px">연계 태스크 —
+            <a href="tasks/des-002.html">DES-002</a> · <a href="tasks/des-003.html">DES-003</a> ·
+            <a href="tasks/des-004.html">DES-004</a></div>
+        </div>
+
+        <div class="card" style="border-left:4px solid #e67e22">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+            <span style="width:22px;height:22px;border-radius:5px;background:#e67e22;color:#fff;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center">5</span>
+            <b style="font-size:.96rem;color:var(--navy)">과업 완료 보고서</b>
+            <span class="badge pending" style="margin-left:auto">마감 M+8 · 종료 2주 전</span>
+          </div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:5px">구성 산출물</div>
+          <div><span class="tag">전체 수행 결과 종합</span><span class="tag">후속 연계 로드맵</span><span class="tag">하자보수 계획</span></div>
+          <div style="font-size:.76rem;color:var(--text-2);margin-top:9px">연계 태스크 — 전체</div>
+        </div>
+      </div>
+
+      <!-- 2. 제출 상태 체크리스트 -->
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>제출 상태 추적</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="sub-kickoff"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">착수보고서 제출</div>
+            <div class="ck-desc">계약 후 10일 이내 · 착수신고서·실시계획서·요원편성표·예정공정표</div></div></li>
+          <li class="check" data-ck="sub-s1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">① 해사 데이터 현황 분석 보고서 제출</div>
+            <div class="ck-desc">M+2 · 계약 후 2개월 이내</div></div></li>
+          <li class="check" data-ck="sub-mid"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">중간보고 실시</div>
+            <div class="ck-desc">M+4 전후 · 연구소 협의 · 진도율·수행내역·문제점·향후계획</div></div></li>
+          <li class="check" data-ck="sub-s2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">② 지식그래프 온톨로지 설계서 제출</div>
+            <div class="ck-desc">M+5 · 계약 후 5개월 이내</div></div></li>
+          <li class="check" data-ck="sub-s3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">③ 지식그래프 모델 PoC 결과 보고서 제출</div>
+            <div class="ck-desc">M+7 · 계약 종료 1개월 전</div></div></li>
+          <li class="check" data-ck="sub-s4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">④ 2차년도 구축 상세 설계서 제출</div>
+            <div class="ck-desc">M+8 · 계약 종료 2주일 전</div></div></li>
+          <li class="check" data-ck="sub-s5"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">⑤ 과업 완료 보고서 제출</div>
+            <div class="ck-desc">M+8 · 계약 종료 2주일 전 · 하자보수 계획 포함</div></div></li>
+          <li class="check" data-ck="sub-final"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">최종보고 실시 · 용역완료계 제출</div>
+            <div class="ck-desc">M+8 · 계약 종료</div></div></li>
+        </ul>
+      </div>
+
+      <!-- 3. 보고 일정 -->
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>보고 일정</h2></div>
+        <div class="timeline card">
+          <div class="tl-item"><div class="tl-when">착수보고 · 계약 후 10일 이내</div>
+            <div class="tl-what">착수신고서 · 용역 실시계획서 · 용역수행자 명단·편성표 · 예정공정표</div></div>
+          <div class="tl-item"><div class="tl-when">중간보고 · M+4 전후 (연구소 협의)</div>
+            <div class="tl-what">기 수행 항목 진도율 · 수행 내역 · 관련 사진 · 현 단계 문제점·대책 · 향후 일정</div></div>
+          <div class="tl-item"><div class="tl-when">최종보고 · M+8 (계약 종료)</div>
+            <div class="tl-what">전체 수행 결과 종합 보고 · 과업 완료 보고서 · 용역완료계</div></div>
+        </div>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>과업지시서 II.8은 "최소 1회 이상의 중간보고와 그 외 최종보고"를 명시한다.
+            중간보고 시점은 연구소와 협의하여 확정한다.</div>
+        </div>
+      </div>
+
+      <!-- 4. 제출 절차 -->
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>제출 절차</h2>
+          <span class="hint">COM-005 연계</span></div>
+        <div class="method">
+          <div class="method-step"><h4>GitHub 등록</h4>
+            <p>모든 산출물을 감독관 GitHub 리포지토리에 유형별 폴더(01_data_analysis ~ 05_reports)로 등록·버전 관리.</p></div>
+          <div class="method-step"><h4>PR 리뷰·승인</h4>
+            <p>주요 산출물 제출 전 Pull Request로 감독관 리뷰를 받고 승인 후 병합.</p></div>
+          <div class="method-step"><h4>감독관 확인·서명</h4>
+            <p>성과물은 연구소 검사를 받으며, 감독관 확인·날인 후 검수 확정 → 기성·잔금 청구 가능.</p></div>
+          <div class="method-step"><h4>전자문서 제출</h4>
+            <p>과업지시서 II.9에 따라 모든 과업성과물을 전자문서 형태로 연구소에 제출.</p></div>
+        </div>
+        <div class="callout warn">
+          <span class="ico">⚠</span>
+          <div>보안 등급이 지정된 해사 데이터는 GitHub 등 외부 저장소 업로드 금지(COM-001).
+            산출물 <b>문서</b>만 GitHub로 관리하고, 원천 데이터는 연구소 내부 환경에 보관한다.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>멀티모달 데이터 인벤토리 (Draft) | IMSP 워크벤치</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-task="REQ-001">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="index.html">대시보드</a><span class="sep">›</span>
+        <a href="tasks/req-001.html">REQ-001</a><span class="sep">›</span>
+        <span class="cur">멀티모달 데이터 인벤토리</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">REQ-001 산출물 ③</div>
+        <h1 class="page-title">멀티모달 해사데이터 인벤토리 (Draft)</h1>
+        <p class="page-desc">AIS 표준 분석 템플릿(④)의 9컬럼 양식으로 멀티모달 해사데이터 10종을 정리한다.
+          온톨로지 설계(DES-001)와 지식그래프 스키마 설계의 기준 산출물이다.</p>
+      </div>
+
+      <div class="callout warn">
+        <span class="ico">⚠</span>
+        <div><b>Draft v0.1 (2026-05-20).</b> 근거: 정성제안서 표 II-6(오재용·김혜진 2024),
+          현황 조사서 v0.2, <a href="req-001-ais-template.html">AIS 표준 분석 템플릿(④)</a>.
+          원본: <code>docs/REQ-001_멀티모달_데이터인벤토리_draft.md</code></div>
+      </div>
+
+      <!-- 1. 개요 -->
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>개요</h2></div>
+        <div class="prose card">
+          <p><strong>목적</strong> — 멀티모달 해사데이터를 9컬럼 표준 양식으로 정리하여 온톨로지 설계(DES-001)와
+            지식그래프 스키마 설계의 기준 산출물로 삼는다.</p>
+          <p style="margin-top:8px"><strong>대상 10종</strong> — 핵심 8종(정성제안서 표 II-6 선행연구 기반:
+            AIS·GPS·항해장비·RADAR·VHF·Port-MIS·CCTV·환경정보) + 확장 2종(전자해도·법령).</p>
+          <p style="margin-top:8px"><strong>9컬럼</strong> — A 데이터 자체 / B 연결 정보 / C 그래프 설계.
+            아래 표 1(A·B)·표 2(C)로 분할 제시.</p>
+        </div>
+      </div>
+
+      <!-- 2. 표 1 -->
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>인벤토리 표 1 — 데이터 기술 (그룹 A·B)</h2></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터</th><th>형식</th><th>세부 항목</th><th>연계 항목</th><th>주요 식별자</th><th>시공간</th></tr></thead>
+          <tbody>
+            <tr><td><b>AIS</b></td><td>NMEA0183·CSV·OpenAPI</td><td>선박 식별·정적·위치·침로·속력·ETA·흘수</td><td>GPS·RADAR·VHF·Port-MIS·CCTV·환경정보</td><td>MMSI·IMO·호출부호</td><td>O</td></tr>
+            <tr><td><b>GPS</b></td><td>텍스트(NMEA0183)</td><td>시각·위경도·위성정보·침로·속력</td><td>AIS·항해장비</td><td>선박ID·수신시각</td><td>O</td></tr>
+            <tr><td><b>항해장비</b></td><td>CSV 텍스트</td><td>자이로컴퍼스·음향측심기·엔진RPM·오토파일럿·ECDIS</td><td>GPS·AIS</td><td>장비ID·선박ID</td><td>O (시각)</td></tr>
+            <tr><td><b>RADAR</b></td><td>텍스트 + 이미지</td><td>표적 추적 정보 (위치·속도·방위)</td><td>AIS·환경정보</td><td>표적ID</td><td>O</td></tr>
+            <tr><td><b>VHF</b></td><td>음성(wav) + 텍스트(STT)</td><td>VHF 음성파일·시각·채널·사이트·STT 변환 텍스트</td><td>AIS·Port-MIS</td><td>MMSI·호출부호·채널</td><td>O (시각)</td></tr>
+            <tr><td><b>Port-MIS</b></td><td>텍스트(CSV)·OpenAPI</td><td>항만시설정보·입출항보고·항만시설 이용보고</td><td>AIS·VHF·CCTV</td><td>호출부호·항만코드</td><td>O</td></tr>
+            <tr><td><b>CCTV</b></td><td>이미지·영상</td><td>표적정보(MMSI·침로·속력)</td><td>AIS·Port-MIS</td><td>표적MMSI·카메라ID</td><td>O</td></tr>
+            <tr><td><b>환경정보</b></td><td>텍스트(CSV)·API</td><td>조류·조위·바람·파고·기상상태·시정거리</td><td>Port-MIS·CCTV·AIS</td><td>관측소코드(ObsCode)·위경도</td><td>O</td></tr>
+            <tr><td><b>전자해도(ENC)</b></td><td>S-57·S-63·SHP</td><td>해안선·수심·항로표지·위험물·항로·수역경계</td><td>수심·해역</td><td>ENC 셀번호·S-57 피처ID</td><td>O (공간)</td></tr>
+            <tr><td><b>법령</b></td><td>텍스트(PDF·HWP)</td><td>법령 조항·규정·지침 (비정형)</td><td>해역·사고·선박</td><td>규정ID·법령명</td><td>△ (적용 해역)</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 3. 표 2 -->
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>인벤토리 표 2 — 지식그래프 설계 (그룹 C)</h2></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터</th><th>KG 후보 노드</th><th>KG 후보 관계</th><th>활용 시나리오</th></tr></thead>
+          <tbody>
+            <tr><td><b>AIS</b></td><td>Vessel·Voyage·Position·Event</td><td>ON_VOYAGE·HAS_POSITION·LOCATED_IN·COMMUNICATE_WITH</td><td>특정 선박·시점·해역 탐색의 기준축</td></tr>
+            <tr><td><b>GPS</b></td><td>Position·Vessel</td><td>HAS_POSITION</td><td>위치 정밀도 교차 검증</td></tr>
+            <tr><td><b>항해장비</b></td><td>Equipment·SensorReading·Vessel</td><td>EQUIPPED_ON·MEASURED_BY</td><td>선박 운항 상태·기관 모니터링</td></tr>
+            <tr><td><b>RADAR</b></td><td>RadarTarget·Position</td><td>DETECTED·MATCHED_WITH(→Vessel)</td><td>표적-선박 매칭, 미식별 표적 탐지</td></tr>
+            <tr><td><b>VHF</b></td><td>VHFMessage·Vessel·VTSCenter</td><td>TRANSMITTED_BY·COMMUNICATE_WITH·PROVIDED_BY</td><td>교신 이력 ↔ 위치 연계, 충돌위험 교신 분석</td></tr>
+            <tr><td><b>Port-MIS</b></td><td>PortCall·Port·Berth·Vessel</td><td>ARRIVES_AT·DEPARTS_FROM·BERTH_TO</td><td>입출항 이력, 항만 이용 분석</td></tr>
+            <tr><td><b>CCTV</b></td><td>CCTVDetection·Vessel·Camera</td><td>LOCATED_IN·DETECTED·BERTH_TO</td><td>영상 표적 검증, 접·이안 모니터링</td></tr>
+            <tr><td><b>환경정보</b></td><td>WeatherObservation·Area·ObservationStation</td><td>OBSERVED_AT·AFFECTS(→Voyage)</td><td>기상-항행 영향, 사고 원인 분석</td></tr>
+            <tr><td><b>전자해도(ENC)</b></td><td>NavigationArea·Route·NavAid·Depth</td><td>CONTAINS·NEAR·OVERLAPS</td><td>항로 안전, S-100 표준 매핑(REQ-004)</td></tr>
+            <tr><td><b>법령</b></td><td>Regulation·LegalReference</td><td>APPLIES_TO·REGULATED_BY</td><td>사고 시 적용 법령 탐색</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 4. 종합 -->
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>종합 — 지식그래프 후보 노드·관계 집계</h2></div>
+        <div class="grid-2">
+          <div class="card">
+            <h4 style="font-size:.9rem;color:var(--navy);margin-bottom:8px">후보 노드군 (중복 제거)</h4>
+            <div class="prose" style="margin:0"><ul style="margin:0 0 0 18px">
+              <li><b>선박 중심</b> — Vessel·Voyage·Position·Event</li>
+              <li><b>항만 중심</b> — Port·Berth·PortCall</li>
+              <li><b>관측·장비</b> — SensorReading·Equipment·RadarTarget·CCTVDetection·WeatherObservation·ObservationStation·Camera</li>
+              <li><b>공간</b> — Area·Route·NavigationArea·NavAid·Depth</li>
+              <li><b>통신·문서</b> — VHFMessage·VTSCenter·Regulation·LegalReference</li>
+            </ul></div>
+          </div>
+          <div class="card">
+            <h4 style="font-size:.9rem;color:var(--navy);margin-bottom:8px">후보 관계군</h4>
+            <div class="prose" style="margin:0"><ul style="margin:0 0 0 18px">
+              <li><b>항행</b> — ON_VOYAGE·HAS_POSITION·LOCATED_IN</li>
+              <li><b>입출항</b> — ARRIVES_AT·DEPARTS_FROM·BERTH_TO</li>
+              <li><b>탐지·관측</b> — DETECTED·MATCHED_WITH·OBSERVED_AT·MEASURED_BY</li>
+              <li><b>통신</b> — TRANSMITTED_BY·COMMUNICATE_WITH·PROVIDED_BY</li>
+              <li><b>공간</b> — CONTAINS·NEAR·OVERLAPS</li>
+              <li><b>규정·영향</b> — APPLIES_TO·REGULATED_BY·AFFECTS·EQUIPPED_ON</li>
+            </ul></div>
+          </div>
+        </div>
+        <div class="callout tip">
+          <span class="ico">✦</span>
+          <div><b>핵심 발견</b> — ① Vessel·Position·Voyage가 AIS·GPS·RADAR·CCTV·Port-MIS에 공통 등장 → KG 허브 노드.
+            ② MMSI·호출부호·IMO가 선박 관련 데이터 6종을 연결 → 식별자 체계(⑤)의 핵심.
+            ③ 환경정보·전자해도는 위경도·해역으로 공간 연계 → Area 노드 중심.
+            ④ 법령은 비정형이라 NER/RE 필요(DES-003 ETL) — 후속 검토 자원.</div>
+        </div>
+      </div>
+
+      <!-- 5. 다음 단계 -->
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>다음 단계</h2></div>
+        <div class="prose card">
+          <ul style="margin:0 0 0 18px">
+            <li>식별자(MMSI·호출부호·IMO·ObsCode 등) → 산출물 ⑤ 연계 규칙·식별자 체계 정의서</li>
+            <li>후보 노드·관계군 → DES-001 온톨로지 엔티티·관계 설계의 입력</li>
+            <li>데이터별 활용도·연계밀도 평가 → 산출물 ⑥ 우선순위 선정표</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 업데이트 로그 -->
+      <div class="section">
+        <div class="section-head"><span class="num">+</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">멀티모달 데이터 인벤토리 draft 생성 — 10종(핵심 8 + 확장 2) 9컬럼 정리, KG 후보 노드·관계 집계.</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

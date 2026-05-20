@@ -66,3 +66,4 @@ infra/k8s/**/secret.yaml
 
 # IMSP runtime state
 .imsp/
+.vercel

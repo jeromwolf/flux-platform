@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REQ-004 해사 도메인 국제 표준 및 온톨로지 매핑 분석 | IMSP 워크벤치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="REQ-004">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="crumb">
+        <a href="../index.html">대시보드</a><span class="sep">›</span>
+        <span>1단계</span><span class="sep">›</span>
+        <span class="cur">REQ-004</span>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <div class="page-head">
+        <div class="page-eyebrow">1단계 · 연구 요구사항</div>
+        <h1 class="page-title">REQ-004 · 해사 도메인 국제 표준 및 온톨로지 매핑 분석</h1>
+        <p class="page-desc">해사 분야의 국제 표준 및 기존 온톨로지를 조사하여 설계될 지식그래프 모델과의 정합성을 분석하고 매핑 가이드라인을 수립한다.</p>
+      </div>
+
+      <div class="meta-grid section">
+        <div class="meta-item"><div class="k">단계</div><div class="v">1단계</div></div>
+        <div class="meta-item"><div class="k">담당</div><div class="v">양선희</div></div>
+        <div class="meta-item"><div class="k">마감</div><div class="v">M+5</div></div>
+        <div class="meta-item"><div class="k">의무 성과물</div><div class="v">지식그래프 온톨로지 설계서 (국제표준 정합성 검토서)</div></div>
+        <div class="meta-item"><div class="k">선행</div><div class="v">REQ-001</div></div>
+        <div class="meta-item"><div class="k">후행</div><div class="v">DES-001</div></div>
+      </div>
+
+      <div class="card section" id="inlineProgress" style="display:flex;align-items:center;gap:14px">
+        <b style="font-size:.85rem;color:var(--navy)">체크리스트 진행률</b>
+        <div class="sb-bar" style="flex:1;background:#e2e8f0">
+          <div class="ip-fill" style="height:100%;background:linear-gradient(90deg,#0d7377,#11998e);width:0"></div>
+        </div>
+        <span class="ip-text" style="font-size:.8rem;color:var(--text-2);white-space:nowrap">0 / 0 완료</span>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">1</span><h2>목적</h2></div>
+        <div class="prose card"><p>REQ-004는 우리 온톨로지가 국제 표준과 호환되도록 보장하는 작업이다. IHO S-100을 그래프 구조로 변환하는 매핑 규칙이 핵심이며, 이는 2차년도 데이터 상호운용성과 표준 확장성의 기반이 된다.</p></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">2</span><h2>수행 방법</h2></div>
+        <div class="method">
+          <div class="method-step"><h4>국제 표준·데이터 모델 조사</h4><p>IHO S-100 시리즈(S-101 ENC·S-102·S-122 등) 객체지향 구조 · IMO GMDSS·AIS 메시지 규격 · e-Navigation 데이터 스키마.</p></div>
+          <div class="method-step"><h4>기존 온톨로지·시맨틱 웹 사례 분석</h4><p>해사 오픈 온톨로지(Maritime Ontology) · MAKG 학계 사례 · 상위 온톨로지(BFO·DOLCE)·범용 스키마(Schema.org·SSN) 활용성 검토.</p></div>
+          <div class="method-step"><h4>표준-KG 정합성 분석</h4><p>S-100의 Feature(객체)-Attribute(속성)-Association(관계) 구조를 그래프 노드-속성-엣지로 변환하는 논리적 매핑 규칙 설계.</p></div>
+          <div class="method-step"><h4>해사 특화 용어 사전·식별자 규칙</h4><p>데이터 소스별 상이한 용어를 통합하는 표준 어휘집 + 국제표준 기반 엔티티 식별자(URI/IRI) 부여 규칙.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">3</span><h2>문제점 도출</h2>
+          <span class="hint">3건</span></div>
+
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-01</span>
+            <span class="issue-title">S-100 시리즈 30+ Product Spec 중 매핑 분석 범위 설정 필요</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">S-100은 S-101 ENC부터 S-421 Route Plan까지 30종 이상. 전부 매핑하면 1차년도 범위 초과.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">본 과제 데이터(전자해도·수심·해류·항행경보 등)와 직결되는 S-101·S-102·S-104·S-111·S-124 등 핵심 5-7종으로 한정하고 근거를 명시.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev mid">MID</span><span class="issue-id">ISSUE-02</span>
+            <span class="issue-title">S-101 ENC 2026 허용 / 2029 의무화 — 현 시점 매핑의 시의성</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">S-101은 2026년 허용, 2029년 의무화 단계. 현재는 S-57이 주력이라 매핑 대상의 현재성 판단 필요.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">S-101을 미래 표준으로 매핑하되 현행 S-57과의 전환 경로도 검토서에 병기.</div></div>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-head">
+            <span class="issue-sev low">LOW</span><span class="issue-id">ISSUE-03</span>
+            <span class="issue-title">상위 온톨로지(BFO/DOLCE) 채택 시 과도한 추상화 리스크</span>
+            <span class="issue-state">미해결</span>
+          </div>
+          <div class="issue-body">
+            <div class="row"><div class="lbl">현상</div><div class="txt">BFO/DOLCE 도입은 표준성을 높이나 설계 복잡도가 급증하고 KRISO 실무 활용성이 떨어질 수 있다.</div></div>
+            <div class="row"><div class="lbl">대응 방안</div><div class="txt resolution">상위 온톨로지는 "참조"하되 채택하지 않고, 실용적 도메인 온톨로지로 설계하는 방향을 권고.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">4</span><h2>작업 체크리스트</h2>
+          <span class="hint">자동 저장됨</span></div>
+        <ul class="checklist">
+          <li class="check" data-ck="req004-1"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">S-100 핵심 시리즈 객체구조 조사</div>
+            <div class="ck-desc">S-101·S-102·S-104·S-111·S-124 등</div></div></li>
+          <li class="check" data-ck="req004-2"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">기존 온톨로지·시맨틱 웹 사례 분석</div>
+            <div class="ck-desc">MAKG · 상위온톨로지 · 범용 스키마</div></div></li>
+          <li class="check" data-ck="req004-3"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">S-100 → KG 매핑 규칙 설계</div>
+            <div class="ck-desc">Feature-Attribute-Association 변환</div></div></li>
+          <li class="check" data-ck="req004-4"><input type="checkbox">
+            <div class="ck-body"><div class="ck-title">해사 용어 사전·URI 식별자 규칙</div>
+            <div class="ck-desc">표준 어휘집 + IRI 체계</div></div></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">5</span><h2>보유 자산 · 참고자료</h2></div>
+        <div class="asset">
+          <div class="a-ico">📄</div>
+          <div class="a-body"><div class="a-name">REQ-004 IHO S-100 표준 분석</div>
+            <div class="a-path">docs/REQ-004_IHO_S100_표준_분석.md</div></div>
+          <span class="a-tag reuse">부분 재활용</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📊</div>
+          <div class="a-body"><div class="a-name">제안서 표 II-6 — Neo4j LPG 변환 규칙</div>
+            <div class="a-path">S-100 구조 → Neo4j 매핑 6규칙</div></div>
+          <span class="a-tag ref">참고</span>
+        </div>
+        <div class="asset">
+          <div class="a-ico">📁</div>
+          <div class="a-body"><div class="a-name">S-100 매핑 스캐폴드</div>
+            <div class="a-path">domains/maritime/s100/</div></div>
+          <span class="a-tag new">신규 확장</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="num">6</span><h2>문서 업데이트 로그</h2></div>
+        <ul class="log card">
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">워크벤치 페이지 생성 — 과업지시서·제안서 기반 수행 방법·문제점 정리.</span></li>
+        </ul>
+        <div class="callout info">
+          <span class="ico">◆</span>
+          <div>작업 진행 시 이 로그에 <b>날짜 · 변경 내용</b>을 추가하고,
+            해결된 문제는 ISSUE 상태를 <code>resolved</code>로 갱신하세요.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>
