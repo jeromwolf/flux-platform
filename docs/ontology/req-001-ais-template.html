@@ -31,7 +31,7 @@
 
       <div class="callout warn">
         <span class="ico">⚠</span>
-        <div><b>Draft v0.1 (2026-05-20).</b> 근거: 정성제안서 II.2 마), 데이터 제공처별 현황 조사서 v0.2.
+        <div><b>Draft v0.2 (2026-05-20).</b> 근거: 정성제안서 II.2 마), 데이터 제공처별 현황 조사서 v0.3.
           원본: <code>docs/REQ-001_AIS_표준분석템플릿_draft.md</code></div>
       </div>
 
@@ -108,7 +108,7 @@
             <tr><td>Voyage (항차)</td><td>departure · destination · eta</td><td>운항정보</td></tr>
             <tr><td>Position (위치)</td><td>latitude · longitude · timestamp · sog · cog · heading</td><td>위치·항행정보</td></tr>
             <tr><td>Event (이벤트)</td><td>eventType(입항·출항·교신) · time</td><td>이벤트성 정보</td></tr>
-            <tr><td>Port · Route · Area</td><td>(공간 개체)</td><td>연계 데이터</td></tr>
+            <tr><td>Port · Route · Area</td><td>name · 좌표·범위</td><td>AIS 운항정보(목적지) 참조 — Port-MIS·ENC 연계 시 구체화</td></tr>
           </tbody>
         </table></div>
 
@@ -121,13 +121,16 @@
             <tr><td>(Vessel)-[:LOCATED_IN]->(Area)</td><td>선박이 위치한 해역</td><td>위치 + 해역</td></tr>
             <tr><td>(Voyage)-[:DEPARTS_FROM / ARRIVES_AT]->(Port)</td><td>출발·도착 항만</td><td>운항정보 + Port-MIS</td></tr>
             <tr><td>(Vessel)-[:COMMUNICATE_WITH]->(Vessel)</td><td>선박 간 교신</td><td>VHF 연계</td></tr>
-            <tr><td>(Vessel)-[:TRANSMITTED_BY]->(VHFMessage)</td><td>교신 발신</td><td>KRISO 선행연구(표 II-7)</td></tr>
+            <tr><td>(Vessel)-[:TRANSMITTED_BY]->(VHFMessage)</td><td>교신 발신</td><td>정성제안서 표 II-7 (오재용·김혜진 2024)</td></tr>
           </tbody>
         </table></div>
-        <div class="callout info">
-          <span class="ico">◆</span>
-          <div>TRANSMITTED_BY·PORT_ENTRY·BERTH_TO 등 해사 특화 관계는 KRISO 선행연구
-            (오재용·김혜진 2024)의 관계 유형을 DES-001 온톨로지 설계에 반영한다.</div>
+        <div class="callout warn">
+          <span class="ico">⚠</span>
+          <div><b>후보 노드·관계명은 잠정(provisional)이다.</b> 정성제안서 표 II-7(오재용·김혜진 2024)이 정의한
+            해사 특화 관계(TRANSMITTED_BY·PORT_ENTRY·PORT_DEPARTURE·ANCHOR_AT·BERTH_TO·UNBERTH_FROM·COMMUNICATE_WITH·PROVIDED_BY·LOCATED_IN)와
+            본 분석 제안 관계(ON_VOYAGE·HAS_POSITION)를 구분한다. 영문 명칭·방향의 최종 확정은 DES-001 온톨로지 설계 단계에서 수행한다.
+            §5.1의 Vessel·Voyage·Position·Event는 AIS 직접 도출 노드, Port·Route·Area는 타 데이터 연계 시 구체화되는 공간 노드 —
+            인벤토리 ③의 AIS 행은 직접 도출 노드 4종만 싣는다.</div>
         </div>
       </div>
 
@@ -149,6 +152,9 @@
             <tr><td>활용 시나리오</td><td>특정 선박·시점·해역 탐색의 기준축, 사고 대응·경로 분석</td></tr>
           </tbody>
         </table></div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:6px">
+          ※ "KG 후보 관계"는 §5.2의 6종 중 대표 4종이다 (DEPARTS_FROM/ARRIVES_AT·TRANSMITTED_BY 포함 전체는 §5.2 참조).
+          9컬럼 인벤토리 양식에는 대표 관계를 싣는다.</p>
       </div>
 
       <!-- 7. 표준 분석 절차 -->
@@ -175,6 +181,8 @@
         <ul class="log card">
           <li><span class="log-date">2026-05-20</span>
             <span class="log-txt">AIS 표준 분석 템플릿 draft 생성 — 5범주 세부분석·소스·연계·KG 매핑·9컬럼 행·표준 절차.</span></li>
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">v0.2 — 독립 검토 반영: §5.1 공간노드 근거 보강, 잠정 명칭 주석, §6 대표 관계 주석.</span></li>
         </ul>
       </div>
 

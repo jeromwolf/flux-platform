@@ -31,7 +31,7 @@
 
       <div class="callout warn">
         <span class="ico">⚠</span>
-        <div><b>Draft v0.1 (2026-05-20).</b> 근거: 정성제안서 표 II-6(오재용·김혜진 2024),
+        <div><b>Draft v0.2 (2026-05-20).</b> 근거: 정성제안서 표 II-6(오재용·김혜진 2024),
           현황 조사서 v0.2, <a href="req-001-ais-template.html">AIS 표준 분석 템플릿(④)</a>.
           원본: <code>docs/REQ-001_멀티모달_데이터인벤토리_draft.md</code></div>
       </div>
@@ -42,8 +42,9 @@
         <div class="prose card">
           <p><strong>목적</strong> — 멀티모달 해사데이터를 9컬럼 표준 양식으로 정리하여 온톨로지 설계(DES-001)와
             지식그래프 스키마 설계의 기준 산출물로 삼는다.</p>
-          <p style="margin-top:8px"><strong>대상 10종</strong> — 핵심 8종(정성제안서 표 II-6 선행연구 기반:
-            AIS·GPS·항해장비·RADAR·VHF·Port-MIS·CCTV·환경정보) + 확장 2종(전자해도·법령).</p>
+          <p style="margin-top:8px"><strong>대상 10종</strong> — 선행연구 8종(정성제안서 표 II-6, 오재용·김혜진 2024:
+            AIS·GPS·항해장비※·RADAR·VHF·Port-MIS·CCTV·환경정보) + 그 외 2종(표 II-5·과업지시서 명시: 전자해도·법령).
+            <span style="color:var(--muted)">※ "항해장비"는 표 II-6 표기 — 과업지시서·표 II-5는 "항해술"로 표기, 원문 불일치(KRISO 확인 예정).</span></p>
           <p style="margin-top:8px"><strong>9컬럼</strong> — A 데이터 자체 / B 연결 정보 / C 그래프 설계.
             아래 표 1(A·B)·표 2(C)로 분할 제시.</p>
         </div>
@@ -82,11 +83,18 @@
             <tr><td><b>VHF</b></td><td>VHFMessage·Vessel·VTSCenter</td><td>TRANSMITTED_BY·COMMUNICATE_WITH·PROVIDED_BY</td><td>교신 이력 ↔ 위치 연계, 충돌위험 교신 분석</td></tr>
             <tr><td><b>Port-MIS</b></td><td>PortCall·Port·Berth·Vessel</td><td>ARRIVES_AT·DEPARTS_FROM·BERTH_TO</td><td>입출항 이력, 항만 이용 분석</td></tr>
             <tr><td><b>CCTV</b></td><td>CCTVDetection·Vessel·Camera</td><td>LOCATED_IN·DETECTED·BERTH_TO</td><td>영상 표적 검증, 접·이안 모니터링</td></tr>
-            <tr><td><b>환경정보</b></td><td>WeatherObservation·Area·ObservationStation</td><td>OBSERVED_AT·AFFECTS(→Voyage)</td><td>기상-항행 영향, 사고 원인 분석</td></tr>
+            <tr><td><b>환경정보</b></td><td>WeatherObservation·Area·ObservationStation</td><td>OBSERVED·AFFECTS(→Voyage)</td><td>기상-항행 영향, 사고 원인 분석</td></tr>
             <tr><td><b>전자해도(ENC)</b></td><td>NavigationArea·Route·NavAid·Depth</td><td>CONTAINS·NEAR·OVERLAPS</td><td>항로 안전, S-100 표준 매핑(REQ-004)</td></tr>
             <tr><td><b>법령</b></td><td>Regulation·LegalReference</td><td>APPLIES_TO·REGULATED_BY</td><td>사고 시 적용 법령 탐색</td></tr>
           </tbody>
         </table></div>
+        <div class="callout warn">
+          <span class="ico">⚠</span>
+          <div><b>KG 후보 노드·관계명은 잠정(provisional)이다.</b> 정성제안서 표 II-7(오재용·김혜진 2024)·표 II-8
+            근거 관계(TRANSMITTED_BY·BERTH_TO·ARRIVES_AT·COMMUNICATE_WITH·PROVIDED_BY·LOCATED_IN 등)와
+            본 분석 제안 관계(HAS_POSITION·ON_VOYAGE·OBSERVED·AFFECTS·EQUIPPED_ON·MEASURED_BY·DETECTED 등)를 함께 제시한다.
+            영문 명칭·방향의 최종 확정은 DES-001 온톨로지 설계 단계에서 수행하며, 산출물 ④·⑤와 동일 명칭 체계를 쓴다.</div>
+        </div>
       </div>
 
       <!-- 4. 종합 -->
@@ -108,7 +116,7 @@
             <div class="prose" style="margin:0"><ul style="margin:0 0 0 18px">
               <li><b>항행</b> — ON_VOYAGE·HAS_POSITION·LOCATED_IN</li>
               <li><b>입출항</b> — ARRIVES_AT·DEPARTS_FROM·BERTH_TO</li>
-              <li><b>탐지·관측</b> — DETECTED·MATCHED_WITH·OBSERVED_AT·MEASURED_BY</li>
+              <li><b>탐지·관측</b> — DETECTED·MATCHED_WITH·OBSERVED·MEASURED_BY</li>
               <li><b>통신</b> — TRANSMITTED_BY·COMMUNICATE_WITH·PROVIDED_BY</li>
               <li><b>공간</b> — CONTAINS·NEAR·OVERLAPS</li>
               <li><b>규정·영향</b> — APPLIES_TO·REGULATED_BY·AFFECTS·EQUIPPED_ON</li>
@@ -141,7 +149,9 @@
         <div class="section-head"><span class="num">+</span><h2>문서 업데이트 로그</h2></div>
         <ul class="log card">
           <li><span class="log-date">2026-05-20</span>
-            <span class="log-txt">멀티모달 데이터 인벤토리 draft 생성 — 10종(핵심 8 + 확장 2) 9컬럼 정리, KG 후보 노드·관계 집계.</span></li>
+            <span class="log-txt">멀티모달 데이터 인벤토리 draft 생성 — 10종 9컬럼 정리, KG 후보 노드·관계 집계.</span></li>
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">v0.2 — 독립 검토 반영: 관계명 ④·⑤와 통일(OBSERVED·AFFECTS), 잠정 명칭 주석, "항해술" 표기 주석.</span></li>
         </ul>
       </div>
 

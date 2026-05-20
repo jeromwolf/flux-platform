@@ -25,13 +25,13 @@
       <div class="page-head">
         <div class="page-eyebrow">REQ-001 산출물 ①</div>
         <h1 class="page-title">해사서비스 플랫폼 데이터 제공처별 현황 조사서 (Draft)</h1>
-        <p class="page-desc">공공데이터포털·기관 공식 사이트 실조사로 60개 이상의 해사·해양 데이터셋을 확인했다.
+        <p class="page-desc">공공데이터포털·기관 공식 사이트 실조사로 7개 기관 76건의 해사·해양 데이터셋·자원을 확인했다.
           M+2 「해사 데이터 현황 분석 보고서」에 취합된다.</p>
       </div>
 
       <div class="callout warn">
         <span class="ico">⚠</span>
-        <div><b>Draft v0.2 (2026-05-20).</b> 외부 기관 = 공공데이터포털(data.go.kr)·기관 포털 실조사.
+        <div><b>Draft v0.3 (2026-05-20).</b> 외부 기관 = 공공데이터포털(data.go.kr)·기관 포털 실조사.
           내부 시험시설은 KRISO 협조 자료(A-1) 수령 후 작성. 원본: <code>docs/REQ-001_데이터제공처_현황조사서_draft.md</code></div>
       </div>
 
@@ -42,13 +42,14 @@
           <table class="tbl">
             <thead><tr><th>제공처</th><th>확인 데이터셋</th><th>주력 형식</th><th>핵심 식별자</th></tr></thead>
             <tbody>
-              <tr><td>해양수산부 (GICOMS·Port-MIS)</td><td>27건</td><td>CSV·OpenAPI·GIS</td><td>MMSI·IMO·호출부호·UN/LOCODE</td></tr>
-              <tr><td>국립해양조사원 (KHOA)</td><td>15건 (+API 240여 개)</td><td>S-57·JSON API·SHP</td><td>ENC셀번호·ObsCode</td></tr>
+              <tr><td>해양수산부 (GICOMS·Port-MIS)</td><td>27건 (공개 24 + 비공개·제한 3)</td><td>CSV·OpenAPI·GIS</td><td>MMSI·IMO·호출부호·UN/LOCODE</td></tr>
+              <tr><td>국립해양조사원 (KHOA)</td><td>15건</td><td>S-57·JSON API·SHP</td><td>ENC셀번호·ObsCode</td></tr>
               <tr><td>국립해양측위정보원 (NMPNT)</td><td>5건</td><td>RTCM·RINEX·JSON</td><td>기준국ID·관측소코드</td></tr>
               <tr><td>기상청 (KMA)</td><td>7건</td><td>CSV·JSON API</td><td>지점번호·특보구역코드</td></tr>
               <tr><td>해양경찰청 (KCG)</td><td>6건</td><td>CSV·REST API</td><td>연번·일자+지역</td></tr>
               <tr><td>자율운항선박실증센터 (KRISO)</td><td>4건 (대부분 비공개)</td><td>—</td><td>—</td></tr>
-              <tr><td>기타 (MEIS·KIOST·중앙해양안전심판원)</td><td>13건+</td><td>CSV·API·NetCDF4</td><td>정점코드·사건번호</td></tr>
+              <tr><td>기타 (MEIS·KIOST·중앙해양안전심판원)</td><td>12건</td><td>CSV·API·NetCDF4</td><td>정점코드·사건번호</td></tr>
+              <tr><td><b>합계</b></td><td><b>76건</b> (본문 §2~§8 표 기준)</td><td>—</td><td>—</td></tr>
             </tbody>
           </table>
         </div>
@@ -126,7 +127,7 @@
       <!-- 3. 국립해양조사원 -->
       <div class="section">
         <div class="section-head"><span class="num">3</span><h2>국립해양조사원 (KHOA)</h2>
-          <span class="hint">바다누리 · 개방海 · 15건+</span></div>
+          <span class="hint">바다누리 · 개방海 · 15건</span></div>
 
         <h3 style="font-size:.92rem;color:var(--navy);margin:6px 0 8px">3.1 전자해도·수심</h3>
         <div class="tbl-wrap"><table class="tbl">
@@ -336,6 +337,31 @@
             ③ 전자해도(ENC)는 유료이나 S-100 표준 매핑(REQ-004)의 핵심 — 활용 조건 협의 필요.
             ④ 자율운항 실증 데이터는 발주처 내부 자산 — 협조 필수.</div>
         </div>
+
+        <h3 style="font-size:.92rem;color:var(--navy);margin:16px 0 8px">10.4 데이터 품질·메타데이터 진단 (1차)</h3>
+        <p style="font-size:.84rem;color:var(--text-2);margin-bottom:8px">과업지시서 REQ-001은 "메타데이터 구조·품질 진단·결측치 영향 분석"을 요구한다.
+          데이터 미수령 단계이므로 공개 메타데이터·API 명세 기준의 1차 진단을 인벤토리 ③ 10종 단위로 제시한다.
+          결측치 비율·정확도 등 정량 지표는 데이터 실수령 후 갱신한다.</p>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>데이터</th><th>메타데이터 수준</th><th>식별자</th><th>정형성</th><th>품질 종합</th></tr></thead>
+          <tbody>
+            <tr><td><b>AIS</b></td><td>상 — 공공포털 명세 제공</td><td>MMSI·IMO 명확</td><td>정형 (NMEA0183·CSV)</td><td>상 (공개본 비식별·샘플)</td></tr>
+            <tr><td><b>GPS</b></td><td>중 — 수신기 표준 명세</td><td>수신시각·선박ID</td><td>정형 (NMEA0183·RINEX)</td><td>상</td></tr>
+            <tr><td>항해장비 ※</td><td>중 — 장비별 상이</td><td>장비ID·선박ID</td><td>정형 (CSV)</td><td>중상 (선내·공개 제한)</td></tr>
+            <tr><td>RADAR</td><td>중하 — 표준 명세 부족</td><td>표적ID만</td><td>반정형 (텍스트+이미지)</td><td>중</td></tr>
+            <tr><td>VHF</td><td>중하 — 교신 메타 제한</td><td>MMSI·호출부호·채널</td><td>비정형 (음성+STT)</td><td>중하</td></tr>
+            <tr><td><b>Port-MIS</b></td><td>상 — OpenAPI 명세 제공</td><td>호출부호·항만코드 명확</td><td>정형 (CSV·API)</td><td>상</td></tr>
+            <tr><td>CCTV</td><td>하 — 영상 메타 미흡</td><td>카메라ID (비표준)</td><td>비정형 (이미지·영상)</td><td>중하</td></tr>
+            <tr><td><b>환경정보</b></td><td>상 — 바다누리 API 명세</td><td>ObsCode 표준</td><td>정형 (CSV·API)</td><td>상</td></tr>
+            <tr><td>전자해도(ENC)</td><td>상 — S-57 국제표준 명세</td><td>ENC셀번호·S-57 피처ID</td><td>정형 (S-57)</td><td>상 (유료 구매 제약)</td></tr>
+            <tr><td>법령</td><td>하 — 구조화 메타 부재</td><td>규정ID·법령명</td><td>비정형 (PDF·HWP)</td><td>하 (NER/RE 필요)</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout info" style="margin-top:8px">
+          <span class="ico">◆</span>
+          <div>"품질 종합" 등급은 우선순위 선정표(산출물 ⑥)의 품질 축(25%) 평가 입력으로 사용된다.
+            ※ "항해장비"는 정성제안서 표 II-6 표기 — 과업지시서·표 II-5는 "항해술", 원문 불일치(KRISO 확인 예정).</div>
+        </div>
       </div>
 
       <!-- 11. 다음 단계 -->
@@ -346,6 +372,7 @@
             <li><b>외부기관 협조</b> (A-3) — 측위정보원·자율운항센터 데이터 세부, 전자해도 활용 조건</li>
             <li><b>시험시설 데이터</b> (A-1) — 메타데이터 목록 수령 후 §9 작성</li>
             <li><b>공개 API 직접 확인</b> — 핵심 API의 필드 명세 상세화 (당사 자체 조사)</li>
+            <li><b>품질 정밀 진단</b> — 데이터 실수령 후 §10.4 결측치·정확도 정량 지표 갱신</li>
             <li>본 조사서 → 멀티모달 데이터 인벤토리(산출물 ③), 우선순위 선정표(산출물 ⑥)의 입력</li>
           </ul>
         </div>
@@ -358,7 +385,9 @@
           <li><span class="log-date">2026-05-20</span>
             <span class="log-txt">v0.1 생성 — 외부 6기관 골격.</span></li>
           <li><span class="log-date">2026-05-20</span>
-            <span class="log-txt">v0.2 대폭 보강 — 공공데이터포털·기관 포털 실조사로 60개+ 데이터셋 확인, 기관별 표·조인 키 매핑·접근성 매트릭스 작성.</span></li>
+            <span class="log-txt">v0.2 대폭 보강 — 공공데이터포털·기관 포털 실조사로 데이터셋 확인, 기관별 표·조인 키 매핑·접근성 매트릭스 작성.</span></li>
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">v0.3 — 독립 검토 반영: §10.4 품질·메타데이터 진단 신설, 데이터셋 수치 정합(총 76건), KHOA API 수치 정정.</span></li>
         </ul>
       </div>
 

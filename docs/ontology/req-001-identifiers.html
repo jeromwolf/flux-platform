@@ -31,7 +31,7 @@
 
       <div class="callout warn">
         <span class="ico">⚠</span>
-        <div><b>Draft v0.1 (2026-05-20).</b> 근거: 정성제안서 II.2 바·사·아 및 표 II-3,
+        <div><b>Draft v0.2 (2026-05-20).</b> 근거: 정성제안서 II.2 바·사·아 및 표 II-3,
           현황 조사서 v0.2, <a href="req-001-inventory.html">멀티모달 데이터 인벤토리(③)</a>.
           원본: <code>docs/REQ-001_연계규칙_식별자체계_draft.md</code></div>
       </div>
@@ -101,6 +101,7 @@
             <tr><td><b>위도·경도(WGS84)</b></td><td>해양오염사고 · 해양사고 통계 · 위성 격자 · 조석·파고 관측소 · 전자해도</td><td>공간 좌표</td></tr>
             <tr><td><b>ENC 셀번호 / S-57 피처ID</b></td><td>전자해도 · 수심정보 · 해안선</td><td>IHO S-57</td></tr>
             <tr><td><b>시험시설 코드 + 데이터셋 ID</b></td><td>KRISO 시험시설 8종 데이터 (A-1 수령 후)</td><td>KRISO 내부</td></tr>
+            <tr><td><b>규정 ID / 문서 ID</b></td><td>법령·규정 · 시나리오·보고서 (§1 문서 기준)</td><td>기관 내부</td></tr>
           </tbody>
         </table></div>
       </div>
@@ -115,12 +116,19 @@
             <tr><td>동일 MMSI/IMO</td><td>(Vessel)-[:HAS_POSITION]->(Position), (Vessel)-[:ON_VOYAGE]->(Voyage)</td></tr>
             <tr><td>동일 호출부호 + 항만</td><td>(Vessel)-[:ARRIVES_AT / DEPARTS_FROM]->(Port)</td></tr>
             <tr><td>MMSI + 교신 시각·채널</td><td>(Vessel)-[:TRANSMITTED_BY]->(VHFMessage), (Vessel)-[:COMMUNICATE_WITH]->(Vessel)</td></tr>
-            <tr><td>위경도·시각 근접</td><td>(Vessel)-[:LOCATED_IN]->(Area), (Voyage)-[:AFFECTED_BY]->(WeatherObservation)</td></tr>
+            <tr><td>위경도·시각 근접</td><td>(Vessel)-[:LOCATED_IN]->(Area), (WeatherObservation)-[:AFFECTS]->(Voyage)</td></tr>
             <tr><td>동일 ObsCode</td><td>(ObservationStation)-[:OBSERVED]->(WeatherObservation / TidalRecord)</td></tr>
             <tr><td>시험시설 코드 + 날짜 + 모형선</td><td>(TestFacility)-[:CONDUCTED]->(Test)-[:USED_MODEL]->(ModelShip)</td></tr>
             <tr><td>해역·사고·법령 위치 매칭</td><td>(Incident)-[:REGULATED_BY]->(Regulation), (Regulation)-[:APPLIES_TO]->(Area)</td></tr>
           </tbody>
         </table></div>
+        <div class="callout warn">
+          <span class="ico">⚠</span>
+          <div><b>관계명은 잠정(provisional)이다.</b> 정성제안서 표 II-7(오재용·김혜진 2024)·표 II-8
+            근거 관계(TRANSMITTED_BY·BERTH_TO·ARRIVES_AT·COMMUNICATE_WITH·LOCATED_IN·APPLIES_TO 등)와
+            본 분석 제안 관계(HAS_POSITION·ON_VOYAGE·OBSERVED·AFFECTS·CONDUCTED·USED_MODEL 등)를 함께 제시한다.
+            영문 명칭·방향의 최종 확정은 DES-001 온톨로지 설계 단계에서 수행하며, 산출물 ③·④와 동일 명칭 체계를 쓴다.</div>
+        </div>
       </div>
 
       <!-- 6. 다음 단계 -->
@@ -141,6 +149,8 @@
         <ul class="log card">
           <li><span class="log-date">2026-05-20</span>
             <span class="log-txt">연계 규칙·식별자 체계 정의서 draft 생성 — 6대 기준·통합 고유번호·연결 규칙·식별자 매핑·관계 생성 규칙.</span></li>
+          <li><span class="log-date">2026-05-20</span>
+            <span class="log-txt">v0.2 — 독립 검토 반영: 관계명 ③·④와 통일(AFFECTS), 규정·문서 식별자 행 보강, 잠정 명칭 주석.</span></li>
         </ul>
       </div>
 

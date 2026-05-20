@@ -2,7 +2,7 @@
 
 ## REQ-001 산출물 ⑤
 
-> **Draft v0.1 — 2026-05-20**
+> **Draft v0.2 — 2026-05-20**
 > 멀티모달 해사데이터를 연결하는 식별자와 관계 생성 규칙을 정의한다.
 > 근거: 정성제안서 II.2 바·사·아 및 표 II-3, 데이터 제공처별 현황 조사서 v0.2, 멀티모달 데이터 인벤토리(③)
 
@@ -69,6 +69,7 @@
 | **위도·경도 (WGS84)** | 해양오염사고 · 해양사고 통계 · 위성 격자 · 조석·파고 관측소 · 전자해도 | 공간 좌표 |
 | **ENC 셀번호 / S-57 피처ID** | 전자해도 · 수심정보 · 해안선 | IHO S-57 |
 | **시험시설 코드 + 데이터셋 ID** | KRISO 시험시설 8종 데이터 (A-1 수령 후) | KRISO 내부 |
+| **규정 ID / 문서 ID** | 법령·규정 · 시나리오·보고서 (§2 문서 기준) | 기관 내부 |
 
 ---
 
@@ -81,10 +82,12 @@
 | 동일 MMSI/IMO | (Vessel)-[:HAS_POSITION]->(Position), (Vessel)-[:ON_VOYAGE]->(Voyage) |
 | 동일 호출부호 + 항만 | (Vessel)-[:ARRIVES_AT / DEPARTS_FROM]->(Port) |
 | MMSI + 교신 시각·채널 | (Vessel)-[:TRANSMITTED_BY]->(VHFMessage), (Vessel)-[:COMMUNICATE_WITH]->(Vessel) |
-| 위경도·시각 근접 | (Vessel)-[:LOCATED_IN]->(Area), (Voyage)-[:AFFECTED_BY]->(WeatherObservation) |
+| 위경도·시각 근접 | (Vessel)-[:LOCATED_IN]->(Area), (WeatherObservation)-[:AFFECTS]->(Voyage) |
 | 동일 ObsCode | (ObservationStation)-[:OBSERVED]->(WeatherObservation / TidalRecord) |
 | 시험시설 코드 + 날짜 + 모형선 | (TestFacility)-[:CONDUCTED]->(Test)-[:USED_MODEL]->(ModelShip) |
 | 해역·사고·법령 위치 매칭 | (Incident)-[:REGULATED_BY]->(Regulation), (Regulation)-[:APPLIES_TO]->(Area) |
+
+> **관계명은 잠정(provisional)이다.** 정성제안서 표 II-7(오재용·김혜진 2024)·표 II-8 근거 관계(TRANSMITTED_BY·BERTH_TO·ARRIVES_AT·DEPARTS_FROM·COMMUNICATE_WITH·LOCATED_IN·APPLIES_TO 등)와, 본 분석에서 도출한 제안 관계(HAS_POSITION·ON_VOYAGE·OBSERVED·AFFECTS·CONDUCTED·USED_MODEL·REGULATED_BY 등)를 함께 제시한다. 영문 명칭·방향의 최종 확정은 DES-001 온톨로지 설계 단계에서 수행하며, 인벤토리 ③·템플릿 ④와 동일 명칭 체계를 사용한다.
 
 ---
 
